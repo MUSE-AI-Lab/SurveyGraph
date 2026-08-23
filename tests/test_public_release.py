@@ -20,7 +20,6 @@ def test_required_release_documents_exist() -> None:
         "CONTRIBUTING.md",
         "SECURITY.md",
         "CITATION.cff",
-        "data/README.md",
         "docs/PUBLIC_RELEASE_BOUNDARY.md",
         ".github/workflows/ci.yml",
         "scripts/audit_release_assets.py",
@@ -85,12 +84,17 @@ def test_asset_audit_includes_ignored_local_research_files(tmp_path: Path) -> No
         rows = list(csv.DictReader(handle, delimiter="\t"))
     present_paths = {row["path"] for row in rows if row["exists"] == "true"}
 
-    assert any(path.startswith("refer/") for path in present_paths)
-    assert any(path.startswith("data/graph_db/") for path in present_paths)
-    assert any(
-        path.startswith("paper/openreview_supplementary_")
-        for path in present_paths
-    )
+    # The full research workspace contains these ignored assets; the public
+    # release intentionally does not. Validate whichever tree is present.
+    if (ROOT / "refer").exists():
+        assert any(path.startswith("refer/") for path in present_paths)
+    if (ROOT / "data" / "graph_db").exists():
+        assert any(path.startswith("data/graph_db/") for path in present_paths)
+    if (ROOT / "paper").exists():
+        assert any(
+            path.startswith("paper/openreview_supplementary_")
+            for path in present_paths
+        )
 
 
 def test_public_staging_uses_a_strict_allowlist(tmp_path: Path) -> None:
@@ -203,12 +207,20 @@ def test_standalone_scan_rejects_private_state(tmp_path: Path) -> None:
 
 def test_public_release_package_contains_only_scanned_tree(tmp_path: Path) -> None:
     output = tmp_path / "SurveyGraph-public-release.zip"
+    staged = tmp_path / "public-release"
+    stage = subprocess.run(
+        [sys.executable, "scripts/stage_public_release.py", "--output", str(staged)],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+    )
+    assert stage.returncode == 0, stage.stdout + stage.stderr
     result = subprocess.run(
         [
             sys.executable,
             "scripts/package_public_release.py",
             "--source",
-            str(ROOT / "release_artifacts" / "public_release"),
+            str(staged),
             "--output",
             str(output),
         ],

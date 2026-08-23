@@ -30,6 +30,7 @@ PUBLIC_CANDIDATE_FILES = {
     ".env.example",
     ".gitignore",
     "README.md",
+    "README_zh.md",
     "LICENSE",
     "CITATION.cff",
     "CONTRIBUTING.md",

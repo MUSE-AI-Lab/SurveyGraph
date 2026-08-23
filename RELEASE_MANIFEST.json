@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "source": "current-working-tree",
-  "included_count": 576,
+  "included_count": 582,
   "excluded_count": 160,
   "included": [
     {
@@ -26,8 +26,8 @@
     },
     {
       "path": ".github/workflows/ci.yml",
-      "bytes": 1341,
-      "sha256": "d65ef395fc87ae49c538bb54d6f5ad0444c6d10d133bb6ad95f05191241228fb"
+      "bytes": 1347,
+      "sha256": "054792c295ab3ae86ffe4a69459ee6327fda5d20ad6deba9beba2f5795eb8d68"
     },
     {
       "path": ".gitignore",
@@ -61,8 +61,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 7350,
-      "sha256": "d90d9dabce52ada337460844109ffdd3af9fecc8649466449470121089836c91"
+      "bytes": 11282,
+      "sha256": "4ec35cd8a9f087093da404d848c856ce732fdc8671df6c46a6a1912a561dc127"
+    },
+    {
+      "path": "README_zh.md",
+      "bytes": 10153,
+      "sha256": "5aead5df1d63fcd2f7378490cc774d8b987f640fbbce1e6e35cb71ffbb634500"
     },
     {
       "path": "SECURITY.md",
@@ -88,6 +93,31 @@
       "path": "docs/SurveyGraph_Technical_Summary.md",
       "bytes": 41970,
       "sha256": "a1499345faeb9e7730d974b011ce9e4ca7bf1e0a94bd0576fa0419aa07f3e401"
+    },
+    {
+      "path": "docs/assets/evaluation-report.png",
+      "bytes": 105944,
+      "sha256": "a3fa271fcb88e16954edba81a35ce827625098e136eeb147991fe78dc2035e42"
+    },
+    {
+      "path": "docs/assets/generated-survey-preview.png",
+      "bytes": 296951,
+      "sha256": "bcaee9e0775f221fa9676a3b2e4775f10d179f0ecdba37bbf5de534fcf12a217"
+    },
+    {
+      "path": "docs/assets/surveygraph-architecture.png",
+      "bytes": 482774,
+      "sha256": "800cab67c6aa3e8717504870eef4473d09848f44339b0e34251850113c1365fd"
+    },
+    {
+      "path": "docs/assets/surveygraph-icon.png",
+      "bytes": 125103,
+      "sha256": "175ff190f23b64c41540169870e0a24d29887265efa0cf59c152db0df4dc154c"
+    },
+    {
+      "path": "docs/assets/surveygraph-pipeline.png",
+      "bytes": 1617657,
+      "sha256": "4a916b7fde9b4cfba9baeaa1984cbef7c2efdb45164c4b1b3acf8f980f8f6650"
     },
     {
       "path": "docs/mekg/README_MEKG.md",
@@ -2191,8 +2221,8 @@
     },
     {
       "path": "scripts/check_public_release.py",
-      "bytes": 5263,
-      "sha256": "b7d3b98b1e1fac52617439826e8d5bc1fb771e64a0484c7519e592655a59c014"
+      "bytes": 5283,
+      "sha256": "d5225405cfaa0a55353eebd55986b5666e8d45c057307af695285b16af6855ad"
     },
     {
       "path": "scripts/package_public_release.py",
@@ -2201,8 +2231,8 @@
     },
     {
       "path": "scripts/stage_public_release.py",
-      "bytes": 5360,
-      "sha256": "a2d84f6460d7eff944a322e4bf61bba6691234a057cb9f93a7c78ef3cf6ac15c"
+      "bytes": 5380,
+      "sha256": "c504c194492d70888fa247bbcd34a5070eef80b334b69e0ac3884a5d65db5fa2"
     },
     {
       "path": "src/__init__.py",
@@ -2836,8 +2866,8 @@
     },
     {
       "path": "tests/test_public_release.py",
-      "bytes": 7798,
-      "sha256": "228c10a30d599a9a8601df0226e2c3007fdb48a9773e2b64a00eedf2ed30fdf7"
+      "bytes": 8310,
+      "sha256": "63176a0d55da3dbd7170c836ea911584eb2e714d6281f7155625fde38ed18850"
     },
     {
       "path": "tests/test_reflective_content_generator.py",
