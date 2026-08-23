@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SurveyGraph{% endblock %}</title>
+    
+    <!-- 主题初始化 - 必须在 CSS 之前执行以避免闪烁 -->
+    <script>
+        (function() {
+            // 立即应用保存的主题，避免页面闪烁
+            var savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else if (savedTheme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                // 跟随系统偏好
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    
+    <!-- 样式 -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    
+    <!-- 图标 -->
+    <link rel="icon" type="image/webp" href="/static/images/icon.webp">
+    
+    <!--CDN 多源加载策略-->
+    <!-- FontAwesome 图标 - 多源加载 -->
+    <link rel="stylesheet" id="fontawesome-css" href="https://cdn.bootcdn.net/font-awesome/6.5.1/css/all.min.css"
+          onerror="this.onerror=null; this.href='/static/vendor/fontawesome/css/fontawesome-local.css';">
+    
+    {% block head %}{% endblock %}
+    
+    <!-- CDN 多源加载脚本 -->
+    <script>
+    (function() {
+        'use strict';
+        
+        // CDN 配置
+        const CDN_CONFIG = {
+            echarts: {
+                sources: [
+                    'https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js',    // 国内 - BootCDN
+                    'https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js', // 国际 - Cloudflare
+                    '/static/vendor/echarts/echarts.min.js'                               // 本地 fallback
+                ],
+                globalVar: 'echarts',
+                timeout: 5000
+            },
+            marked: {
+                sources: [
+                    'https://cdn.bootcdn.net/ajax/libs/marked/9.1.6/marked.min.js',
+                    'https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js',
+                    '/static/vendor/marked/marked.min.js'
+                ],
+                globalVar: 'marked',
+                timeout: 5000
+            }
+        };
+        
+        // 加载脚本的Promise封装
+        function loadScript(url, timeout) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = url;
+                script.async = true;
+                
+                const timer = setTimeout(() => {
+                    script.remove();
+                    reject(new Error(`Timeout loading ${url}`));
+                }, timeout);
+                
+                script.onload = () => {
+                    clearTimeout(timer);
+                    resolve(url);
+                };
+                
+                script.onerror = () => {
+                    clearTimeout(timer);
+                    script.remove();
+                    reject(new Error(`Failed to load ${url}`));
+                };
+                
+                document.head.appendChild(script);
+            });
+        }
+        
+        // 多源加载函数
+        async function loadWithFallback(config) {
+            const { sources, globalVar, timeout } = config;
+            
+            // 如果已经加载过，直接返回
+            if (window[globalVar]) {
+                return Promise.resolve();
+            }
+            
+            for (let i = 0; i < sources.length; i++) {
+                const url = sources[i];
+                try {
+                    await loadScript(url, timeout);
+                    if (window[globalVar]) {
+                        console.log(`[CDN] ${globalVar} loaded from: ${url}`);
+                        return;
+                    }
+                } catch (e) {
+                    console.warn(`[CDN] Failed to load ${globalVar} from ${url}:`, e.message);
+                    // 继续尝试下一个源
+                }
+            }
+            
+            console.error(`[CDN] All sources failed for ${globalVar}`);
+        }
+        
+        // 页面加载完成后开始加载CDN资源
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initCDNLoad);
+        } else {
+            initCDNLoad();
+        }
+        
+        function initCDNLoad() {
+            // 并行加载所有CDN资源
+            Promise.all([
+                loadWithFallback(CDN_CONFIG.echarts),
+                loadWithFallback(CDN_CONFIG.marked)
+            ]).then(() => {
+                // 触发自定义事件，通知其他脚本CDN资源已加载
+                window.dispatchEvent(new CustomEvent('cdnLoaded'));
+            }).catch(err => {
+                console.error('[CDN] Some resources failed to load:', err);
+                // 即使部分失败也触发事件
+                window.dispatchEvent(new CustomEvent('cdnLoaded'));
+            });
+        }
+        
+        // 暴露加载函数供外部使用
+        window.CDNLoader = {
+            loadWithFallback,
+            config: CDN_CONFIG
+        };
+    })();
+    </script>
+</head>
+<body>
+    {% block body %}
+    <!-- PC端顶部导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <span class="brand-icon"><img src="/static/images/icon.webp" alt="SurveyGraph" style="width: 24px; height: 24px;"></span>
+                <span class="brand-text">SurveyGraph</span>
+            </a>
+            <div class="nav-links">
+                <a href="/dashboard" class="nav-link" data-page="dashboard">
+                    <i class="fas fa-th-large"></i> 我的任务
+                </a>
+                <a href="/task/new" class="nav-link" data-page="new-task">
+                    <i class="fas fa-plus"></i> 创建综述
+                </a>
+                <a href="/knowledge-base" class="nav-link" data-page="knowledge-base">
+                    <i class="fas fa-book-open"></i> 知识库
+                </a>
+                <a href="/profile" class="nav-link" data-page="profile">
+                    <i class="fas fa-user"></i> 个人中心
+                </a>
+            </div>
+            <div class="nav-user">
+                <!-- 主题切换按钮 -->
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题">
+                    <i class="fas fa-moon theme-icon icon-moon"></i>
+                    <i class="fas fa-sun theme-icon icon-sun"></i>
+                </button>
+                <div class="user-dropdown" id="userDropdown">
+                    <button class="user-btn" onclick="toggleUserDropdown()">
+                        <div class="user-avatar" id="navUserAvatar">U</div>
+                        <span class="user-name" id="navUserName">加载中...</span>
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                    </button>
+                    <div class="dropdown-menu" id="userDropdownMenu">
+                        <div class="dropdown-user-info">
+                            <div class="dropdown-user-name" id="dropdownUserName">-</div>
+                            <div class="dropdown-user-quota" id="dropdownUserQuota">配额: -</div>
+                        </div>
+                        <a href="/dashboard" class="dropdown-item">
+                            <i class="fas fa-th-large"></i> 我的任务
+                        </a>
+                        <a href="/profile" class="dropdown-item">
+                            <i class="fas fa-user-cog"></i> 个人设置
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item dropdown-item-danger" onclick="logout(); return false;">
+                            <i class="fas fa-sign-out-alt"></i> 退出登录
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="app-container">
+        <!-- 移动端切换按钮 -->
+        <button class="mobile-menu-toggle" id="mobileMenuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- 侧边导航栏 (移动端) -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-brand">
+                    <div class="sidebar-logo"><img src="/static/images/icon.webp" alt="SurveyGraph" style="width: 24px; height: 24px;"></div>
+                    <span>SurveyGraph</span>
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="/dashboard" class="sidebar-link" data-page="dashboard">
+                    <i class="fas fa-th-large"></i>
+                    <span>我的任务</span>
+                </a>
+                <a href="/task/new" class="sidebar-link" data-page="new-task">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>创建综述</span>
+                </a>
+                <a href="/knowledge-base" class="sidebar-link" data-page="knowledge-base">
+                    <i class="fas fa-book-open"></i>
+                    <span>知识库</span>
+                </a>
+                <a href="/profile" class="sidebar-link" data-page="profile">
+                    <i class="fas fa-user-cog"></i>
+                    <span>个人中心</span>
+                </a>
+                <div id="adminNavSection" style="display: none;">
+                    <div style="margin-top: 24px; padding: 0 12px; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">管理后台</div>
+                    <a href="/admin" class="sidebar-link" data-page="admin-dashboard">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>系统概览</span>
+                    </a>
+                    <a href="/admin/users" class="sidebar-link" data-page="admin-users">
+                        <i class="fas fa-users"></i>
+                        <span>用户管理</span>
+                    </a>
+                    <a href="/admin/tasks" class="sidebar-link" data-page="admin-tasks">
+                        <i class="fas fa-tasks"></i>
+                        <span>任务管理</span>
+                    </a>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile" id="userProfile">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">加载中...</div>
+                        <div class="user-quota" id="userQuota">配额: --</div>
+                    </div>
+                    <button class="btn btn-ghost btn-icon btn-sm" onclick="logout()" title="退出登录">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+                <!-- 移动端主题切换 -->
+                <div class="theme-toggle-wrapper">
+                    <span class="theme-toggle-label">深色模式</span>
+                    <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+                        <i class="fas fa-moon theme-icon icon-moon"></i>
+                        <i class="fas fa-sun theme-icon icon-sun"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- 移动端遮罩 -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- 主内容 -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+            
+            <footer class="footer" style="margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--border-light); text-align: center; color: var(--text-muted); font-size: 13px;">
+                <p>&copy; <span id="currentYear"></span> SurveyGraph. All rights reserved.</p>
+            </footer>
+        </main>
+    </div>
+    {% endblock %}
+    
+    <!-- 全局 Toast 容器 -->
+    <div id="toastContainer" style="position: fixed; top: 80px; right: 20px; z-index: 1000;"></div>
+    
+    <!-- 全局 Modal 容器 -->
+    <div id="modalContainer"></div>
+    
+    <!-- API 封装 -->
+    <script src="/static/js/api.js"></script>
+    
+    <!-- 通用组件 -->
+    <script src="/static/js/components.js"></script>
+    
+    <!-- 主应用逻辑 -->
+    <script src="/static/js/app.js"></script>
+    
+    {% block scripts %}{% endblock %}
+    
+    <!-- 主题管理脚本 - 提供切换功能 -->
+    <script>
+        // 主题管理（主题已在 head 中初始化，这里只提供切换功能）
+        (function() {
+            'use strict';
+            
+            // 应用主题（带过渡动画）
+            function applyTheme(theme) {
+                const html = document.documentElement;
+                
+                // 添加过渡类
+                html.classList.add('theme-transition');
+                
+                if (theme === 'dark') {
+                    html.setAttribute('data-theme', 'dark');
+                } else {
+                    html.setAttribute('data-theme', 'light');
+                }
+                
+                // 移除过渡类
+                setTimeout(() => {
+                    html.classList.remove('theme-transition');
+                }, 300);
+                
+                // 保存主题设置
+                localStorage.setItem('theme', theme);
+                
+                // 更新图表主题（如果 ECharts 已加载）
+                if (window.updateChartsTheme) {
+                    window.updateChartsTheme(theme);
+                }
+            }
+            
+            // 切换主题
+            window.toggleTheme = function() {
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                applyTheme(newTheme);
+            };
+            
+            // 获取当前主题
+            window.getCurrentTheme = function() {
+                return document.documentElement.getAttribute('data-theme') || 'light';
+            };
+            
+            // 监听系统主题变化
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                    // 只有在没有手动设置主题时才跟随系统
+                    if (!localStorage.getItem('theme')) {
+                        applyTheme(e.matches ? 'dark' : 'light');
+                    }
+                });
+            }
+        })();
+    </script>
+    
+    <script>
+        // 页面加载时检查登录状态
+        document.addEventListener('DOMContentLoaded', async () => {
+            const publicPages = ['/login', '/register', '/'];
+            const currentPath = window.location.pathname;
+            
+            // 设置当前年份
+            const yearSpan = document.getElementById('currentYear');
+            if (yearSpan) {
+                yearSpan.textContent = new Date().getFullYear();
+            }
+            
+            // 移动端菜单逻辑
+            const toggle = document.getElementById('mobileMenuToggle');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            if (toggle && sidebar && overlay) {
+                toggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('open');
+                    toggle.classList.toggle('sidebar-open');
+                });
+                overlay.addEventListener('click', () => {
+                    sidebar.classList.remove('open');
+                    toggle.classList.remove('sidebar-open');
+                });
+            }
+            
+            // 点击页面其他地方关闭用户下拉菜单
+            document.addEventListener('click', (e) => {
+                const dropdown = document.getElementById('userDropdown');
+                const menu = document.getElementById('userDropdownMenu');
+                if (dropdown && menu && !dropdown.contains(e.target)) {
+                    menu.classList.remove('show');
+                }
+            });
+            
+            // 高亮当前导航
+            highlightCurrentNav();
+            
+            if (!publicPages.includes(currentPath)) {
+                try {
+                    const user = await checkAuth();
+                    if (!user) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    
+                    // 更新用户信息显示
+                    updateUserDisplay(user);
+                    
+                    // 如果是管理员，显示管理菜单
+                    if (user.is_admin) {
+                        const adminSection = document.getElementById('adminNavSection');
+                        if (adminSection) {
+                            adminSection.style.display = 'block';
+                        }
+                    }
+                } catch (e) {
+                    console.error('Auth check failed:', e);
+                    window.location.href = '/login';
+                }
+            }
+        });
+        
+        function highlightCurrentNav() {
+            const currentPath = window.location.pathname;
+            
+            // PC端导航栏
+            document.querySelectorAll('.nav-link').forEach(link => {
+                const href = link.getAttribute('href');
+                // 精确匹配当前路径
+                if (currentPath === href) {
+                    link.classList.add('active');
+                }
+                // /dashboard 特殊处理：只有在 /task/{id} (任务详情页) 时才高亮，/task/new 不算
+                else if (href === '/dashboard' && currentPath.startsWith('/task/') && currentPath !== '/task/new') {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+            
+            // 移动端侧边栏
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                const href = link.getAttribute('href');
+                // 精确匹配当前路径
+                if (currentPath === href) {
+                    link.classList.add('active');
+                }
+                // /dashboard 特殊处理：只有在 /task/{id} (任务详情页) 时才高亮，/task/new 不算
+                else if (href === '/dashboard' && currentPath.startsWith('/task/') && currentPath !== '/task/new') {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+        
+        function updateUserDisplay(user) {
+            // 侧边栏用户信息
+            const avatar = document.getElementById('userAvatar');
+            const userName = document.getElementById('userName');
+            const quota = document.getElementById('userQuota');
+            
+            if (avatar) {
+                avatar.textContent = user.username.charAt(0).toUpperCase();
+            }
+            if (userName) {
+                userName.textContent = user.username;
+            }
+            if (quota) {
+                const total = user.daily_quota + user.bonus_quota;
+                quota.textContent = `配额: ${total}次/天`;
+            }
+            
+            // 顶部导航栏用户信息
+            const navAvatar = document.getElementById('navUserAvatar');
+            const navUserName = document.getElementById('navUserName');
+            const dropdownUserName = document.getElementById('dropdownUserName');
+            const dropdownUserQuota = document.getElementById('dropdownUserQuota');
+            
+            if (navAvatar) {
+                navAvatar.textContent = user.username.charAt(0).toUpperCase();
+            }
+            if (navUserName) {
+                navUserName.textContent = user.username;
+            }
+            if (dropdownUserName) {
+                dropdownUserName.textContent = user.username;
+            }
+            if (dropdownUserQuota) {
+                const total = user.daily_quota + user.bonus_quota;
+                dropdownUserQuota.textContent = `配额: ${total}次/天`;
+            }
+        }
+        
+        function toggleUserDropdown() {
+            const menu = document.getElementById('userDropdownMenu');
+            if (menu) {
+                if (menu.classList.contains('show')) {
+                    // 关闭时添加动画
+                    menu.classList.add('hiding');
+                    menu.classList.remove('show');
+                    setTimeout(() => {
+                        menu.classList.remove('hiding');
+                    }, 200);
+                } else {
+                    menu.classList.add('show');
+                }
+            }
+        }
+        
+        // 增强的下拉菜单关闭（带动画）
+        function closeUserDropdown() {
+            const menu = document.getElementById('userDropdownMenu');
+            if (menu && menu.classList.contains('show')) {
+                menu.classList.add('hiding');
+                menu.classList.remove('show');
+                setTimeout(() => {
+                    menu.classList.remove('hiding');
+                }, 200);
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            window.location.href = '/login';
+        }
+        
+        // 导航栏滚动效果
+        (function() {
+            const navbar = document.querySelector('.navbar');
+            if (!navbar) return;
+            
+            let lastScrollY = window.scrollY;
+            let ticking = false;
+            
+            function updateNavbar() {
+                const scrollY = window.scrollY;
+                
+                // 添加/移除滚动样式
+                if (scrollY > 10) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+                
+                lastScrollY = scrollY;
+                ticking = false;
+            }
+            
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    requestAnimationFrame(updateNavbar);
+                    ticking = true;
+                }
+            }, { passive: true });
+            
+            // 初始检查
+            updateNavbar();
+        })();
+        
+        // 点击页面其他地方关闭下拉菜单（带动画）
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('userDropdown');
+            const menu = document.getElementById('userDropdownMenu');
+            if (dropdown && menu && !dropdown.contains(e.target)) {
+                if (menu.classList.contains('show')) {
+                    closeUserDropdown();
+                }
+            }
+        });
+        
+        // ESC 键关闭下拉菜单
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeUserDropdown();
+                
+                // 同时关闭移动端侧边栏
+                const sidebar = document.getElementById('sidebar');
+                const toggle = document.getElementById('mobileMenuToggle');
+                if (sidebar && sidebar.classList.contains('open')) {
+                    sidebar.classList.remove('open');
+                    if (toggle) toggle.classList.remove('sidebar-open');
+                }
+            }
+        });
+        
+        // 导航链接点击涟漪效果
+        document.querySelectorAll('.nav-link, .sidebar-link, .dropdown-item').forEach(link => {
+            link.addEventListener('click', function(e) {
+                // 创建涟漪元素
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple-effect';
+                
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+                
+                ripple.style.cssText = `
+                    position: absolute;
+                    width: ${size}px;
+                    height: ${size}px;
+                    left: ${x}px;
+                    top: ${y}px;
+                    background: var(--accent-primary-light);
+                    border-radius: 50%;
+                    transform: scale(0);
+                    animation: ripple 0.6s ease-out;
+                    pointer-events: none;
+                `;
+                
+                this.style.position = 'relative';
+                this.style.overflow = 'hidden';
+                this.appendChild(ripple);
+                
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+        
+        // 添加涟漪动画样式
+        if (!document.getElementById('ripple-style')) {
+            const style = document.createElement('style');
+            style.id = 'ripple-style';
+            style.textContent = `
+                @keyframes ripple {
+                    to {
+                        transform: scale(4);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    </script>
+</body>
+</html>

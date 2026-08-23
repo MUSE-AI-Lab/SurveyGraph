@@ -1,0 +1,32 @@
+You will provided with a LaTeX code snippet representing a table and the corresponding text from which the table is derived. Your task is to help generate the following:  
+
+1. A **caption** for the table that succinctly and formally describes its content in the style of an academic paper. Use precise, professional language, and ensure the caption clearly conveys the table's key information in 2-3 sentences.  
+2. An **introductory sentence** for the table, written in formal academic style, that integrates the table into the text. This sentence should provide clear context for the table’s inclusion and relevance, serving as a bridge from the main text to the table. The sentence should explicitly reference the table insertion location using the format `\input{{table}}`. For example:  
+   *"Table \input{{table}} provides a detailed overview of XXX."*  
+
+
+Here is the LaTeX code for the table:  
+{Latex}
+
+Here is the corresponding text:
+{Content}
+
+Please generate the caption and introductory sentence based on the provided inputs.
+
+**IMPORTANT: The caption and introductory sentence MUST be in ENGLISH.**
+
+Output your results in the following dictionary format:
+{{
+    'caption': 'XXX',
+    'introductory sentence': 'XXX',
+}}
+
+Your response should be enclosed within `<Answer>` and `</Answer>` tags.
+
+Example Output:
+<Answer>
+{{
+    'caption': 'XXX',
+    'introductory sentence': 'XXX',
+}}
+</Answer>

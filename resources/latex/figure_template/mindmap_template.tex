@@ -1,0 +1,151 @@
+% ============================================
+% 现代化思维导图模板
+% 专业学术风格 - 适用于概念关系展示
+% ============================================
+% Note: Colors (mind-*) are defined in the main document preamble (survey.ini.tex)
+%
+% Key improvements:
+% 1. Increased sibling angles to prevent overlap
+% 2. Larger level distances for better spacing
+% 3. Wider text widths for longer content
+% 4. Better font sizing hierarchy
+
+\begin{figure}[H]
+    \centering
+    \begin{adjustbox}{max width=\textwidth, max height=0.85\textheight, center}
+ \tikzset{
+     % 注释样式 - 现代化设计
+     every annotation/.style = {
+         draw=mind-annotation-border!60,
+         line width=1.2pt,
+         fill=mind-annotation,
+         font=\small\sffamily,
+         rounded corners=4pt,
+     },
+     % 节点通用样式
+     every node/.style = {
+         concept,
+         circular drop shadow={shadow xshift=1pt, shadow yshift=-1pt, opacity=0.15},
+     },
+     % 根节点样式 - 深色突出
+     root/.style = {
+         concept color=mind-root,
+         font=\normalsize\sffamily\bfseries,
+         text width=8em,
+         text=white,
+         minimum size=3cm,
+     },
+     % 一级节点样式 - 增大间距
+     level 1 concept/.append style = {
+         font=\small\sffamily\bfseries,
+         sibling angle=72,
+         text width=6em,
+         level distance=16em,
+         inner sep=4pt,
+         minimum size=2.2cm,
+     },
+     % 二级节点样式 - 增大间距
+     level 2 concept/.append style = {
+         font=\footnotesize\sffamily,
+         sibling angle=45,
+         level distance=12em,
+         text width=5em,
+         minimum size=1.8cm,
+     },
+     % 三级节点样式
+     level 3 concept/.append style = {
+         font=\scriptsize\sffamily,
+         sibling angle=40,
+         level distance=9em,
+         text width=4.5em,
+         minimum size=1.5cm,
+     },
+ }
+ 
+ % 信息注释命令 - 优化样式
+ \newcommand*{\info}[4][15]{
+     \node[annotation, #3, scale=0.7, text width=#1 em, inner sep=3mm] at (#2){
+         \list{$\bullet$}{
+             \topsep=2pt\itemsep=1pt\parsep=0pt\parskip=0pt
+             \labelwidth=8pt\leftmargin=10pt\itemindent=0pt
+             \labelsep=3pt
+         }
+         #4
+         \endlist
+     };
+ }
+ 
+     \begin{tikzpicture}
+         \path[mindmap, concept color=mind-root, text=white, grow cyclic]
+ <tree_code>
+     \end{tikzpicture}
+ \end{adjustbox}
+ 
+ \caption{<caption>}
+ \label{fig:<label>}
+ 
+ \end{figure}
+
+% ============================================
+% USAGE INSTRUCTIONS FOR CODE GENERATION:
+% ============================================
+%
+% When generating mindmap diagrams, follow these guidelines:
+%
+% 1. ROOT NODE:
+%    - Use short, concise text (max 3-4 words)
+%    - Example: node[root] {Open Challenges\\in LLM\\Function Calling}
+%
+% 2. LEVEL 1 NODES (main branches):
+%    - Maximum 5-6 branches to avoid crowding
+%    - Use sibling angle=72 for 5 branches, 60 for 6 branches
+%    - Keep text short (2-3 words max)
+%    - Example: child[concept color=mind-l1-1] { node {Multi-turn\\Reliability} }
+%
+% 3. LEVEL 2 NODES (sub-branches):
+%    - Maximum 3-4 per parent
+%    - Use sibling angle=45 for good spacing
+%    - Can use slightly longer text with line breaks
+%    - Example: child { node {Performance\\degradation} }
+%
+% 4. TEXT FORMATTING:
+%    - Use \\ for line breaks in long text
+%    - Keep each line under 10 characters
+%    - Avoid very long single words
+%
+% 5. COLOR SCHEME:
+%    - mind-l1-1: Blue (for technical topics)
+%    - mind-l1-2: Green (for methodology)
+%    - mind-l1-3: Yellow (for challenges)
+%    - mind-l1-4: Pink (for applications)
+%    - mind-l1-5: Cyan (for future work)
+%    - mind-l1-6: Orange (for evaluation)
+%
+% EXAMPLE - Challenge mindmap with 4 main branches:
+%
+% node[root] {Open Challenges\\in LLM\\Function Calling}
+%     child[concept color=mind-l1-1, grow=150] { 
+%         node {Multi-turn\\Reliability}
+%         child { node {State\\maintenance} }
+%         child { node {Error\\recovery} }
+%     }
+%     child[concept color=mind-l1-2, grow=60] { 
+%         node {Dynamic\\Environment}
+%         child { node {Tool\\discovery} }
+%         child { node {Schema\\evolution} }
+%     }
+%     child[concept color=mind-l1-3, grow=-30] { 
+%         node {Reasoning\\Quality}
+%         child { node {Tool\\selection} }
+%         child { node {Parameter\\inference} }
+%     }
+%     child[concept color=mind-l1-4, grow=-120] { 
+%         node {Operational\\Stability}
+%         child { node {Latency\\control} }
+%         child { node {Cost\\efficiency} }
+%     };
+%
+% IMPORTANT SPACING RULES:
+% - For 4 branches: grow angles = 150, 60, -30, -120 (90° apart)
+% - For 5 branches: grow angles = 162, 90, 18, -54, -126 (72° apart)
+% - For 3 branches: grow angles = 150, 30, -90 (120° apart)

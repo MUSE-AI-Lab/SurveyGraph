@@ -1,0 +1,1203 @@
+{% extends "base.html" %}
+
+{% block title %}个人知识库 - SurveyGraph{% endblock %}
+
+{% block head %}
+<style>
+/* 知识库页面专用样式 */
+.knowledge-base-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.page-header-left h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+}
+
+.page-header-left p {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.page-header-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* 统计卡片 */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.stat-icon.files {
+    background: var(--accent-primary-light);
+    color: var(--accent-primary);
+}
+
+.stat-icon.size {
+    background: var(--accent-success-light);
+    color: var(--accent-success);
+}
+
+.stat-info h3 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 4px 0;
+}
+
+.stat-info p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* 工具栏 */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.search-box {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.search-box input:focus {
+    background: var(--bg-primary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--accent-primary-light);
+}
+
+.search-box i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 批量操作栏 */
+.batch-actions {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--accent-primary-light);
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.batch-actions.show {
+    display: flex;
+}
+
+.batch-actions .selected-count {
+    font-size: 14px;
+    color: var(--accent-primary);
+    font-weight: 500;
+}
+
+/* 文件列表容器 */
+.files-container {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* 文件列表头部 */
+.files-header {
+    display: grid;
+    grid-template-columns: 40px 1fr 120px 150px 100px;
+    gap: 16px;
+    padding: 12px 20px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+@media (max-width: 768px) {
+    .files-header {
+        display: none;
+    }
+}
+
+/* 文件列表项 */
+.file-item {
+    display: grid;
+    grid-template-columns: 40px 1fr 120px 150px 100px;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-light);
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.file-item:last-child {
+    border-bottom: none;
+}
+
+.file-item:hover {
+    background: var(--bg-secondary);
+}
+
+.file-item.selected {
+    background: var(--accent-primary-light);
+}
+
+@media (max-width: 768px) {
+    .file-item {
+        grid-template-columns: 40px 1fr auto;
+        gap: 12px;
+    }
+    
+    .file-item .file-size,
+    .file-item .file-date {
+        display: none;
+    }
+}
+
+.file-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-primary);
+    cursor: pointer;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.file-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--accent-error-light);
+    color: var(--accent-error);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.file-details {
+    min-width: 0;
+}
+
+.file-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+}
+
+.file-title {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-size {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.file-date {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.file-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.file-actions .btn-icon {
+    padding: 6px 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.file-actions .btn-icon:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.file-actions .btn-icon.delete:hover {
+    background: var(--accent-error-light);
+    color: var(--accent-error);
+}
+
+/* 空状态 */
+.empty-state {
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.empty-state-icon {
+    font-size: 48px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+}
+
+.empty-state p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0 0 20px 0;
+}
+
+/* 分页 */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 20px;
+    border-top: 1px solid var(--border-light);
+}
+
+.pagination-btn {
+    padding: 8px 12px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: var(--bg-tertiary);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-btn.active {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: white;
+}
+
+.pagination-info {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0 12px;
+}
+
+/* 上传区域 */
+.upload-zone {
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 40px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg-secondary);
+    margin-bottom: 24px;
+}
+
+.upload-zone:hover,
+.upload-zone.dragover {
+    border-color: var(--accent-primary);
+    background: var(--accent-primary-light);
+}
+
+.upload-zone-icon {
+    font-size: 40px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.upload-zone-text {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.upload-zone-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* 模态框 */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--bg-primary);
+    width: 90%;
+    max-width: 500px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.modal-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-light);
+    background: var(--bg-secondary);
+}
+
+/* 表单字段 */
+.form-field {
+    margin-bottom: 16px;
+}
+
+.form-field:last-child {
+    margin-bottom: 0;
+}
+
+.form-field label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.form-field input,
+.form-field textarea {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.form-field input:focus,
+.form-field textarea:focus {
+    background: var(--bg-primary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--accent-primary-light);
+}
+
+.form-field textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* 提示信息 */
+.info-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: var(--accent-info-light);
+    border-radius: 8px;
+    margin-bottom: 24px;
+}
+
+.info-banner i {
+    color: var(--accent-info);
+    font-size: 18px;
+    margin-top: 2px;
+}
+
+.info-banner-content {
+    flex: 1;
+}
+
+.info-banner-content strong {
+    display: block;
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.info-banner-content p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* 加载状态 */
+.loading-overlay {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.loading-overlay.show {
+    display: flex;
+}
+
+[data-theme="dark"] .loading-overlay {
+    background: rgba(0, 0, 0, 0.5);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="knowledge-base-page">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1><i class="fas fa-book-open" style="margin-right: 12px; color: var(--accent-primary);"></i>个人知识库</h1>
+            <p>管理您的PDF文献资料，可在创建综述时快速复用</p>
+        </div>
+        <div class="page-header-actions">
+            <button class="btn btn-primary" onclick="showUploadModal()">
+                <i class="fas fa-upload"></i> 上传文件
+            </button>
+        </div>
+    </div>
+    
+    <!-- 提示信息 -->
+    <div class="info-banner">
+        <i class="fas fa-info-circle"></i>
+        <div class="info-banner-content">
+            <strong>关于知识库</strong>
+            <p>知识库中的文件可以在创建综述任务时快速选择复用。从知识库"移除"文件只会删除关联记录，不会删除服务器上的实际文件。</p>
+        </div>
+    </div>
+    
+    <!-- 统计卡片 -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon files">
+                <i class="fas fa-file-pdf"></i>
+            </div>
+            <div class="stat-info">
+                <h3 id="totalFiles">0</h3>
+                <p>文件总数</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon size">
+                <i class="fas fa-database"></i>
+            </div>
+            <div class="stat-info">
+                <h3 id="totalSize">0 MB</h3>
+                <p>总存储大小</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="搜索文件名、标题或描述..." onkeyup="handleSearch(event)">
+            </div>
+        </div>
+        <div class="toolbar-right">
+            <button class="btn btn-ghost btn-sm" onclick="refreshFiles()">
+                <i class="fas fa-sync-alt"></i> 刷新
+            </button>
+        </div>
+    </div>
+    
+    <!-- 批量操作栏 -->
+    <div class="batch-actions" id="batchActions">
+        <span class="selected-count"><span id="selectedCount">0</span> 个文件已选中</span>
+        <button class="btn btn-sm btn-ghost" onclick="clearSelection()">取消选择</button>
+        <button class="btn btn-sm btn-error" onclick="batchRemove()">
+            <i class="fas fa-trash"></i> 批量移除
+        </button>
+    </div>
+    
+    <!-- 文件列表 -->
+    <div class="files-container" style="position: relative;">
+        <div class="loading-overlay" id="loadingOverlay">
+            <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--accent-primary);"></i>
+        </div>
+        
+        <div class="files-header">
+            <div>
+                <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+            </div>
+            <div>文件信息</div>
+            <div>大小</div>
+            <div>添加时间</div>
+            <div>操作</div>
+        </div>
+        
+        <div id="filesList">
+            <!-- 文件列表将由 JavaScript 动态生成 -->
+        </div>
+        
+        <!-- 分页 -->
+        <div class="pagination" id="pagination" style="display: none;">
+            <button class="pagination-btn" id="prevPage" onclick="goToPage(currentPage - 1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <span class="pagination-info" id="paginationInfo">第 1 页，共 1 页</span>
+            <button class="pagination-btn" id="nextPage" onclick="goToPage(currentPage + 1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 上传模态框 -->
+<div class="modal-overlay" id="uploadModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3>上传文件到知识库</h3>
+            <button class="modal-close" onclick="closeUploadModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-zone-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-zone-text">点击或拖拽文件到此处上传</div>
+                <div class="upload-zone-hint">仅支持 PDF 格式，单个文件最大 50MB</div>
+            </div>
+            <input type="file" id="fileInput" accept=".pdf" multiple style="display: none;" onchange="handleFileSelect(this.files)">
+            
+            <!-- 上传进度列表 -->
+            <div id="uploadProgress" style="display: none; margin-top: 16px;">
+                <div style="font-size: 14px; font-weight: 500; margin-bottom: 12px;">上传进度</div>
+                <div id="uploadList"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeUploadModal()">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑模态框 -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>编辑文件信息</h3>
+            <button class="modal-close" onclick="closeEditModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editFileId">
+            <div class="form-field">
+                <label>标题</label>
+                <input type="text" id="editTitle" placeholder="输入文件标题">
+            </div>
+            <div class="form-field">
+                <label>描述</label>
+                <textarea id="editDescription" placeholder="输入文件描述"></textarea>
+            </div>
+            <div class="form-field">
+                <label>标签 <span style="font-weight: normal; color: var(--text-muted);">(逗号分隔)</span></label>
+                <input type="text" id="editTags" placeholder="例如：机器学习, 深度学习, NLP">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeEditModal()">取消</button>
+            <button class="btn btn-primary" onclick="saveFileInfo()">保存</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 状态变量
+let currentPage = 1;
+let pageSize = 20;
+let totalPages = 1;
+let totalFiles = 0;
+let selectedFiles = new Set();
+let searchQuery = '';
+let searchTimeout = null;
+
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', () => {
+    loadFiles();
+    setupDragAndDrop();
+});
+
+// 设置拖拽上传
+function setupDragAndDrop() {
+    const uploadZone = document.getElementById('uploadZone');
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadZone.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadZone.addEventListener(eventName, () => {
+            uploadZone.classList.add('dragover');
+        }, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadZone.addEventListener(eventName, () => {
+            uploadZone.classList.remove('dragover');
+        }, false);
+    });
+    
+    uploadZone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        handleFileSelect(files);
+    }, false);
+}
+
+// 加载文件列表
+async function loadFiles() {
+    showLoading(true);
+    
+    try {
+        const response = await api.getKnowledgeBaseFiles(currentPage, pageSize, searchQuery || null);
+        
+        totalFiles = response.total;
+        totalPages = response.total_pages;
+        
+        renderFiles(response.files);
+        updateStats(response.files);
+        updatePagination();
+        
+    } catch (e) {
+        Toast.error(e.message || '加载文件列表失败');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// 渲染文件列表
+function renderFiles(files) {
+    const container = document.getElementById('filesList');
+    
+    if (files.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <h3>知识库为空</h3>
+                <p>上传PDF文件到知识库，方便在创建综述时复用</p>
+                <button class="btn btn-primary" onclick="showUploadModal()">
+                    <i class="fas fa-upload"></i> 上传文件
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = files.map(file => `
+        <div class="file-item ${selectedFiles.has(file.id) ? 'selected' : ''}" data-id="${file.id}">
+            <div class="file-checkbox">
+                <input type="checkbox" ${selectedFiles.has(file.id) ? 'checked' : ''} 
+                       onchange="toggleFileSelection(${file.id}, this.checked)">
+            </div>
+            <div class="file-info">
+                <div class="file-icon">
+                    <i class="fas fa-file-pdf"></i>
+                </div>
+                <div class="file-details">
+                    <div class="file-name" title="${escapeHtml(file.filename)}">${escapeHtml(file.filename)}</div>
+                    <div class="file-title" title="${escapeHtml(file.title || '')}">${escapeHtml(file.title || file.filename)}</div>
+                </div>
+            </div>
+            <div class="file-size">${formatFileSize(file.file_size)}</div>
+            <div class="file-date">${formatDate(file.created_at)}</div>
+            <div class="file-actions">
+                <button class="btn-icon" onclick="editFile(${file.id})" title="编辑">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-icon delete" onclick="removeFile(${file.id}, '${escapeHtml(file.filename)}')" title="移除">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// 更新统计信息
+function updateStats(files) {
+    document.getElementById('totalFiles').textContent = totalFiles;
+    
+    // 计算总大小
+    let totalSize = 0;
+    files.forEach(f => totalSize += f.file_size || 0);
+    document.getElementById('totalSize').textContent = formatFileSize(totalSize);
+}
+
+// 更新分页
+function updatePagination() {
+    const pagination = document.getElementById('pagination');
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
+    const info = document.getElementById('paginationInfo');
+    
+    if (totalPages <= 1) {
+        pagination.style.display = 'none';
+        return;
+    }
+    
+    pagination.style.display = 'flex';
+    prevBtn.disabled = currentPage <= 1;
+    nextBtn.disabled = currentPage >= totalPages;
+    info.textContent = `第 ${currentPage} 页，共 ${totalPages} 页`;
+}
+
+// 跳转页面
+function goToPage(page) {
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    loadFiles();
+}
+
+// 搜索处理
+function handleSearch(event) {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        searchQuery = event.target.value.trim();
+        currentPage = 1;
+        loadFiles();
+    }, 300);
+}
+
+// 刷新文件列表
+function refreshFiles() {
+    loadFiles();
+    Toast.success('已刷新');
+}
+
+// 显示/隐藏加载状态
+function showLoading(show) {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.classList.toggle('show', show);
+    }
+}
+
+// 文件选择
+function toggleFileSelection(fileId, checked) {
+    if (checked) {
+        selectedFiles.add(fileId);
+    } else {
+        selectedFiles.delete(fileId);
+    }
+    updateBatchActions();
+    updateSelectAllState();
+}
+
+// 全选/取消全选
+function toggleSelectAll(checkbox) {
+    const items = document.querySelectorAll('.file-item');
+    items.forEach(item => {
+        const id = parseInt(item.dataset.id);
+        const cb = item.querySelector('input[type="checkbox"]');
+        if (checkbox.checked) {
+            selectedFiles.add(id);
+            cb.checked = true;
+            item.classList.add('selected');
+        } else {
+            selectedFiles.delete(id);
+            cb.checked = false;
+            item.classList.remove('selected');
+        }
+    });
+    updateBatchActions();
+}
+
+// 更新全选状态
+function updateSelectAllState() {
+    const selectAll = document.getElementById('selectAll');
+    const items = document.querySelectorAll('.file-item');
+    const allSelected = items.length > 0 && Array.from(items).every(item => selectedFiles.has(parseInt(item.dataset.id)));
+    selectAll.checked = allSelected;
+}
+
+// 更新批量操作栏
+function updateBatchActions() {
+    const batchActions = document.getElementById('batchActions');
+    const selectedCount = document.getElementById('selectedCount');
+    
+    if (selectedFiles.size > 0) {
+        batchActions.classList.add('show');
+        selectedCount.textContent = selectedFiles.size;
+    } else {
+        batchActions.classList.remove('show');
+    }
+    
+    // 更新文件项的选中样式
+    document.querySelectorAll('.file-item').forEach(item => {
+        const id = parseInt(item.dataset.id);
+        item.classList.toggle('selected', selectedFiles.has(id));
+    });
+}
+
+// 清除选择
+function clearSelection() {
+    selectedFiles.clear();
+    document.querySelectorAll('.file-item input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.getElementById('selectAll').checked = false;
+    updateBatchActions();
+}
+
+// 批量移除
+async function batchRemove() {
+    if (selectedFiles.size === 0) return;
+    
+    if (!confirm(`确定要从知识库中移除 ${selectedFiles.size} 个文件吗？\n\n注意：这只会删除知识库中的关联记录，不会删除实际文件。`)) {
+        return;
+    }
+    
+    try {
+        await api.batchRemoveFromKnowledgeBase(Array.from(selectedFiles));
+        Toast.success(`已移除 ${selectedFiles.size} 个文件`);
+        selectedFiles.clear();
+        loadFiles();
+    } catch (e) {
+        Toast.error(e.message || '批量移除失败');
+    }
+}
+
+// 移除单个文件
+async function removeFile(fileId, filename) {
+    if (!confirm(`确定要从知识库中移除 "${filename}" 吗？\n\n注意：这只会删除知识库中的关联记录，不会删除实际文件。`)) {
+        return;
+    }
+    
+    try {
+        await api.removeFromKnowledgeBase(fileId);
+        Toast.success('文件已从知识库移除');
+        selectedFiles.delete(fileId);
+        loadFiles();
+    } catch (e) {
+        Toast.error(e.message || '移除失败');
+    }
+}
+
+// 编辑文件信息
+async function editFile(fileId) {
+    try {
+        const file = await api.getKnowledgeBaseFile(fileId);
+        
+        document.getElementById('editFileId').value = fileId;
+        document.getElementById('editTitle').value = file.title || '';
+        document.getElementById('editDescription').value = file.description || '';
+        document.getElementById('editTags').value = file.tags || '';
+        
+        document.getElementById('editModal').classList.add('show');
+    } catch (e) {
+        Toast.error(e.message || '获取文件信息失败');
+    }
+}
+
+// 保存文件信息
+async function saveFileInfo() {
+    const fileId = document.getElementById('editFileId').value;
+    const title = document.getElementById('editTitle').value.trim();
+    const description = document.getElementById('editDescription').value.trim();
+    const tags = document.getElementById('editTags').value.trim();
+    
+    try {
+        await api.updateKnowledgeBaseFile(fileId, {
+            title: title || null,
+            description: description || null,
+            tags: tags || null
+        });
+        
+        Toast.success('文件信息已更新');
+        closeEditModal();
+        loadFiles();
+    } catch (e) {
+        Toast.error(e.message || '保存失败');
+    }
+}
+
+// 关闭编辑模态框
+function closeEditModal() {
+    document.getElementById('editModal').classList.remove('show');
+}
+
+// 显示上传模态框
+function showUploadModal() {
+    document.getElementById('uploadModal').classList.add('show');
+    document.getElementById('uploadProgress').style.display = 'none';
+    document.getElementById('uploadList').innerHTML = '';
+}
+
+// 关闭上传模态框
+function closeUploadModal() {
+    document.getElementById('uploadModal').classList.remove('show');
+}
+
+// 处理文件选择
+async function handleFileSelect(files) {
+    if (!files || files.length === 0) return;
+    
+    const uploadProgress = document.getElementById('uploadProgress');
+    const uploadList = document.getElementById('uploadList');
+    
+    uploadProgress.style.display = 'block';
+    
+    // 过滤非 PDF 文件
+    const pdfFiles = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+    if (pdfFiles.length !== files.length) {
+        Toast.warning('已过滤非 PDF 格式的文件');
+    }
+    
+    if (pdfFiles.length === 0) {
+        Toast.error('请选择 PDF 文件');
+        return;
+    }
+    
+    // 显示上传列表
+    uploadList.innerHTML = pdfFiles.map((file, index) => `
+        <div class="upload-item" id="upload-item-${index}" style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 8px;">
+            <i class="fas fa-file-pdf" style="color: var(--accent-error); font-size: 18px;"></i>
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 14px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(file.name)}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">${formatFileSize(file.size)}</div>
+            </div>
+            <div class="upload-status" id="upload-status-${index}" style="font-size: 13px; color: var(--text-muted);">
+                <i class="fas fa-spinner fa-spin"></i> 上传中...
+            </div>
+        </div>
+    `).join('');
+    
+    // 逐个上传文件
+    for (let i = 0; i < pdfFiles.length; i++) {
+        const file = pdfFiles[i];
+        const statusEl = document.getElementById(`upload-status-${i}`);
+        
+        try {
+            // 1. 先上传到共享目录
+            const uploadResult = await api.uploadPdf(file);
+            
+            // 2. 添加到知识库
+            await api.addToKnowledgeBase({
+                filename: uploadResult.filename,
+                file_path: uploadResult.path,
+                file_size: uploadResult.size,
+                title: file.name.replace(/\.pdf$/i, '')
+            });
+            
+            statusEl.innerHTML = '<i class="fas fa-check" style="color: var(--accent-success);"></i> 完成';
+            statusEl.style.color = 'var(--accent-success)';
+            
+        } catch (e) {
+            statusEl.innerHTML = `<i class="fas fa-times" style="color: var(--accent-error);"></i> ${e.message || '失败'}`;
+            statusEl.style.color = 'var(--accent-error)';
+        }
+    }
+    
+    // 刷新文件列表
+    loadFiles();
+    Toast.success('上传完成');
+    
+    // 清空文件输入
+    document.getElementById('fileInput').value = '';
+}
+
+// 工具函数：格式化文件大小
+function formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+// 工具函数：格式化日期
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+}
+
+// 工具函数：HTML 转义
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 点击模态框外部关闭
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-overlay')) {
+        e.target.classList.remove('show');
+    }
+});
+
+// ESC 键关闭模态框
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.show').forEach(modal => {
+            modal.classList.remove('show');
+        });
+    }
+});
+</script>
+{% endblock %}

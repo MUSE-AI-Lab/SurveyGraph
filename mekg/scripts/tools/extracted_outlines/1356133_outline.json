@@ -1,0 +1,302 @@
+{
+  "paper_title": "A Comprehensive Survey on Multimodal RAG: All Combinations of Modalities as Input and Output",
+  "paper_topic": "Multimodal Retrieval-Augmented Generation (MM-RAG)",
+  "total_sections": 9,
+  "outline_pattern": "Taxonomy-driven followed by a process-oriented workflow analysis",
+  "sections": [
+    {
+      "number": "1",
+      "title": "Introduction",
+      "description": "Introduces the evolution of Large Language Models (LLMs) to Multimodal LLMs (MLLMs) and the necessity of Multimodal RAG (MM-RAG) to mitigate hallucinations. It highlights the limitations of existing surveys, presents the paper's unique contribution (covering all modality combinations), and outlines the paper's structure.",
+      "subsections": []
+    },
+    {
+      "number": "2",
+      "title": "Problem Formulation",
+      "description": "Provides the mathematical definition of the MM-RAG framework. It defines the three core components: the Knowledge Base (D), the Retriever (R), and the Generator (G), and formulates the optimization objective of minimizing the difference between generated output and ground truth.",
+      "subsections": []
+    },
+    {
+      "number": "3",
+      "title": "Taxonomy",
+      "description": "Presents a comprehensive taxonomy matrix based on 54 possible input-output modality combinations. It analyzes existing work within these combinations and identifies unexplored areas.",
+      "subsections": [
+        {
+          "number": "3.1",
+          "title": "Input",
+          "description": "Analyzes encoders and processing methods for various input modalities used to query the knowledge base.",
+          "subsections": [
+            {
+              "number": "3.1.1",
+              "title": "Text",
+              "description": "Discusses text as the basic modality for retrieval, using models like BERT and T5.",
+              "subsections": []
+            },
+            {
+              "number": "3.1.2",
+              "title": "Image",
+              "description": "Covers image inputs using encoders like ViT, ResNet, and Vision-Language Models (CLIP, BLIP) for alignment.",
+              "subsections": []
+            },
+            {
+              "number": "3.1.3",
+              "title": "Audio",
+              "description": "Examines audio inputs using models like Wav2vec, HuBERT, and CLAP.",
+              "subsections": []
+            },
+            {
+              "number": "3.1.4",
+              "title": "Video",
+              "description": "Discusses video inputs, utilizing Large Video Language Models or converting video to text/images for processing.",
+              "subsections": []
+            },
+            {
+              "number": "3.1.5",
+              "title": "Code",
+              "description": "Reviews code as a modality, using specialized encoders like CodeT5 and GraphCodeBERT.",
+              "subsections": []
+            },
+            {
+              "number": "3.1.6",
+              "title": "Structured Data",
+              "description": "Discusses knowledge graphs and tables as inputs for tasks like KBQA and Table QA.",
+              "subsections": []
+            },
+            {
+              "number": "3.1.7",
+              "title": "Others",
+              "description": "Briefly touches on other modalities like time-series data forecasting.",
+              "subsections": []
+            }
+          ]
+        },
+        {
+          "number": "3.2",
+          "title": "Output",
+          "description": "Analyzes the generation capabilities for different output modalities based on retrieved information.",
+          "subsections": [
+            {
+              "number": "3.2.1",
+              "title": "Text",
+              "description": "Covers text generation from multimodal inputs (e.g., image captioning, VQA) using LLMs and MLLMs.",
+              "subsections": []
+            },
+            {
+              "number": "3.2.2",
+              "title": "Image",
+              "description": "Discusses image generation using GANs, diffusion models, and VLMs augmented by retrieval.",
+              "subsections": []
+            },
+            {
+              "number": "3.2.3",
+              "title": "Audio",
+              "description": "Reviews audio generation (TTS, music) using spectral generation or large audio models.",
+              "subsections": []
+            },
+            {
+              "number": "3.2.4",
+              "title": "Video",
+              "description": "Discusses the nascent field of RAG-based video generation using diffusion models.",
+              "subsections": []
+            },
+            {
+              "number": "3.2.5",
+              "title": "3D data",
+              "description": "Covers text-to-3D generation using retrieved 3D assets or motion samples.",
+              "subsections": []
+            },
+            {
+              "number": "3.2.6",
+              "title": "Code",
+              "description": "Examines code generation and completion using retrieved documentation and snippets.",
+              "subsections": []
+            }
+          ]
+        },
+        {
+          "number": "3.3",
+          "title": "Insights from the Taxonomy",
+          "description": "Summarizes the findings from the taxonomy matrix, highlighting empty cells as opportunities for future research and summarizing common models for core components.",
+          "subsections": []
+        }
+      ]
+    },
+    {
+      "number": "4",
+      "title": "Workflow",
+      "description": "Deconstructs the MM-RAG system into four essential operational stages: Pre-retrieval, Retrieval, Augmentation, and Generation.",
+      "subsections": [
+        {
+          "number": "4.1",
+          "title": "Pre-Retrieval",
+          "description": "Focuses on preparing the data and the query before the actual search occurs.",
+          "subsections": [
+            {
+              "number": "4.1.1",
+              "title": "Knowledge Base Preparation",
+              "description": "Details data preprocessing, chunking, and organization methods (Uni-modal Embedding, Pair-wise Storage, Unified Embedding, Graph Construction).",
+              "subsections": []
+            },
+            {
+              "number": "4.1.2",
+              "title": "Query Preparation",
+              "description": "Discusses techniques to refine inputs: Query Expansion, Rewriting, Transformation, Dropout, and Multi-Query strategies.",
+              "subsections": []
+            }
+          ]
+        },
+        {
+          "number": "4.2",
+          "title": "Retrieval",
+          "description": "Analyzes the core retrieval mechanisms used to fetch relevant documents.",
+          "subsections": [
+            {
+              "number": "4.2.1",
+              "title": "Retriever",
+              "description": "Compares Sparse Retrievers (BM25), Dense Retrievers (CLIP, DPR), and other specialized retrievers.",
+              "subsections": []
+            },
+            {
+              "number": "4.2.2",
+              "title": "Retrieval Strategy",
+              "description": "Reviews strategies like Hybrid Retrieval and Hierarchical Retrieval.",
+              "subsections": []
+            },
+            {
+              "number": "4.2.3",
+              "title": "Retrieval Timing",
+              "description": "Discusses when retrieval occurs: Single, Iterative, or Adaptive Retrieval.",
+              "subsections": []
+            }
+          ]
+        },
+        {
+          "number": "4.3",
+          "title": "Augmentation",
+          "description": "Describes how retrieved data is processed before being fed to the generator.",
+          "subsections": [
+            {
+              "number": "4.3.1",
+              "title": "Context Reranking",
+              "description": "Re-scoring retrieved documents to improve precision.",
+              "subsections": []
+            },
+            {
+              "number": "4.3.2",
+              "title": "Context Selection",
+              "description": "Filtering irrelevant or redundant information.",
+              "subsections": []
+            },
+            {
+              "number": "4.3.3",
+              "title": "Context Compression",
+              "description": "Reducing dimensionality or size of embeddings to fit context windows.",
+              "subsections": []
+            },
+            {
+              "number": "4.3.4",
+              "title": "Noise Injection",
+              "description": "Adding noise during training to improve model robustness.",
+              "subsections": []
+            },
+            {
+              "number": "4.3.5",
+              "title": "Context Fusion",
+              "description": "Methods to integrate query and documents: Fusion by Concatenation (FiE, FiD) and Fusion by Latent Aggregation.",
+              "subsections": []
+            }
+          ]
+        },
+        {
+          "number": "4.4",
+          "title": "Generation",
+          "description": "Details the generator architecture (Modality Encoder, Projectors, LLM Backbone, Modality Generator).",
+          "subsections": [
+            {
+              "number": "4.4.1",
+              "title": "Enhancement Approaches",
+              "description": "Discusses Prompt Engineering and MLLM Fine-tuning to improve generation quality.",
+              "subsections": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": "5",
+      "title": "Training Strategies",
+      "description": "Categorizes approaches for training MM-RAG systems based on parameter updates.",
+      "subsections": [
+        {
+          "number": "5.1",
+          "title": "Parameter-Frozen Strategies",
+          "description": "Discusses using off-the-shelf models without fine-tuning to reduce costs.",
+          "subsections": []
+        },
+        {
+          "number": "5.2",
+          "title": "Parameter-Trainable Strategies",
+          "description": "Covers methods that update model parameters for better alignment.",
+          "subsections": [
+            {
+              "number": "5.2.1",
+              "title": "Modular Training",
+              "description": "Independent optimization of components (Retriever, Generator, Extra Layers).",
+              "subsections": []
+            },
+            {
+              "number": "5.2.2",
+              "title": "End-to-end Training",
+              "description": "Joint training of retriever and generator for holistic optimization.",
+              "subsections": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": "6",
+      "title": "Evaluation and Benchmarks",
+      "description": "Discusses metrics and methods for assessing MM-RAG performance.",
+      "subsections": [
+        {
+          "number": "6.1",
+          "title": "Evaluation of the Retriever",
+          "description": "Focuses on Retrieval Relevance and Retrieval Quality metrics.",
+          "subsections": []
+        }
+      ]
+    },
+    {
+      "number": "7",
+      "title": "Applications",
+      "description": "Discusses various applications of MM-RAG (inferred from Introduction roadmap).",
+      "subsections": []
+    },
+    {
+      "number": "8",
+      "title": "Future Directions",
+      "description": "Explores future research opportunities in the field (inferred from Introduction roadmap).",
+      "subsections": []
+    },
+    {
+      "number": "9",
+      "title": "Conclusion",
+      "description": "Concluding remarks (inferred from Introduction roadmap).",
+      "subsections": []
+    }
+  ],
+  "structural_insights": {
+    "organization_logic": "The paper follows a classic engineering survey structure: Definition -> Taxonomy (What) -> Workflow (How) -> Training (Build) -> Evaluation (Measure). This logical flow allows readers to first understand the landscape before diving into technical implementation details.",
+    "transition_strategy": "The paper uses the Taxonomy Matrix (Table 1) as a central pivot. It first defines the matrix to categorize existing literature, then uses the specific modality combinations identified in the matrix to structure the detailed technical discussions in the subsequent sections.",
+    "depth_analysis": "The paper shows significant depth in the 'Workflow' section (Section 4), breaking it down into four distinct stages with multiple sub-strategies. This contrasts with the 'Taxonomy' section which is broad but shallower, serving as an index. The inclusion of 'Pre-retrieval' and 'Augmentation' adds necessary granularity often missed in simpler RAG surveys.",
+    "key_strengths": [
+      "Comprehensive Taxonomy Matrix covering 54 input-output combinations.",
+      "Clear separation of the RAG workflow into four distinct, actionable stages.",
+      "Detailed breakdown of specific encoders and generators for every modality type.",
+      "Structured comparison of training strategies (Frozen vs. Trainable)."
+    ]
+  },
+  "source_file": "1356133.pdf",
+  "extraction_time": "2025-12-23T11:32:10.294253"
+}

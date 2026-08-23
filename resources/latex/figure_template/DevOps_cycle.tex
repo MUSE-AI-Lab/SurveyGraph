@@ -1,0 +1,78 @@
+\documentclass[border=6pt]{standalone}
+\usepackage{wheelchart}
+\usetikzlibrary{decorations.text}
+\begin{document}
+\begin{tikzpicture}
+\sffamily
+\def\r{1}%inner radius
+\def\R{2}%outer radius
+\def\gap{0.05}
+\definecolor{DevOpsLightBlue}{RGB}{153,204,255}
+\definecolor{DevOpsDarkBlue}{RGB}{0,111,192}
+\pgfkeys{
+  /wheelchart,
+  arc data=\WCvarA,
+  arc data angle shift=10,
+  arc data pos=0.5,
+  arc data style={text color=white},
+  data=,
+  gap=\gap,
+  radius={\r}{\R},
+  slices arrow={1}{0},
+  value=1
+}
+\wheelchart[
+  arc data dir={\WCmidangle<180?-1:1},
+  at={({-(\r+\R)/sqrt(2)},0)},
+  domain=45:315,
+  middle=Dev,
+  middle style={DevOpsLightBlue,font=\huge},
+  slices style=DevOpsLightBlue
+]{%
+  CODE,
+  BUILD,
+  TEST%
+}
+% \wheelchart[
+%   arc data dir={\WCmidangle<180?1:-1},
+%   at={({(\r+\R)/sqrt(2)},0)},
+%   middle=Ops,
+%   middle style={DevOpsDarkBlue,font=\huge},
+%   slices style=DevOpsDarkBlue,
+%   start angle=135,
+%   total angle=270
+% ]{%
+%   DEPLOY,
+%   OPERATE,
+%   MONITOR%
+% }
+% \pgfkeys{
+%   /wheelchart,
+%   arc data angle shift=0.2,
+%   domain=\gap-(\r+\R)/2:(\r+\R)/2-\gap,%the key gap does not apply if a plot is used thus \gap has to be taken into account
+%   radius={(\r-\R)/2}{(\R-\r)/2},
+%   samples=2%the plots below require only 2 samples and specifying this key reduces the file size
+% }
+% \wheelchart[
+%   plot={{#1*cos(45)+#2*cos(135)},{#1*sin(45)+#2*sin(135)}},
+%   slices style=DevOpsDarkBlue
+% ]{%
+%   RELEASE%
+% }
+% \wheelchart[
+%   arc data dir=-1,
+%   plot={{#1*cos(135)+#2*cos(45)},{#1*sin(135)+#2*sin(45)}},
+%   slices end arc{1}={0}{0},
+%   slices start arc{3}={0}{0},
+%   slices style=DevOpsLightBlue,
+%   slices style{2}={fill=none},
+%   value{list}={\r-2*\gap,\R-\r+2*\gap,\r-2*\gap}
+%   %the length is \r+\R-2*\gap
+%   %the middle overlapping part has thickness \R-\r and including the gap this is \R-\r+2*\gap
+% ]{%
+%   ,
+%   ,
+%   PLAN%
+% }
+\end{tikzpicture}
+\end{document}

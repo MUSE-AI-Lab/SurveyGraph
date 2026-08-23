@@ -1,0 +1,1250 @@
+
+{% extends "base.html" %}
+
+{% block title %}任务结果 - SurveyGraph{% endblock %}
+
+{% block head %}
+<!-- Marked.js 和 ECharts 已在 base.html 中加载，无需重复加载 -->
+<!-- PDF.js 库 - 使用 BootCDN 国内加速 -->
+<script src="https://cdn.bootcdn.net/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+    // 设置 PDF.js worker - 使用 BootCDN 国内加速
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.bootcdn.net/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+</script>
+<style>
+/* 任务结果页面专用样式 */
+.task-results-page {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* 结果头部信息 */
+.results-header-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    margin-bottom: 24px;
+}
+
+.results-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.results-title-section h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+}
+
+.results-topic {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+/* 下载按钮组 */
+.download-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-weight: 500;
+    text-decoration: none;
+    transition: all var(--transition-fast);
+}
+
+.download-btn:hover {
+    border-color: var(--accent-primary);
+    background: var(--accent-primary-light);
+    color: var(--accent-primary);
+}
+
+.download-btn.primary {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: white;
+}
+
+.download-btn.primary:hover {
+    background: var(--accent-primary-dark);
+}
+
+.download-btn i {
+    font-size: 18px;
+}
+
+/* 结果统计 */
+.results-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    padding: 24px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent-primary);
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* 内容标签页 */
+.content-tabs {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.tabs-header {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    overflow-x: auto;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.tab-btn.active {
+    color: var(--accent-primary);
+    border-bottom-color: var(--accent-primary);
+    background: var(--bg-primary);
+}
+
+.tab-btn i {
+    font-size: 16px;
+}
+
+.tab-panel {
+    display: none;
+    padding: 24px;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+/* PDF 预览 */
+.pdf-viewer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.pdf-actions {
+    display: flex;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.pdf-pagination {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.pdf-pagination button {
+    padding: 8px 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.pdf-pagination button:hover:not(:disabled) {
+    background: var(--bg-hover);
+    border-color: var(--accent-primary);
+}
+
+.pdf-pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pdf-pagination span {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.pdf-canvas-container {
+    width: 100%;
+    overflow: auto;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    text-align: center;
+    min-height: 600px;
+    max-height: 900px;
+}
+
+.pdf-canvas-container canvas {
+    max-width: 100%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.pdf-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    color: var(--text-muted);
+}
+
+.pdf-loading i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.pdf-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    color: var(--accent-error);
+}
+
+.pdf-error i {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+/* Markdown 预览 */
+.markdown-viewer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.markdown-actions {
+    display: flex;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.markdown-content {
+    padding: 24px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    line-height: 1.8;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4 {
+    margin-top: 24px;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.markdown-content h1 { font-size: 24px; }
+.markdown-content h2 { font-size: 20px; }
+.markdown-content h3 { font-size: 18px; }
+.markdown-content h4 { font-size: 16px; }
+
+.markdown-content p {
+    margin-bottom: 16px;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+    margin-bottom: 16px;
+    padding-left: 24px;
+}
+
+.markdown-content code {
+    background: var(--bg-tertiary);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 13px;
+}
+
+.markdown-content pre {
+    background: var(--bg-tertiary);
+    padding: 16px;
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+}
+
+.markdown-content pre code {
+    background: transparent;
+    padding: 0;
+}
+
+.markdown-content blockquote {
+    border-left: 4px solid var(--accent-primary);
+    padding-left: 16px;
+    margin: 16px 0;
+    color: var(--text-secondary);
+}
+
+.markdown-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+}
+
+.markdown-content th,
+.markdown-content td {
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    text-align: left;
+}
+
+.markdown-content th {
+    background: var(--bg-tertiary);
+    font-weight: 600;
+}
+
+/* 知识图谱 */
+.mekg-viewer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.mekg-actions {
+    display: flex;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.graph-container {
+    height: 600px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+/* 评估报告 */
+.evaluation-viewer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.evaluation-lang-selector {
+    display: flex;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.lang-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.lang-btn:hover {
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+}
+
+.lang-btn.active {
+    background: var(--accent-primary-light);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.lang-btn i {
+    font-size: 16px;
+}
+
+.evaluation-iframe-container {
+    width: 100%;
+    height: 800px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: white;
+}
+
+.evaluation-iframe-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.evaluation-content {
+    padding: 24px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    line-height: 1.8;
+}
+
+/* 可视化图片 */
+.visualization-viewer {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.visualization-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.visualization-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.visualization-item-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.visualization-item-body {
+    padding: 20px;
+    text-align: center;
+}
+
+.visualization-item-body img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+}
+
+/* 空状态 */
+.empty-results {
+    text-align: center;
+    padding: 60px;
+    color: var(--text-muted);
+}
+
+.empty-results i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-results h3 {
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .results-header-top {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .download-actions {
+        width: 100%;
+    }
+    
+    .download-btn {
+        flex: 1;
+        justify-content: center;
+    }
+    
+    .results-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .tabs-header {
+        flex-wrap: nowrap;
+        overflow-x: auto; /* 允许横向滚动 */
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .tab-btn {
+        padding: 12px 16px;
+        font-size: 13px;
+        flex-shrink: 0; /* 防止按钮被压缩 */
+    }
+    
+    .pdf-frame {
+        height: 500px;
+    }
+    
+    .pdf-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .pdf-pagination {
+        margin-left: 0;
+        justify-content: center;
+        margin-top: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .results-stats {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="task-results-page">
+    <div class="page-header">
+        <a href="javascript:history.back()" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            返回任务详情
+        </a>
+    </div>
+    
+    <div id="results-content">
+        <div class="loading-placeholder" style="text-align: center; padding: 60px;">
+            <div class="spinner"></div>
+            <p style="margin-top: 16px; color: var(--text-muted);">加载任务结果...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 页面级变量
+let pageCurrentTaskId = null;
+
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', async () => {
+    const pathParts = window.location.pathname.split('/');
+    // URL 格式: /task/{task_id}/results
+    const taskIdIndex = pathParts.indexOf('task') + 1;
+    const taskId = pathParts[taskIdIndex];
+    
+    if (taskId && taskId !== 'results') {
+        pageCurrentTaskId = taskId;
+        await loadTaskResults(taskId);
+    } else {
+        document.getElementById('results-content').innerHTML = `
+            <div class="empty-results">
+                <i class="fas fa-exclamation-circle"></i>
+                <h3>无效的任务ID</h3>
+                <p>请从任务详情页面进入查看结果</p>
+                <a href="/dashboard" class="btn btn-primary" style="margin-top: 16px;">返回任务列表</a>
+            </div>
+        `;
+    }
+});
+
+async function loadTaskResults(taskId) {
+    const container = document.getElementById('results-content');
+    
+    try {
+        // 获取任务信息和结果
+        const [task, results] = await Promise.all([
+            api.getTask(taskId),
+            api.getTaskResults(taskId)
+        ]);
+        
+        // 检查任务是否完成
+        if (task.status !== 'completed') {
+            container.innerHTML = `
+                <div class="empty-results">
+                    <i class="fas fa-hourglass-half"></i>
+                    <h3>任务尚未完成</h3>
+                    <p>任务当前状态: ${getStatusText(task.status)}</p>
+                    <a href="/task/${taskId}" class="btn btn-primary" style="margin-top: 16px;">查看任务详情</a>
+                </div>
+            `;
+            return;
+        }
+        
+        renderResultsContent(task, results);
+        
+    } catch (e) {
+        container.innerHTML = `
+            <div class="empty-results">
+                <i class="fas fa-exclamation-circle"></i>
+                <h3>加载失败</h3>
+                <p>${escapeHtml(e.message)}</p>
+                <button class="btn btn-primary" onclick="loadTaskResults('${taskId}')" style="margin-top: 16px;">
+                    <i class="fas fa-redo"></i> 重试
+                </button>
+            </div>
+        `;
+    }
+}
+
+function renderResultsContent(task, results) {
+    const taskId = task.task_id;
+    const container = document.getElementById('results-content');
+    
+    // 构建下载按钮
+    let downloadButtons = '';
+    if (results.pdf_url) {
+        downloadButtons += `
+            <a href="${results.pdf_url}" download class="download-btn primary">
+                <i class="fas fa-file-pdf"></i> 下载 PDF
+            </a>
+        `;
+    }
+    if (results.latex_url) {
+        downloadButtons += `
+            <a href="${results.latex_url}" download class="download-btn">
+                <i class="fas fa-file-code"></i> 下载 LaTeX
+            </a>
+        `;
+    }
+    if (results.markdown_content) {
+        downloadButtons += `
+            <button class="download-btn" onclick="downloadMarkdown('${taskId}')">
+                <i class="fab fa-markdown"></i> 下载 Markdown
+            </button>
+        `;
+    }
+    
+    // 构建统计信息
+    const stats = `
+        <div class="results-stats">
+            <div class="stat-item">
+                <div class="stat-value">${task.papers_count || '-'}</div>
+                <div class="stat-label">收录论文</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">${task.sections_count || '-'}</div>
+                <div class="stat-label">章节数量</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">${results.word_count || '-'}</div>
+                <div class="stat-label">总字数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">${results.reference_count || task.papers_count || '-'}</div>
+                <div class="stat-label">参考文献</div>
+            </div>
+        </div>
+    `;
+    
+    // 构建标签页
+    let tabsHtml = '<div class="tabs-header">';
+    let panelsHtml = '';
+    let tabIndex = 0;
+    
+    // PDF 标签页
+    if (results.pdf_url) {
+        tabsHtml += `
+            <button class="tab-btn ${tabIndex === 0 ? 'active' : ''}" data-tab="pdf" onclick="switchResultsTab('pdf'); initPdfViewer()">
+                <i class="fas fa-file-pdf"></i> PDF 预览
+            </button>
+        `;
+        panelsHtml += `
+            <div class="tab-panel ${tabIndex === 0 ? 'active' : ''}" id="panel-pdf">
+                <div class="pdf-viewer">
+                    <div class="pdf-actions">
+                        <a href="${results.pdf_url}" download class="btn btn-primary">
+                            <i class="fas fa-download"></i> 下载 PDF
+                        </a>
+                        <a href="${results.pdf_url}" target="_blank" class="btn btn-secondary">
+                            <i class="fas fa-external-link-alt"></i> 新窗口打开
+                        </a>
+                        <div class="pdf-pagination">
+                            <button onclick="pdfPrevPage()" id="pdf-prev-btn" disabled>
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <span id="pdf-page-info">第 1 页 / 共 - 页</span>
+                            <button onclick="pdfNextPage()" id="pdf-next-btn" disabled>
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="pdf-canvas-container" id="pdf-canvas-container">
+                        <div class="pdf-loading">
+                            <i class="fas fa-spinner"></i>
+                            <p>正在加载 PDF...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        tabIndex++;
+    }
+    
+    // Markdown 标签页
+    if (results.markdown_content) {
+        tabsHtml += `
+            <button class="tab-btn ${tabIndex === 0 ? 'active' : ''}" data-tab="markdown" onclick="switchResultsTab('markdown')">
+                <i class="fab fa-markdown"></i> Markdown
+            </button>
+        `;
+        panelsHtml += `
+            <div class="tab-panel ${tabIndex === 0 ? 'active' : ''}" id="panel-markdown">
+                <div class="markdown-viewer">
+                    <div class="markdown-actions">
+                        <button class="btn btn-primary" onclick="downloadMarkdown('${taskId}')">
+                            <i class="fas fa-download"></i> 下载
+                        </button>
+                        <button class="btn btn-secondary" onclick="copyMarkdown()">
+                            <i class="fas fa-copy"></i> 复制
+                        </button>
+                    </div>
+                    <div id="markdown-content" class="markdown-content">
+                        ${typeof marked !== 'undefined' ? marked.parse(results.markdown_content) : escapeHtml(results.markdown_content)}
+                    </div>
+                    <textarea id="markdown-raw" style="display:none">${escapeHtml(results.markdown_content)}</textarea>
+                </div>
+            </div>
+        `;
+        tabIndex++;
+    }
+    
+    // 知识图谱标签页
+    if (results.mekg_data) {
+        tabsHtml += `
+            <button class="tab-btn ${tabIndex === 0 ? 'active' : ''}" data-tab="mekg" onclick="switchResultsTab('mekg'); initMekgGraph()">
+                <i class="fas fa-project-diagram"></i> 知识图谱
+            </button>
+        `;
+        panelsHtml += `
+            <div class="tab-panel ${tabIndex === 0 ? 'active' : ''}" id="panel-mekg">
+                <div class="mekg-viewer">
+                    <div class="mekg-actions">
+                        <a href="/api/tasks/${taskId}/hierarchy_visualization" target="_blank" class="btn btn-primary">
+                            <i class="fas fa-sitemap"></i> 查看层级图谱 (全屏)
+                        </a>
+                    </div>
+                    <div id="mekg-graph" class="graph-container"></div>
+                </div>
+            </div>
+        `;
+        tabIndex++;
+    }
+    
+    // 评估报告标签页 - 支持双语 HTML 报告
+    if (results.evaluation_report_zh_url || results.evaluation_report_en_url || results.evaluation_report) {
+        tabsHtml += `
+            <button class="tab-btn ${tabIndex === 0 ? 'active' : ''}" data-tab="evaluation" onclick="switchResultsTab('evaluation')">
+                <i class="fas fa-chart-bar"></i> 评估报告
+            </button>
+        `;
+        
+        // 如果有双语 HTML 报告
+        if (results.evaluation_report_zh_url || results.evaluation_report_en_url) {
+            const defaultLang = results.evaluation_report_zh_url ? 'zh' : 'en';
+            const defaultUrl = results.evaluation_report_zh_url || results.evaluation_report_en_url;
+            
+            panelsHtml += `
+                <div class="tab-panel ${tabIndex === 0 ? 'active' : ''}" id="panel-evaluation">
+                    <div class="evaluation-viewer">
+                        <div class="evaluation-lang-selector">
+                            ${results.evaluation_report_zh_url ? `
+                            <button class="lang-btn ${defaultLang === 'zh' ? 'active' : ''}" onclick="switchEvaluationLang('zh')" data-lang="zh">
+                                <i class="fas fa-language"></i> 中文报告
+                            </button>
+                            ` : ''}
+                            ${results.evaluation_report_en_url ? `
+                            <button class="lang-btn ${defaultLang === 'en' ? 'active' : ''}" onclick="switchEvaluationLang('en')" data-lang="en">
+                                <i class="fas fa-globe"></i> English Report
+                            </button>
+                            ` : ''}
+                        </div>
+                        <div class="evaluation-iframe-container">
+                            <iframe id="evaluation-iframe" src="${defaultUrl}"></iframe>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            // 回退到 Markdown 格式
+            panelsHtml += `
+                <div class="tab-panel ${tabIndex === 0 ? 'active' : ''}" id="panel-evaluation">
+                    <div class="evaluation-viewer">
+                        <div class="evaluation-content">
+                            ${typeof marked !== 'undefined' ? marked.parse(results.evaluation_report) : escapeHtml(results.evaluation_report)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        tabIndex++;
+    }
+    
+    // 可视化图片标签页
+    if (results.visualization_images && results.visualization_images.length > 0) {
+        tabsHtml += `
+            <button class="tab-btn ${tabIndex === 0 ? 'active' : ''}" data-tab="visualization" onclick="switchResultsTab('visualization')">
+                <i class="fas fa-images"></i> 可视化图片
+            </button>
+        `;
+        let visualizationContent = '<div class="visualization-viewer">';
+        results.visualization_images.forEach((img, idx) => {
+            visualizationContent += `
+                <div class="visualization-item">
+                    <div class="visualization-item-header">
+                        <span class="visualization-item-title">${escapeHtml(img.title || `图片 ${idx + 1}`)}</span>
+                        <a href="${img.url}" download class="btn btn-sm btn-secondary">
+                            <i class="fas fa-download"></i> 下载
+                        </a>
+                    </div>
+                    <div class="visualization-item-body">
+                        <img src="${img.url}" alt="${escapeHtml(img.title || `图片 ${idx + 1}`)}">
+                    </div>
+                </div>
+            `;
+        });
+        visualizationContent += '</div>';
+        
+        panelsHtml += `
+            <div class="tab-panel ${tabIndex === 0 ? 'active' : ''}" id="panel-visualization">
+                ${visualizationContent}
+            </div>
+        `;
+        tabIndex++;
+    }
+    
+    tabsHtml += '</div>';
+    
+    // 如果没有任何结果
+    if (tabIndex === 0) {
+        container.innerHTML = `
+            <div class="results-header-card">
+                <div class="results-header-top">
+                    <div class="results-title-section">
+                        <h1>${escapeHtml(task.topic)}</h1>
+                        <div class="results-topic">任务 ID: ${escapeHtml(taskId)}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="empty-results">
+                <i class="fas fa-folder-open"></i>
+                <h3>暂无结果文件</h3>
+                <p>任务已完成，但未生成可下载的结果文件</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // 渲染完整内容
+    container.innerHTML = `
+        <div class="results-header-card">
+            <div class="results-header-top">
+                <div class="results-title-section">
+                    <h1>${escapeHtml(task.topic)}</h1>
+                    <div class="results-topic">任务 ID: ${escapeHtml(taskId)} · 完成于 ${formatDate(task.updated_at)}</div>
+                </div>
+                <div class="download-actions">
+                    ${downloadButtons}
+                </div>
+            </div>
+            ${stats}
+        </div>
+        
+        <div class="content-tabs">
+            ${tabsHtml}
+            ${panelsHtml}
+        </div>
+    `;
+    
+    // 存储结果数据供后续使用
+    window.currentResultsData = results;
+    
+    // 如果第一个标签是 PDF，初始化 PDF 查看器
+    if (results.pdf_url) {
+        setTimeout(() => initPdfViewer(), 100);
+    }
+    // 如果第一个标签是知识图谱，初始化图表
+    else if (results.mekg_data && !results.markdown_content) {
+        setTimeout(() => initMekgGraph(), 100);
+    }
+}
+
+function switchResultsTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+    });
+    document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.toggle('active', panel.id === `panel-${tabName}`);
+    });
+}
+
+// ==========================================
+// PDF.js 渲染相关
+// ==========================================
+let pdfDoc = null;
+let pdfCurrentPage = 1;
+let pdfTotalPages = 0;
+let pdfRendering = false;
+let pdfScale = 1.5;
+
+async function initPdfViewer() {
+    const container = document.getElementById('pdf-canvas-container');
+    if (!container || !window.currentResultsData?.pdf_url) return;
+    
+    // 如果已经加载过，直接渲染当前页
+    if (pdfDoc) {
+        renderPdfPage(pdfCurrentPage);
+        return;
+    }
+    
+    try {
+        container.innerHTML = `
+            <div class="pdf-loading">
+                <i class="fas fa-spinner"></i>
+                <p>正在加载 PDF...</p>
+            </div>
+        `;
+        
+        // 加载 PDF
+        const loadingTask = pdfjsLib.getDocument(window.currentResultsData.pdf_url);
+        pdfDoc = await loadingTask.promise;
+        pdfTotalPages = pdfDoc.numPages;
+        pdfCurrentPage = 1;
+        
+        // 更新页码信息
+        updatePdfPageInfo();
+        
+        // 渲染第一页
+        await renderPdfPage(1);
+        
+    } catch (error) {
+        console.error('PDF 加载失败:', error);
+        container.innerHTML = `
+            <div class="pdf-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>PDF 加载失败</p>
+                <p style="font-size: 12px; margin-top: 8px;">${escapeHtml(error.message || '未知错误')}</p>
+                <a href="${window.currentResultsData.pdf_url}" download class="btn btn-primary" style="margin-top: 16px;">
+                    <i class="fas fa-download"></i> 直接下载 PDF
+                </a>
+            </div>
+        `;
+    }
+}
+
+async function renderPdfPage(pageNum) {
+    if (!pdfDoc || pdfRendering) return;
+    
+    pdfRendering = true;
+    const container = document.getElementById('pdf-canvas-container');
+    
+    try {
+        const page = await pdfDoc.getPage(pageNum);
+        const viewport = page.getViewport({ scale: pdfScale });
+        
+        // 创建 canvas
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        
+        // 清空容器并添加 canvas
+        container.innerHTML = '';
+        container.appendChild(canvas);
+        
+        // 渲染页面
+        await page.render({
+            canvasContext: context,
+            viewport: viewport
+        }).promise;
+        
+        pdfCurrentPage = pageNum;
+        updatePdfPageInfo();
+        
+    } catch (error) {
+        console.error('PDF 页面渲染失败:', error);
+    } finally {
+        pdfRendering = false;
+    }
+}
+
+function updatePdfPageInfo() {
+    const pageInfo = document.getElementById('pdf-page-info');
+    const prevBtn = document.getElementById('pdf-prev-btn');
+    const nextBtn = document.getElementById('pdf-next-btn');
+    
+    if (pageInfo) {
+        pageInfo.textContent = `第 ${pdfCurrentPage} 页 / 共 ${pdfTotalPages} 页`;
+    }
+    if (prevBtn) {
+        prevBtn.disabled = pdfCurrentPage <= 1;
+    }
+    if (nextBtn) {
+        nextBtn.disabled = pdfCurrentPage >= pdfTotalPages;
+    }
+}
+
+function pdfPrevPage() {
+    if (pdfCurrentPage > 1) {
+        renderPdfPage(pdfCurrentPage - 1);
+    }
+}
+
+function pdfNextPage() {
+    if (pdfCurrentPage < pdfTotalPages) {
+        renderPdfPage(pdfCurrentPage + 1);
+    }
+}
+
+// ==========================================
+// 评估报告语言切换
+// ==========================================
+function switchEvaluationLang(lang) {
+    const results = window.currentResultsData;
+    if (!results) return;
+    
+    const iframe = document.getElementById('evaluation-iframe');
+    if (!iframe) return;
+    
+    // 更新按钮状态
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+    
+    // 切换 iframe src
+    if (lang === 'zh' && results.evaluation_report_zh_url) {
+        iframe.src = results.evaluation_report_zh_url;
+    } else if (lang === 'en' && results.evaluation_report_en_url) {
+        iframe.src = results.evaluation_report_en_url;
+    }
+}
+
+function initMekgGraph() {
+    const container = document.getElementById('mekg-graph');
+    if (!container || !window.echarts || !window.currentResultsData?.mekg_data) return;
+    
+    const data = window.currentResultsData.mekg_data;
+    const chart = echarts.init(container);
+    const rawNodes = data.nodes || [];
+    const rawLinks = data.edges || data.links || [];
+    
+    if (rawNodes.length === 0) {
+        container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);">暂无图谱数据</div>';
+        return;
+    }
+    
+    // 定义节点类型的颜色
+    const categoryColors = {
+        'paper': '#0066cc',
+        'concept': '#28cd41',
+        'keyword': '#ff9f0a',
+        'author': '#ba68c8',
+        'method': '#ef5350',
+        'dataset': '#4fc3f7',
+        'default': '#999999'
+    };
+    
+    // 构建节点
+    const nodes = rawNodes.map((n, index) => {
+        const name = n.name || n.id || `node_${index}`;
+        return {
+            id: index,
+            name: name,
+            category: n.type || 'default',
+            symbolSize: Math.min(40, Math.max(10, 8 + (n.weight || 1) * 2)),
+            value: n.weight || 1,
+            itemStyle: { color: categoryColors[n.type] || '#999' }
+        };
+    });
+    
+    // 构建名称到索引的映射
+    const nameToIndex = {};
+    nodes.forEach((n, idx) => {
+        nameToIndex[n.name] = idx;
+    });
+    
+    // 过滤并转换边
+    const links = [];
+    rawLinks.forEach(l => {
+        const sourceName = typeof l.source === 'object' ? (l.source.name || l.source.id) : l.source;
+        const targetName = typeof l.target === 'object' ? (l.target.name || l.target.id) : l.target;
+        
+        if (nameToIndex[sourceName] !== undefined && nameToIndex[targetName] !== undefined) {
+            links.push({
+                source: nameToIndex[sourceName],
+                target: nameToIndex[targetName],
+                value: l.weight || 1
+            });
+        }
+    });
+    
+    // 获取类别
+    const categoryTypes = [...new Set(nodes.map(n => n.category))];
+    const categories = categoryTypes.map(type => ({
+        name: type,
+        itemStyle: { color: categoryColors[type] || '#999' }
+    }));
+    
+    // 为节点分配类别索引
+    const categoryIndexMap = {};
+    categoryTypes.forEach((type, idx) => {
+        categoryIndexMap[type] = idx;
+    });
+    nodes.forEach(n => {
+        n.category = categoryIndexMap[n.category] !== undefined ? categoryIndexMap[n.category] : 0;
+    });
+    
+    try {
+        chart.setOption({
+            tooltip: {
+                trigger: 'item',
+                formatter: function(params) {
+                    if (params.dataType === 'node') {
+                        const catName = categoryTypes[params.data.category] || '未知';
+                        return `<strong>${params.data.name}</strong><br/>类型: ${catName}`;
+                    }
+                    return '';
+                }
+            },
+            legend: {
+                data: categoryTypes,
+                orient: 'horizontal',
+                bottom: 10
+            },
+            series: [{
+                type: 'graph',
+                layout: 'force',
+                data: nodes,
+                links: links,
+                categories: categories,
+                roam: true,
+                draggable: true,
+                label: {
+                    show: nodes.length < 100,
+                    position: 'right',
+                    fontSize: 9,
+                    formatter: function(params) {
+                        const name = params.data.name || '';
+                        return name.length > 12 ? name.substring(0, 12) + '...' : name;
+                    }
+                },
+                force: {
+                    repulsion: Math.max(100, 500 / Math.sqrt(nodes.length)),
+                    edgeLength: [50, 150],
+                    gravity: 0.1,
+                    layoutAnimation: true
+                },
+                lineStyle: {
+                    color: 'source',
+                    curveness: 0.3,
+                    opacity: 0.4,
+                    width: 1
+                },
+                emphasis: {
+                    focus: 'adjacency',
+                    lineStyle: { width: 2 }
+                }
+            }]
+        });
+        
+        window.addEventListener('resize', () => chart.resize());
+    } catch (e) {
+        console.error('ECharts error:', e);
+        container.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--accent-error);">图表渲染失败</div>`;
+    }
+}
+
+function downloadMarkdown(taskId) {
+    const content = document.getElementById('markdown-raw')?.value;
+    if (!content) {
+        Toast.error('无法获取 Markdown 内容');
+        return;
+    }
+    
+    const blob = new Blob([content], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `survey_${taskId}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+    Toast.success('下载已开始');
+}
+
+function copyMarkdown() {
+    const content = document.getElementById('markdown-raw')?.value;
+    if (!content) {
+        Toast.error('无法获取 Markdown 内容');
+        return;
+    }
+    
+    navigator.clipboard.writeText(content)
+        .then(() => Toast.success('已复制到剪贴板'))
+        .catch(() => Toast.error('复制失败'));
+}
+
+function getStatusText(status) {
+    const map = {
+        pending: '等待中',
+        running: '运行中',
+        completed: '已完成',
+        failed: '失败',
+        paused: '已暂停',
+        cancelled: '已取消'
+    };
+    return map[status] || status;
+}
+</script>
+{% endblock %}

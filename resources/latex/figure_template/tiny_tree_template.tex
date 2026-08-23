@@ -1,0 +1,78 @@
+
+% ============================================
+% 现代化紧凑树形图模板
+% 专业学术风格 - 适用于小型层次结构
+% ============================================
+% Note: Colors (tiny-*) are defined in the main document preamble (survey.ini.tex)
+
+\begin{figure}[h]
+   \centering
+   \begin{adjustbox}{max width=\textwidth, center}
+      \begin{tikzpicture}[
+         start chain = going below,
+         node distance=1.5mm,
+         sibling distance=38mm,
+         edge from parent/.style={
+            ->,
+            draw=tiny-edge,
+            line width=0.8pt,
+            rounded corners=2pt,
+         },
+         >=stealth,
+         % 基础样式
+         basic/.style = {
+            draw,
+            text width=1cm,
+            rectangle,
+            rounded corners=3pt,
+            drop shadow={shadow xshift=0.3pt, shadow yshift=-0.3pt, opacity=0.1},
+         },
+         % 根节点样式 - 深色突出
+         root/.style = {
+            basic,
+            rounded corners=5pt,
+            align=center,
+            text width=14em,
+            font=\scriptsize\sffamily\bfseries,
+            fill=tiny-root-bg,
+            draw=tiny-root!60,
+            text=tiny-root,
+            line width=1pt,
+            minimum height=10mm,
+         },
+         % 分支节点样式 - 绿色系
+         nodeB/.style = {
+            basic,
+            rounded corners=4pt,
+            align=center,
+            fill=tiny-branch-bg,
+            draw=tiny-branch!50,
+            font=\tiny\sffamily,
+            text=tiny-text,
+            text width=7.5em,
+            line width=0.8pt,
+            minimum height=8mm,
+         },
+         % 叶子节点样式 - 粉色系
+         nodeL/.style = {
+            basic,
+            align=center,
+            font=\tiny\sffamily,
+            fill=tiny-leaf-bg,
+            draw=tiny-leaf!40,
+            text=tiny-text,
+            text width=8.5em,
+            line width=0.6pt,
+            minimum height=7mm,
+         }
+      ]
+   
+<tree_code>
+
+\end{tikzpicture}
+\end{adjustbox}
+
+\caption{<caption>}
+\label{fig:<label>}
+
+\end{figure}

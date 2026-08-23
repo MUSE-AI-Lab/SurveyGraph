@@ -1,0 +1,45 @@
+% Pipeline Diagram Template - 管道/流水线图模板
+
+\begin{figure}[H]
+\centering
+\begin{adjustbox}{max width=0.95\textwidth, center}
+\begin{tikzpicture}[
+    node distance=0.5cm,
+    stage/.style={
+        signal,
+        signal to=east,
+        draw=none,
+        fill=#1!20,
+        text=#1!80!black,
+        minimum width=2.8cm,
+        minimum height=1.2cm,
+        text centered,
+        font=\small\sffamily\bfseries,
+        text width=2.5cm,
+        drop shadow={shadow xshift=0.5pt, shadow yshift=-0.5pt, opacity=0.1},
+        line width=0.8pt,
+        draw=#1!50,
+    },
+    desc/.style={
+        font=\footnotesize\sffamily,
+        text=pipe-text,
+        text width=2.8cm,
+        align=center,
+        anchor=north,
+    },
+    arrow/.style={
+        ->,
+        thick,
+        >=stealth,
+        draw=pipe-arrow,
+        line width=1.2pt,
+    }
+]
+
+<stages>
+
+\end{tikzpicture}
+\end{adjustbox}
+\caption{<caption>}
+\label{fig:<label>}
+\end{figure}

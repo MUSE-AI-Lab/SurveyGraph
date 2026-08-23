@@ -1,0 +1,19 @@
+name: Feature request
+description: Propose a focused improvement to the research pipeline or documentation.
+title: "[Feature] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What workflow or research question is currently blocked?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Describe the smallest change that would address the problem.
+    validations:
+      required: true

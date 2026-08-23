@@ -1,0 +1,46 @@
+**Task Description:**
+
+You are tasked with extracting method-related attributes from a paper that introduces a specific method. For each task, you are provided with contextual information corresponding to the chapter that needs to be summarized in a table. The paper contains only one method, and your goal is to extract an attribute that aligns with the contextual content provided and effectively summarizes the unique characteristics of each method. 
+
+**Instructions:**
+1. It should capture a distinctive characteristic of the method that differentiates it from others.
+   
+2. It should be representative enough to categorize similar methods under the same attribute.
+
+3. You will be provided with the method's domain. Based on that, extract the attribute of this method.
+
+4. You need to provide a brief description to explain the meaning of this attribute.
+
+5. The attribute must be a concise phrase of no more than four words.
+
+
+
+Here is the content of the paper:
+
+{Content}
+
+Here is the context corresponding to the chapter that needs to be summarized in a table:
+
+{Context}
+
+Here is the method's domain
+
+{Domain}
+
+In addition to the provided paper content and chapter-specific context, you will also be provided with previously extracted attributes along with their descriptions. If the current method can be categorized under these existing attributes, reuse them without extracting new ones.
+
+Here are the previously extracted attributes:
+
+{Attributes}
+
+**Important!!!"
+You only need to provide one attribute and corresponding descriptions without additional content.
+
+**Formatting Requirements:**
+Your response should be enclosed within `<Answer>` and `</Answer>` tags.
+
+**Example Output:**
+<Answer>
+[Attribute: Reinforcement Learning]
+[Description: Reinforcement Learning is a machine learning approach where an agent learns by interacting with an environment and receiving feedback.]
+</Answer>

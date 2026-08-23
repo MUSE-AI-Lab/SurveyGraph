@@ -1,0 +1,83 @@
+{
+  "REMOTE_URL": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+  "TOKEN": "",
+  "DEFAULT_CHATAGENT_MODEL": "qwen3.6-plus",
+  "ADVANCED_CHATAGENT_MODEL": "qwen3.6-plus",
+  "EVAL_TEXT_MODEL": "MiniMax-M2.5",
+  "MODEL_CATALOG": [
+    {
+      "name": "qwen3.6-plus",
+      "enable_thinking": true
+    },
+    {
+      "name": "deepseek-v4-pro",
+      "enable_thinking": true
+    },
+    {
+      "name": "deepseek-v4-flash",
+      "enable_thinking": true
+    },
+    {
+      "name": "glm-5.1",
+      "enable_thinking": true
+    },
+    {
+      "name": "glm-5",
+      "enable_thinking": true
+    },
+    {
+      "name": "kimi-k2.6",
+      "enable_thinking": false
+    },
+    {
+      "name": "kimi-k2.5",
+      "enable_thinking": false
+    },
+    {
+      "name": "kimi-k2-thinking",
+      "enable_thinking": true
+    },
+    {
+      "name": "xiaomi/mimo-v2.5-pro",
+      "enable_thinking": true
+    },
+    {
+      "name": "MiniMax-M2.5",
+      "enable_thinking": false
+    }
+  ],
+  "PROFILES": {
+    "stable_qwen": {
+      "DEFAULT_CHATAGENT_MODEL": "qwen3.6-plus",
+      "ADVANCED_CHATAGENT_MODEL": "qwen3.6-plus",
+      "EVAL_TEXT_MODEL": "MiniMax-M2.5"
+    },
+    "stable_glm": {
+      "DEFAULT_CHATAGENT_MODEL": "glm-5.1",
+      "ADVANCED_CHATAGENT_MODEL": "glm-5.1",
+      "EVAL_TEXT_MODEL": "MiniMax-M2.5"
+    },
+    "stable_deepseek": {
+      "DEFAULT_CHATAGENT_MODEL": "deepseek-v4-pro",
+      "ADVANCED_CHATAGENT_MODEL": "deepseek-v4-pro",
+      "EVAL_TEXT_MODEL": "MiniMax-M2.5"
+    }
+  },
+  "TOPICS": [
+    "Large Language Model Function Calling",
+    "Memory in the Age of AI Agents",
+    "Text-to-SQL Agent"
+  ],
+  "MAX_PAPERS": 50,
+  "YEAR_START": 2020,
+  "YEAR_END": 2026,
+  "ENABLE_AI_IMAGES": true,
+  "CHAT_AGENT_WORKERS": 32,
+  "PAPER_ATTRI_WORKERS": 32,
+  "RELATION_DISCOVERY_WORKERS": 24,
+  "ENTITY_EXTRACTION_WORKERS": 24,
+  "MOUNT_PAPERS_WORKERS": 24,
+  "CONTENT_GEN_WORKERS": 8,
+  "SECTION_REFLECTION_WORKERS": 8,
+  "EVALUATION_WORKERS": 8
+}

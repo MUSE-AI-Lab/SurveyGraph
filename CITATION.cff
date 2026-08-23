@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If SurveyGraph contributes to your work, please cite the accompanying EMNLP 2026 Findings paper."
+type: software
+title: "SurveyGraph: Methods-Entity Knowledge Graphs for Academic Survey Generation and Evaluation"
+abstract: "An evidence-oriented academic survey generation system built around a multi-layer evolutionary knowledge graph (MEKG), with graph-aware retrieval, survey planning, generation, and evaluation."
+version: "0.1.0"
+date-released: 2026-08-22
+license: MIT
+authors:
+  - name: "SurveyGraph contributors"
+keywords:
+  - academic survey generation
+  - knowledge graph
+  - retrieval augmented generation
+  - scientific literature

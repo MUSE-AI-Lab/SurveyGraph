@@ -1,0 +1,2579 @@
+{% extends "base.html" %}
+
+{% block title %}创建综述 - SurveyGraph{% endblock %}
+
+{% block head %}
+<style>
+/* 创建任务页面专用样式 */
+.create-task-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 24px;
+}
+
+.create-task-header {
+    margin-bottom: 32px;
+}
+
+.create-task-header .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 14px;
+    text-decoration: none;
+    margin-bottom: 16px;
+    transition: color 0.2s;
+}
+
+.create-task-header .back-link:hover {
+    color: var(--accent-primary);
+}
+
+.create-task-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+}
+
+.create-task-header p {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* 表单卡片 */
+.task-form-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* 表单区块 */
+.form-block {
+    padding: 28px 32px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.form-block:last-of-type {
+    border-bottom: none;
+}
+
+.form-block-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.form-block-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--accent-primary-light);
+    color: var(--accent-primary);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.form-block-title {
+    flex: 1;
+}
+
+.form-block-title h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 2px 0;
+}
+
+.form-block-title p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* 输入框样式优化 */
+.form-field {
+    margin-bottom: 20px;
+}
+
+.form-field:last-child {
+    margin-bottom: 0;
+}
+
+.form-field label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.form-field label .required {
+    color: var(--accent-error);
+    margin-left: 4px;
+}
+
+.form-field label .optional {
+    color: var(--text-muted);
+    font-weight: 400;
+    font-size: 12px;
+    margin-left: 6px;
+}
+
+.form-field input[type="text"],
+.form-field input[type="number"],
+.form-field select {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 15px;
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.form-field input:hover,
+.form-field select:hover {
+    background: var(--bg-tertiary);
+}
+
+.form-field input:focus,
+.form-field select:focus {
+    background: var(--bg-primary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--accent-primary-light);
+}
+
+.form-field .hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 6px;
+}
+
+/* 网格布局 */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 640px) {
+    .form-grid,
+    .form-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 文件上传区域 */
+.upload-zone {
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 32px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg-secondary);
+}
+
+.upload-zone:hover {
+    border-color: var(--accent-primary);
+    background: var(--accent-primary-light);
+}
+
+.upload-zone.dragover {
+    border-color: var(--accent-primary);
+    background: var(--accent-primary-light);
+}
+
+.upload-zone-icon {
+    font-size: 36px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.upload-zone-text {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.upload-zone-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* 复选框样式 */
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+}
+
+.checkbox-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-primary);
+    cursor: pointer;
+}
+
+.checkbox-item span {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+/* 暂停点设置 - 特殊高亮样式 */
+.pause-points-block {
+    background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+    border: 1px solid var(--accent-primary-light);
+}
+
+.pause-points-block .form-block-icon {
+    background: var(--accent-primary);
+    color: white;
+}
+
+.pause-points-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+@media (max-width: 640px) {
+    .pause-points-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.pause-point-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pause-point-item:hover {
+    border-color: var(--accent-primary);
+    box-shadow: 0 2px 8px rgba(0, 102, 204, 0.1);
+}
+
+.pause-point-item.selected {
+    border-color: var(--accent-primary);
+    background: var(--accent-primary-light);
+}
+
+.pause-point-item.recommended {
+    border-color: var(--accent-warning);
+    background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
+}
+
+.pause-point-item.recommended.selected {
+    border-color: var(--accent-primary);
+    background: var(--accent-primary-light);
+}
+
+.recommended-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--accent-warning);
+    color: white;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.pause-point-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-primary);
+    cursor: pointer;
+}
+
+.pause-point-info {
+    flex: 1;
+}
+
+.pause-point-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.pause-point-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.pause-points-tip {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: white;
+    border-radius: 8px;
+    border-left: 3px solid var(--accent-primary);
+}
+
+.pause-points-tip i {
+    color: var(--accent-primary);
+    margin-top: 2px;
+}
+
+.pause-points-tip span {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* 表单操作区 */
+.form-actions-bar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 20px 32px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-light);
+}
+
+.form-actions-bar .btn {
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 配额警告 */
+.quota-alert {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--accent-warning-light);
+    border: 1px solid var(--accent-warning);
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+.quota-alert-icon {
+    font-size: 24px;
+    color: var(--accent-warning);
+}
+
+.quota-alert-content {
+    flex: 1;
+}
+
+.quota-alert-content strong {
+    display: block;
+    font-size: 15px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.quota-alert-content p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* arXiv 开关 */
+.arxiv-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    margin-bottom: 16px;
+}
+
+.arxiv-toggle-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.arxiv-toggle-info i {
+    font-size: 20px;
+    color: var(--accent-primary);
+}
+
+.arxiv-toggle-text strong {
+    display: block;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.arxiv-toggle-text span {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* 开关组件 */
+.toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 26px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: var(--border-color);
+    border-radius: 26px;
+    transition: all 0.2s;
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: var(--accent-primary);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(22px);
+}
+
+/* 来源警告 */
+.source-warning {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--accent-info-light);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--accent-info);
+    margin-top: 12px;
+}
+
+.source-warning.show {
+    display: flex;
+}
+
+/* 关键词操作按钮区域 */
+.keywords-actions-wrapper {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.btn-generate-keywords {
+    white-space: nowrap;
+    padding: 10px 20px !important;
+    font-size: 14px;
+}
+
+.btn-generate-keywords i {
+    margin-right: 6px;
+}
+
+/* 关键词列表容器 */
+.keywords-list-container {
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    min-height: 120px;
+}
+
+.keywords-count {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* 空状态 */
+.keywords-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.keywords-empty-state i {
+    font-size: 32px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.keywords-empty-state p {
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0 0 4px 0;
+}
+
+.keywords-empty-state span {
+    font-size: 12px;
+}
+
+.keywords-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.select-all-keywords {
+    padding: 0 !important;
+}
+
+.keywords-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* 单个关键词项 */
+.keyword-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+
+.keyword-item:hover {
+    border-color: var(--accent-primary);
+    box-shadow: 0 2px 8px rgba(0, 102, 204, 0.1);
+}
+
+.keyword-item.disabled {
+    opacity: 0.5;
+    background: var(--bg-tertiary);
+}
+
+.keyword-item.disabled .keyword-text input {
+    color: var(--text-muted);
+}
+
+.keyword-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.keyword-item .keyword-text {
+    flex: 1;
+    min-width: 120px;
+    max-width: 300px;
+}
+
+.keyword-item .keyword-text input {
+    width: 100%;
+    border: 1px solid transparent;
+    background: var(--bg-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    outline: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.keyword-item .keyword-text input:hover {
+    border-color: var(--border-color);
+}
+
+.keyword-item .keyword-text input:focus {
+    background: var(--bg-primary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--accent-primary-light);
+}
+
+/* 权重滑块 */
+.keyword-weight-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    min-width: 180px;
+    padding: 6px 12px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+}
+
+.keyword-weight-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    min-width: 60px;
+}
+
+.keyword-weight-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: linear-gradient(to right, var(--accent-primary-light), var(--accent-primary));
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+}
+
+.keyword-weight-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 102, 204, 0.3);
+}
+
+.keyword-weight-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    box-shadow: 0 3px 8px rgba(0, 102, 204, 0.4);
+}
+
+.keyword-weight-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 102, 204, 0.3);
+}
+
+.keyword-weight-slider:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.keyword-delete-btn {
+    padding: 8px 10px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.keyword-delete-btn:hover {
+    background: var(--accent-error-light);
+    color: var(--accent-error);
+}
+
+.keyword-delete-btn i {
+    font-size: 14px;
+}
+
+/* AI 生成内容提示 */
+.ai-disclaimer {
+    text-align: center;
+    padding: 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-light);
+    background: var(--bg-secondary);
+}
+
+.ai-disclaimer i {
+    margin-right: 6px;
+    color: var(--accent-warning);
+}
+
+/* 响应式调整 */
+@media (max-width: 640px) {
+    .keywords-actions-wrapper {
+        flex-direction: column;
+    }
+    
+    .keywords-actions-wrapper .btn {
+        width: 100%;
+    }
+    
+    .keyword-item {
+        flex-wrap: wrap;
+    }
+    
+    .keyword-weight-wrapper {
+        width: 100%;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid var(--border-light);
+    }
+}
+
+/* 上传进度模态框样式 */
+.upload-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-modal.show {
+    display: flex;
+}
+
+.upload-modal-content {
+    background: var(--bg-primary);
+    width: 90%;
+    max-width: 500px;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+}
+
+.upload-modal-header {
+    margin-bottom: 20px;
+}
+
+.upload-modal-header h3 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    color: var(--text-primary);
+}
+
+.upload-modal-header p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.upload-file-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+}
+
+.upload-file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.upload-file-item:last-child {
+    border-bottom: none;
+}
+
+.upload-file-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.upload-file-icon {
+    color: var(--text-muted);
+    font-size: 18px;
+}
+
+.upload-file-name {
+    font-size: 14px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.upload-file-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.status-pending { color: var(--text-muted); }
+.status-uploading { color: var(--accent-primary); }
+.status-success { color: var(--accent-success); }
+.status-error { color: var(--accent-error); }
+
+.upload-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-light);
+}
+
+/* 已上传文件列表 */
+.uploaded-files-list {
+    margin-top: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.uploaded-files-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--accent-success-light);
+    color: var(--accent-success);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.uploaded-files-header i {
+    margin-right: 6px;
+}
+
+.uploaded-files-content {
+    max-height: 250px;
+    overflow-y: auto;
+    /* 隐藏滚动条但保持滚动功能 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+.uploaded-files-content::-webkit-scrollbar {
+    display: none; /* Chrome/Safari/Opera */
+}
+
+.uploaded-file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 13px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.uploaded-file-item:last-child {
+    border-bottom: none;
+}
+
+.uploaded-file-item.uploading {
+    background: var(--accent-info-light);
+}
+
+.uploaded-file-item.error {
+    background: var(--accent-error-light);
+}
+
+.uploaded-file-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.uploaded-file-info i {
+    color: var(--accent-error);
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.uploaded-file-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    max-width: 300px;
+}
+
+.uploaded-file-size {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.uploaded-file-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.uploaded-file-status.status-uploading {
+    color: var(--accent-primary);
+}
+
+.uploaded-file-status.status-success {
+    color: var(--accent-success);
+}
+
+.uploaded-file-status.status-error {
+    color: var(--accent-error);
+}
+
+.uploaded-file-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.uploaded-file-retry {
+    padding: 4px 10px;
+    background: var(--accent-primary);
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.uploaded-file-retry:hover {
+    background: var(--accent-primary-dark, #0056b3);
+}
+
+.uploaded-file-delete {
+    padding: 4px 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.uploaded-file-delete:hover {
+    background: var(--accent-error-light);
+    color: var(--accent-error);
+}
+
+/* 错误原因显示 */
+.uploaded-file-error-reason {
+    width: 100%;
+    padding: 6px 12px 6px 38px;
+    font-size: 12px;
+    color: var(--accent-error);
+    background: rgba(220, 53, 69, 0.05);
+    border-radius: 4px;
+    margin-top: 4px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 上传中的动画 */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.uploading-animation {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* 知识库选择按钮 */
+.file-source-buttons {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.file-source-buttons .btn {
+    flex: 1;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* 知识库选择模态框 */
+.kb-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.kb-modal-overlay.show {
+    display: flex;
+}
+
+.kb-modal-content {
+    background: var(--bg-primary);
+    width: 90%;
+    max-width: 700px;
+    max-height: 80vh;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+}
+
+.kb-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.kb-modal-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.kb-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.kb-modal-close:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.kb-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.kb-search-bar {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-secondary);
+}
+
+.kb-search-bar input {
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    outline: none;
+}
+
+.kb-search-bar input:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--accent-primary-light);
+}
+
+.kb-file-list {
+    padding: 0;
+}
+
+.kb-file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border-light);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.kb-file-item:hover {
+    background: var(--bg-secondary);
+}
+
+.kb-file-item.selected {
+    background: var(--accent-primary-light);
+}
+
+.kb-file-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.kb-file-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--accent-error-light);
+    color: var(--accent-error);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.kb-file-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.kb-file-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kb-file-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.kb-empty-state {
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.kb-empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.kb-empty-state p {
+    font-size: 14px;
+    margin: 0 0 16px 0;
+}
+
+.kb-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-light);
+    background: var(--bg-secondary);
+}
+
+.kb-selected-count {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.kb-modal-footer .btn-group {
+    display: flex;
+    gap: 12px;
+}
+
+.kb-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    color: var(--text-muted);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="create-task-page">
+    <div class="create-task-header">
+        <a href="/dashboard" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            返回任务列表
+        </a>
+        <h1>创建综述任务</h1>
+        <p>配置您的学术综述生成参数，AI 将自动为您生成高质量的文献综述</p>
+    </div>
+    
+    <!-- 配额警告 -->
+    <div id="quota-warning" class="quota-alert" style="display: none;">
+        <i class="fas fa-exclamation-triangle quota-alert-icon"></i>
+        <div class="quota-alert-content">
+            <strong>配额不足</strong>
+            <p>您今日的生成配额已用完。邀请好友可获得额外配额。</p>
+        </div>
+        <a href="/profile" class="btn btn-sm btn-secondary">查看邀请码</a>
+    </div>
+    
+    <form id="task-form" class="task-form-card">
+        <!-- 1. 基本信息 - 最重要的部分放在最前面 -->
+        <div class="form-block">
+            <div class="form-block-header">
+                <div class="form-block-icon">
+                    <i class="fas fa-lightbulb"></i>
+                </div>
+                <div class="form-block-title">
+                    <h3>研究主题</h3>
+                    <p>告诉我们您想要综述的研究领域</p>
+                </div>
+            </div>
+            
+            <div class="form-field">
+                <label for="topic">
+                    研究主题 <span class="required">*</span>
+                </label>
+                <input type="text" id="topic" name="topic" required 
+                       placeholder="例如：Large Language Models for Code Generation">
+                <p class="hint">请输入您想要综述的研究主题，建议使用英文以获得更好的文献检索效果</p>
+            </div>
+            
+            <div class="form-field">
+                <label for="keywords">
+                    关键词 <span class="optional">(可选)</span>
+                </label>
+                
+                <!-- 关键词操作按钮 -->
+                <div class="keywords-actions-wrapper">
+                    <button type="button" class="btn btn-secondary btn-generate-keywords" id="generate-keywords-btn" onclick="generateKeywords()">
+                        <i class="fas fa-magic"></i> AI 生成关键词
+                    </button>
+                    <button type="button" class="btn btn-ghost" onclick="addCustomKeyword()">
+                        <i class="fas fa-plus"></i> 手动添加
+                    </button>
+                </div>
+                <p class="hint">输入主题后点击"AI 生成关键词"自动生成，或点击"手动添加"逐个添加关键词</p>
+                
+                <!-- 关键词列表与权重调配 -->
+                <div id="keywords-list-container" class="keywords-list-container">
+                    <div class="keywords-list-header">
+                        <label class="checkbox-item select-all-keywords">
+                            <input type="checkbox" id="select-all-keywords" checked onchange="toggleAllKeywords(this)">
+                            <span>全选</span>
+                        </label>
+                        <span class="keywords-count" id="keywords-count">0 个关键词</span>
+                    </div>
+                    <div id="keywords-list" class="keywords-list">
+                        <!-- 关键词项将动态生成 -->
+                        <div class="keywords-empty-state" id="keywords-empty-state">
+                            <i class="fas fa-tags"></i>
+                            <p>暂无关键词</p>
+                            <span>点击上方按钮生成或添加关键词</span>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="keywords" name="keywords">
+            </div>
+        </div>
+        
+        <!-- 2. 暂停点设置 - 重要功能，放在显眼位置 -->
+        <div class="form-block pause-points-block">
+            <div class="form-block-header">
+                <div class="form-block-icon">
+                    <i class="fas fa-pause-circle"></i>
+                </div>
+                <div class="form-block-title">
+                    <h3>暂停点设置</h3>
+                    <p>选择在哪些步骤后暂停，以便您预览和修改中间结果</p>
+                </div>
+            </div>
+            
+            <div class="pause-points-grid" id="pause-points-container">
+                <!-- 暂停点选项将由 JavaScript 动态生成 -->
+            </div>
+            
+            <div class="pause-points-tip">
+                <i class="fas fa-info-circle"></i>
+                <span><strong>推荐：</strong>建议在"MEKG构建后"和"大纲生成后"设置暂停点。MEKG构建后可以预览收集到的论文和知识图谱；大纲生成后可以调整综述的整体结构。默认不设置暂停点将一次性完成全部生成。</span>
+            </div>
+        </div>
+        
+        <!-- 3. 文献来源 -->
+        <div class="form-block">
+            <div class="form-block-header">
+                <div class="form-block-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <div class="form-block-title">
+                    <h3>文献来源</h3>
+                    <p>选择文献检索方式和上传自定义文档</p>
+                </div>
+            </div>
+            
+            <div class="arxiv-toggle">
+                <div class="arxiv-toggle-info">
+                    <i class="fas fa-search"></i>
+                    <div class="arxiv-toggle-text">
+                        <strong>启用 arXiv 文献搜索</strong>
+                        <span>自动从 arXiv 检索相关学术论文</span>
+                    </div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="enable-arxiv" name="enable_arxiv" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="form-field">
+                <label>自定义 PDF 文档 <span class="optional">(可选)</span></label>
+                
+                <!-- 文件来源选择按钮 -->
+                <div class="file-source-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="showKnowledgeBaseModal()">
+                        <i class="fas fa-book-open"></i> 从知识库选择
+                    </button>
+                    <button type="button" class="btn btn-ghost" onclick="document.getElementById('direct-file-input').click()">
+                        <i class="fas fa-upload"></i> 直接上传
+                    </button>
+                </div>
+                <input type="file" id="direct-file-input" accept=".pdf" multiple style="display: none;" onchange="handleDirectFileUpload(this.files)">
+                
+                <div id="file-upload" style="display: none;"></div>
+                <p class="hint">从知识库选择已有文件，或直接上传新的 PDF 文件（单个最大 50MB，最多 50 个）</p>
+                <div id="uploaded-files-list" class="uploaded-files-list" style="display: none;">
+                    <div class="uploaded-files-header">
+                        <span><i class="fas fa-check-circle"></i> 已上传文件</span>
+                        <span id="uploaded-count">0 个</span>
+                    </div>
+                    <div id="uploaded-files-content" class="uploaded-files-content">
+                        <!-- 动态生成 -->
+                    </div>
+                </div>
+            </div>
+            
+            <div id="source-warning" class="source-warning">
+                <i class="fas fa-info-circle"></i>
+                <span>如果不启用 arXiv 搜索，则必须上传至少一个文档作为文献来源</span>
+            </div>
+        </div>
+        
+        <!-- 4. 高级参数 -->
+        <div class="form-block">
+            <div class="form-block-header">
+                <div class="form-block-icon">
+                    <i class="fas fa-sliders-h"></i>
+                </div>
+                <div class="form-block-title">
+                    <h3>高级参数</h3>
+                    <p>自定义生成配置，可保持默认值</p>
+                </div>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="max-papers">最大文献数量</label>
+                    <input type="number" id="max-papers" name="max_papers" value="50" min="10" max="200">
+                </div>
+                <div class="form-field">
+                    <label for="year-start">起始年份</label>
+                    <input type="number" id="year-start" name="year_start" value="2020" min="2000" max="2025">
+                </div>
+                <div class="form-field">
+                    <label for="year-end">结束年份</label>
+                    <input type="number" id="year-end" name="year_end" value="2025" min="2000" max="2025">
+                </div>
+            </div>
+            
+            <div class="form-grid-2">
+                <div class="form-field">
+                    <label for="language">输出语言</label>
+                    <select id="language" name="language">
+                        <option value="en">English (英文)</option>
+                        <option value="zh">中文</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label for="outline-depth">大纲深度</label>
+                    <select id="outline-depth" name="outline_depth">
+                        <option value="2">2级 (简洁)</option>
+                        <option value="3" selected>3级 (标准)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 24px; margin-top: 8px;">
+                <label class="checkbox-item">
+                    <input type="checkbox" id="enable-figures" name="enable_figures" checked>
+                    <span>生成图表</span>
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" id="enable-evaluation" name="enable_evaluation" checked>
+                    <span>生成评估报告</span>
+                </label>
+            </div>
+        </div>
+        
+        <!-- 表单操作 -->
+        <div class="form-actions-bar">
+            <button type="button" class="btn btn-ghost" onclick="clearDraft()" title="清除已保存的草稿">
+                <i class="fas fa-eraser"></i>
+                清除草稿
+            </button>
+            <div style="flex: 1;"></div>
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='/dashboard'">
+                取消
+            </button>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-rocket"></i>
+                创建任务
+            </button>
+        </div>
+        
+        <!-- AI 生成内容提示 -->
+        <div class="ai-disclaimer">
+            <i class="fas fa-robot"></i>
+            内容由人工智能大模型驱动生成，请仔细甄别！
+        </div>
+    </form>
+</div>
+
+<!-- 知识库选择模态框 -->
+<div class="kb-modal-overlay" id="kb-modal">
+    <div class="kb-modal-content">
+        <div class="kb-modal-header">
+            <h3><i class="fas fa-book-open" style="margin-right: 8px; color: var(--accent-primary);"></i>从知识库选择文件</h3>
+            <button class="kb-modal-close" onclick="closeKnowledgeBaseModal()">&times;</button>
+        </div>
+        <div class="kb-search-bar">
+            <input type="text" id="kb-search-input" placeholder="搜索文件名或标题..." onkeyup="handleKbSearch(event)">
+        </div>
+        <div class="kb-modal-body">
+            <div class="kb-file-list" id="kb-file-list">
+                <!-- 文件列表将由 JavaScript 动态生成 -->
+            </div>
+        </div>
+        <div class="kb-modal-footer">
+            <span class="kb-selected-count" id="kb-selected-count">已选择 0 个文件</span>
+            <div class="btn-group">
+                <button class="btn btn-ghost" onclick="closeKnowledgeBaseModal()">取消</button>
+                <button class="btn btn-primary" onclick="confirmKbSelection()">
+                    <i class="fas fa-check"></i> 确认添加
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Pipeline 步骤配置 - 与 task_detail.html 保持一致
+const PIPELINE_STEPS = {
+    1: { name: "MEKG_BUILT", label: "MEKG构建", description: "论文采集与知识图谱构建", recommended: true },
+    2: { name: "OUTLINE_GENERATED", label: "大纲生成", description: "生成综述大纲", recommended: true },
+    3: { name: "CONTENT_GENERATED", label: "内容生成", description: "生成Survey主体内容" },
+    4: { name: "POST_REFINED", label: "文本优化", description: "PostRefiner文本优化" },
+    5: { name: "TABLES_GENERATED", label: "表格生成", description: "生成表格" },
+    6: { name: "VISUALS_GENERATED", label: "视觉元素", description: "生成动态视觉元素" },
+    7: { name: "EVALUATED", label: "质量评估", description: "质量评估与全局反思" },
+    8: { name: "CRITICAL_ANALYZED", label: "批判分析", description: "批判性分析增强" },
+    9: { name: "LATEX_GENERATED", label: "LaTeX生成", description: "生成LaTeX文档" },
+    10: { name: "VISUALIZATION_DONE", label: "可视化导出", description: "导出可视化数据" }
+};
+
+const TOTAL_STEPS = 10;
+
+let fileUpload = null;
+let keywordsData = []; // 存储关键词数据 [{text: string, weight: number, enabled: boolean}]
+// currentTaskId 已在 app.js 中声明为全局变量，这里不再重复声明
+let uploadedFiles = []; // 已上传的文件列表 [{filename: string, path: string, size: number, status: string, error: string, file: File}]
+
+// 上传限制常量
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_FILE_COUNT = 50; // 最多 50 个文件
+const MAX_FILENAME_LENGTH = 50; // 文件名最大长度（不含扩展名）
+
+// 本地缓存 key
+const DRAFT_STORAGE_KEY = 'surveygraph_task_draft';
+
+// 是否正在恢复草稿（恢复期间禁止自动保存）
+let isRestoringDraft = false;
+
+// 是否已完成初始化（初始化完成前禁止自动保存）
+let isDraftInitialized = false;
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // 检查配额
+    try {
+        const quota = await api.getQuota();
+        const canCreate = (quota.remaining_today > 0) || (quota.bonus_quota > 0);
+        
+        if (!canCreate) {
+            document.getElementById('quota-warning').style.display = 'flex';
+            document.getElementById('task-form').style.opacity = '0.5';
+            document.getElementById('task-form').style.pointerEvents = 'none';
+        }
+    } catch (e) {
+        Toast.error('获取配额失败');
+    }
+    
+    // 初始化文件上传 - 只允许 PDF，选择后立即上传
+    fileUpload = new FileUpload(document.getElementById('file-upload'), {
+        accept: '.pdf',
+        multiple: true,
+        maxSize: MAX_FILE_SIZE,
+        onError: (msg) => Toast.error(msg),
+        onSelect: async (files) => {
+            // 检查文件数量限制
+            const totalCount = uploadedFiles.length + files.length;
+            if (totalCount > MAX_FILE_COUNT) {
+                Toast.error(`最多只能上传 ${MAX_FILE_COUNT} 个文件，当前已有 ${uploadedFiles.length} 个`);
+                fileUpload.clear();
+                return;
+            }
+            
+            // 过滤非 PDF 文件
+            const pdfFiles = files.filter(f => f.name.toLowerCase().endsWith('.pdf'));
+            if (pdfFiles.length !== files.length) {
+                Toast.warning('已过滤非 PDF 格式的文件');
+            }
+            
+            if (pdfFiles.length === 0) {
+                fileUpload.clear();
+                return;
+            }
+            
+            // 立即开始上传
+            await uploadFilesImmediately(pdfFiles);
+            
+            // 清空选择器（因为已经上传了）
+            fileUpload.clear();
+        }
+    });
+    
+    // arXiv 开关逻辑
+    const arxivCheckbox = document.getElementById('enable-arxiv');
+    const sourceWarning = document.getElementById('source-warning');
+    arxivCheckbox.addEventListener('change', () => {
+        sourceWarning.classList.toggle('show', !arxivCheckbox.checked);
+    });
+    
+    // 渲染暂停点选项
+    renderPausePointsOptions();
+    
+    // 阻止 Enter 键提交表单（只允许点击提交按钮）
+    document.getElementById('task-form').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+            // 如果是在关键词输入框中按 Enter，不提交表单
+            e.preventDefault();
+            return false;
+        }
+    });
+    
+    // 表单提交（只响应按钮点击）
+    document.getElementById('task-form').addEventListener('submit', handleCreateTask);
+    
+    // 初始化关键词列表显示（此时 isDraftInitialized 为 false，不会触发保存）
+    renderKeywordsList();
+    
+    // 从本地缓存恢复草稿
+    loadDraft();
+    
+    // 标记初始化完成，允许自动保存
+    isDraftInitialized = true;
+    console.log('[Draft] 初始化完成，允许自动保存');
+    
+    // 绑定自动保存事件
+    bindAutoSave();
+});
+
+// ==================== 本地缓存功能 ====================
+
+// 获取相对时间字符串（如：刚刚、5分钟前、2小时前、昨天等）
+function getRelativeTimeString(date) {
+    const now = new Date();
+    const diffMs = now - date;
+    const diffSeconds = Math.floor(diffMs / 1000);
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffSeconds < 60) {
+        return '刚刚';
+    } else if (diffMinutes < 60) {
+        return `${diffMinutes}分钟前`;
+    } else if (diffHours < 24) {
+        return `${diffHours}小时前`;
+    } else if (diffDays === 1) {
+        return '昨天';
+    } else if (diffDays < 7) {
+        return `${diffDays}天前`;
+    } else {
+        return '较早前';
+    }
+}
+
+// 保存草稿到 localStorage（无感保存，不显示任何提示）
+function saveDraft() {
+    // 如果尚未完成初始化，不要保存
+    if (!isDraftInitialized) {
+        console.log('[Draft] 跳过保存：尚未完成初始化');
+        return;
+    }
+    
+    // 如果正在恢复草稿，不要保存（避免覆盖原数据）
+    if (isRestoringDraft) {
+        console.log('[Draft] 跳过保存：正在恢复草稿中');
+        return;
+    }
+    
+    try {
+        const form = document.getElementById('task-form');
+        const draft = {
+            topic: form.topic.value,
+            keywordsData: keywordsData,
+            enableArxiv: form.enable_arxiv.checked,
+            maxPapers: form.max_papers.value,
+            yearStart: form.year_start.value,
+            yearEnd: form.year_end.value,
+            language: form.language.value,
+            outlineDepth: form.outline_depth.value,
+            enableFigures: form.enable_figures.checked,
+            enableEvaluation: form.enable_evaluation.checked,
+            pausePoints: getPausePointsValues(),
+            uploadedFiles: uploadedFiles.filter(f => f.status === 'success').map(f => ({
+                filename: f.filename,
+                path: f.path,
+                size: f.size
+            })),
+            savedAt: new Date().toISOString()
+        };
+        
+        console.log('[Draft] 保存草稿:', draft);
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    } catch (e) {
+        console.error('[Draft] 保存失败:', e);
+    }
+}
+
+// 获取当前选中的暂停点
+function getPausePointsValues() {
+    const values = [];
+    document.querySelectorAll('input[name="pause_point"]:checked').forEach(cb => {
+        values.push(parseInt(cb.value));
+    });
+    return values;
+}
+
+// 从 localStorage 加载草稿
+function loadDraft() {
+    console.log('[Draft] 开始加载草稿...');
+    try {
+        const draftJson = localStorage.getItem(DRAFT_STORAGE_KEY);
+        console.log('[Draft] localStorage 中的数据:', draftJson);
+        
+        if (!draftJson) {
+            console.log('[Draft] 没有找到草稿数据');
+            return;
+        }
+        
+        const draft = JSON.parse(draftJson);
+        console.log('[Draft] 解析后的草稿:', draft);
+        
+        const form = document.getElementById('task-form');
+        console.log('[Draft] 表单元素:', form);
+        
+        // 标记正在恢复草稿，防止恢复过程中触发自动保存
+        isRestoringDraft = true;
+        console.log('[Draft] 设置 isRestoringDraft = true');
+        
+        // 恢复研究主题
+        if (draft.topic) {
+            console.log('[Draft] 恢复主题:', draft.topic);
+            form.topic.value = draft.topic;
+            console.log('[Draft] 主题恢复后的值:', form.topic.value);
+        }
+        
+        // 恢复关键词数据
+        if (draft.keywordsData && draft.keywordsData.length > 0) {
+            console.log('[Draft] 恢复关键词:', draft.keywordsData);
+            keywordsData = draft.keywordsData;
+            renderKeywordsList();
+            document.getElementById('keywords-list-container').style.display = 'block';
+        }
+        
+        // 恢复 arXiv 开关
+        if (typeof draft.enableArxiv === 'boolean') {
+            console.log('[Draft] 恢复 arXiv 开关:', draft.enableArxiv);
+            form.enable_arxiv.checked = draft.enableArxiv;
+            // 触发警告显示逻辑
+            document.getElementById('source-warning').classList.toggle('show', !draft.enableArxiv);
+        }
+        
+        // 恢复高级参数
+        if (draft.maxPapers) {
+            console.log('[Draft] 恢复 maxPapers:', draft.maxPapers);
+            form.max_papers.value = draft.maxPapers;
+        }
+        if (draft.yearStart) {
+            console.log('[Draft] 恢复 yearStart:', draft.yearStart);
+            form.year_start.value = draft.yearStart;
+        }
+        if (draft.yearEnd) {
+            console.log('[Draft] 恢复 yearEnd:', draft.yearEnd);
+            form.year_end.value = draft.yearEnd;
+        }
+        if (draft.language) {
+            console.log('[Draft] 恢复 language:', draft.language);
+            form.language.value = draft.language;
+        }
+        if (draft.outlineDepth) {
+            console.log('[Draft] 恢复 outlineDepth:', draft.outlineDepth);
+            form.outline_depth.value = draft.outlineDepth;
+        }
+        if (typeof draft.enableFigures === 'boolean') {
+            console.log('[Draft] 恢复 enableFigures:', draft.enableFigures);
+            form.enable_figures.checked = draft.enableFigures;
+        }
+        if (typeof draft.enableEvaluation === 'boolean') {
+            console.log('[Draft] 恢复 enableEvaluation:', draft.enableEvaluation);
+            form.enable_evaluation.checked = draft.enableEvaluation;
+        }
+        
+        // 恢复暂停点
+        if (draft.pausePoints && draft.pausePoints.length > 0) {
+            console.log('[Draft] 恢复暂停点:', draft.pausePoints);
+            document.querySelectorAll('input[name="pause_point"]').forEach(cb => {
+                const value = parseInt(cb.value);
+                cb.checked = draft.pausePoints.includes(value);
+                cb.closest('.pause-point-item').classList.toggle('selected', cb.checked);
+            });
+        }
+        
+        // 恢复已上传文件列表（仅恢复成功上传的文件信息）
+        if (draft.uploadedFiles && draft.uploadedFiles.length > 0) {
+            console.log('[Draft] 恢复上传文件:', draft.uploadedFiles);
+            uploadedFiles = draft.uploadedFiles.map(f => ({
+                filename: f.filename,
+                path: f.path,
+                size: f.size,
+                status: 'success'
+            }));
+            renderUploadedFilesList();
+            document.getElementById('uploaded-files-list').style.display = 'block';
+        }
+        
+        // 恢复完成，允许自动保存
+        isRestoringDraft = false;
+        console.log('[Draft] 设置 isRestoringDraft = false，恢复完成');
+        
+        // 显示恢复提示（让用户知道数据已恢复）
+        if (draft.savedAt) {
+            const savedTime = new Date(draft.savedAt);
+            const relativeTime = getRelativeTimeString(savedTime);
+            const exactTime = savedTime.toLocaleString('zh-CN');
+            console.log('[Draft] 显示恢复提示:', relativeTime, exactTime);
+            Toast.info(`已恢复${relativeTime}的草稿（${exactTime}）`);
+        }
+        
+    } catch (e) {
+        console.error('[Draft] 加载失败:', e);
+        // 如果加载失败，静默清除可能损坏的数据
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+        isRestoringDraft = false;
+    }
+}
+
+// 清除草稿
+function clearDraft() {
+    if (confirm('确定要清除已保存的草稿吗？这将重置所有表单字段。')) {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+        
+        // 重置表单
+        const form = document.getElementById('task-form');
+        form.reset();
+        
+        // 重置关键词
+        keywordsData = [];
+        renderKeywordsList();
+        
+        // 重置暂停点样式
+        document.querySelectorAll('.pause-point-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        
+        // 隐藏来源警告
+        document.getElementById('source-warning').classList.remove('show');
+        
+        Toast.success('草稿已清除');
+    }
+}
+
+// 绑定自动保存事件（任何修改立即保存，使用短防抖避免频繁写入）
+function bindAutoSave() {
+    const form = document.getElementById('task-form');
+    
+    // 短防抖函数（100ms，几乎立即保存）
+    let saveTimeout = null;
+    const debouncedSave = () => {
+        if (saveTimeout) clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(saveDraft, 100);
+    };
+    
+    // 监听文本输入
+    form.topic.addEventListener('input', debouncedSave);
+    form.max_papers.addEventListener('input', debouncedSave);
+    form.year_start.addEventListener('input', debouncedSave);
+    form.year_end.addEventListener('input', debouncedSave);
+    
+    // 监听选择框变化 - 立即保存
+    form.language.addEventListener('change', saveDraft);
+    form.outline_depth.addEventListener('change', saveDraft);
+    
+    // 监听复选框变化 - 立即保存
+    form.enable_arxiv.addEventListener('change', saveDraft);
+    form.enable_figures.addEventListener('change', saveDraft);
+    form.enable_evaluation.addEventListener('change', saveDraft);
+    
+    // 监听暂停点变化 - 立即保存
+    document.querySelectorAll('input[name="pause_point"]').forEach(cb => {
+        cb.addEventListener('change', saveDraft);
+    });
+}
+
+// 渲染暂停点选项
+function renderPausePointsOptions() {
+    const container = document.getElementById('pause-points-container');
+    if (!container) return;
+    
+    let html = '';
+    for (let i = 1; i <= TOTAL_STEPS; i++) {
+        const stepInfo = PIPELINE_STEPS[i];
+        if (!stepInfo) continue;
+        
+        const isRecommended = stepInfo.recommended === true;
+        // 默认不勾选任何暂停点（一次性全部生成），只是推荐勾选 MEKG后(1) 和 大纲后(2)
+        const isDefaultChecked = false;
+        
+        html += `
+            <label class="pause-point-item${isRecommended ? ' recommended' : ''}">
+                <input type="checkbox" name="pause_point" value="${i}">
+                <div class="pause-point-info">
+                    <div class="pause-point-name">
+                        ${stepInfo.label}
+                        ${isRecommended ? '<span class="recommended-badge">推荐</span>' : ''}
+                    </div>
+                    <div class="pause-point-desc">${stepInfo.description}</div>
+                </div>
+            </label>
+        `;
+    }
+    
+    container.innerHTML = html;
+    
+    // 绑定选中状态样式
+    container.querySelectorAll('.pause-point-item input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            this.closest('.pause-point-item').classList.toggle('selected', this.checked);
+        });
+    });
+}
+
+// 生成关键词
+async function generateKeywords() {
+    const topic = document.getElementById('topic').value.trim();
+    if (!topic) {
+        Toast.error('请先输入研究主题');
+        document.getElementById('topic').focus();
+        return;
+    }
+    
+    const btn = document.getElementById('generate-keywords-btn');
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 生成中...';
+    btn.disabled = true;
+    
+    try {
+        const response = await api.post('/tasks/generate-keywords', { topic: topic });
+        const keywords = response.keywords || [];
+        
+        if (keywords.length === 0) {
+            Toast.warning('未能生成关键词，请手动输入');
+            return;
+        }
+        
+        // 初始化关键词数据
+        keywordsData = keywords.map(kw => ({
+            text: typeof kw === 'string' ? kw : kw.text || kw.keyword,
+            weight: typeof kw === 'object' && kw.weight ? kw.weight : 0.8,
+            enabled: true
+        }));
+        
+        // 显示关键词列表
+        renderKeywordsList();
+        document.getElementById('keywords-list-container').style.display = 'block';
+        
+        // 生成关键词后立即保存草稿
+        saveDraft();
+        
+        Toast.success(`已生成 ${keywords.length} 个关键词`);
+        
+    } catch (e) {
+        Toast.error(e.message || '生成关键词失败');
+    } finally {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    }
+}
+
+// 渲染关键词列表
+function renderKeywordsList() {
+    const container = document.getElementById('keywords-list');
+    const emptyState = document.getElementById('keywords-empty-state');
+    const countEl = document.getElementById('keywords-count');
+    
+    // 更新计数
+    const enabledCount = keywordsData.filter(kw => kw.enabled).length;
+    countEl.textContent = `${keywordsData.length} 个关键词${enabledCount !== keywordsData.length ? ` (已选 ${enabledCount})` : ''}`;
+    
+    if (keywordsData.length === 0) {
+        // 显示空状态
+        container.innerHTML = `
+            <div class="keywords-empty-state" id="keywords-empty-state">
+                <i class="fas fa-tags"></i>
+                <p>暂无关键词</p>
+                <span>点击上方按钮生成或添加关键词</span>
+            </div>
+        `;
+    } else {
+        // 渲染关键词列表
+        container.innerHTML = keywordsData.map((kw, index) => `
+            <div class="keyword-item ${kw.enabled ? '' : 'disabled'}" data-index="${index}">
+                <input type="checkbox" ${kw.enabled ? 'checked' : ''} onchange="toggleKeyword(${index}, this.checked)">
+                <div class="keyword-text">
+                    <input type="text" value="${escapeHtml(kw.text)}" onchange="updateKeywordText(${index}, this.value)"
+                           onkeydown="handleKeywordInputKeydown(event)">
+                </div>
+                <div class="keyword-weight-wrapper">
+                    <span class="keyword-weight-label">权重: ${kw.weight.toFixed(1)}</span>
+                    <input type="range" class="keyword-weight-slider" min="0.1" max="1" step="0.1" value="${kw.weight}"
+                           oninput="updateKeywordWeightDisplay(${index}, this.value)"
+                           onchange="updateKeywordWeight(${index}, this.value)" ${kw.enabled ? '' : 'disabled'}>
+                </div>
+                <button type="button" class="keyword-delete-btn" onclick="deleteKeyword(${index})" title="删除">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+    
+    // 更新隐藏字段
+    updateKeywordsHiddenField();
+    
+    // 更新全选状态
+    updateSelectAllState();
+}
+
+// 处理关键词输入框的键盘事件
+function handleKeywordInputKeydown(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        event.target.blur();
+    }
+}
+
+// 实时更新权重显示
+function updateKeywordWeightDisplay(index, value) {
+    const item = document.querySelector(`.keyword-item[data-index="${index}"]`);
+    if (item) {
+        const label = item.querySelector('.keyword-weight-label');
+        if (label) {
+            label.textContent = `权重: ${parseFloat(value).toFixed(1)}`;
+        }
+    }
+}
+
+// 切换单个关键词
+function toggleKeyword(index, enabled) {
+    keywordsData[index].enabled = enabled;
+    renderKeywordsList();
+}
+
+// 更新关键词文本
+function updateKeywordText(index, text) {
+    keywordsData[index].text = text;
+    updateKeywordsHiddenField();
+}
+
+// 更新关键词权重
+function updateKeywordWeight(index, weight) {
+    keywordsData[index].weight = parseFloat(weight);
+    updateKeywordsHiddenField();
+}
+
+// 删除关键词
+function deleteKeyword(index) {
+    keywordsData.splice(index, 1);
+    renderKeywordsList();
+}
+
+// 全选/取消全选
+function toggleAllKeywords(checkbox) {
+    const enabled = checkbox.checked;
+    keywordsData.forEach(kw => kw.enabled = enabled);
+    renderKeywordsList();
+}
+
+// 更新全选状态
+function updateSelectAllState() {
+    const selectAllCheckbox = document.getElementById('select-all-keywords');
+    const allEnabled = keywordsData.every(kw => kw.enabled);
+    const someEnabled = keywordsData.some(kw => kw.enabled);
+    
+    selectAllCheckbox.checked = allEnabled;
+    selectAllCheckbox.indeterminate = someEnabled && !allEnabled;
+}
+
+// 添加自定义关键词
+function addCustomKeyword() {
+    keywordsData.push({
+        text: '新关键词',
+        weight: 0.8,
+        enabled: true
+    });
+    renderKeywordsList();
+    
+    // 聚焦到新添加的关键词输入框
+    setTimeout(() => {
+        const inputs = document.querySelectorAll('.keyword-item .keyword-text input');
+        if (inputs.length > 0) {
+            const lastInput = inputs[inputs.length - 1];
+            lastInput.focus();
+            lastInput.select();
+        }
+    }, 100);
+}
+
+// 更新隐藏字段（用于表单提交）
+function updateKeywordsHiddenField() {
+    const enabledKeywords = keywordsData
+        .filter(kw => kw.enabled && kw.text.trim())
+        .map(kw => `${kw.text.trim()}:${kw.weight}`)
+        .join(',');
+    
+    document.getElementById('keywords').value = enabledKeywords;
+    
+    // 关键词变化时保存草稿
+    saveDraft();
+}
+
+// HTML 转义
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 立即上传文件到共享目录
+async function uploadFilesImmediately(files) {
+    const listContainer = document.getElementById('uploaded-files-list');
+    const contentContainer = document.getElementById('uploaded-files-content');
+    const countEl = document.getElementById('uploaded-count');
+    
+    // 显示列表容器
+    listContainer.style.display = 'block';
+    
+    for (const file of files) {
+        // 检查是否已存在同名文件
+        if (uploadedFiles.some(f => f.filename === file.name && f.status !== 'error')) {
+            Toast.warning(`文件 "${file.name}" 已存在，跳过`);
+            continue;
+        }
+        
+        // 添加到列表（上传中状态），保存文件对象以便重试
+        const fileInfo = {
+            filename: file.name,
+            size: file.size,
+            status: 'uploading',
+            path: null,
+            error: null,
+            file: file  // 保存文件对象以便重试
+        };
+        uploadedFiles.push(fileInfo);
+        renderUploadedFilesList();
+        
+        await uploadSingleFile(fileInfo);
+    }
+    
+    // 更新计数
+    const successCount = uploadedFiles.filter(f => f.status === 'success').length;
+    countEl.textContent = `${successCount} 个`;
+    
+    // 上传完成后保存草稿
+    saveDraft();
+}
+
+// 上传单个文件
+async function uploadSingleFile(fileInfo) {
+    try {
+        fileInfo.status = 'uploading';
+        fileInfo.error = null;
+        renderUploadedFilesList();
+        
+        // 调用独立上传 API
+        const result = await api.uploadPdf(fileInfo.file);
+        
+        // 更新状态
+        fileInfo.status = 'success';
+        fileInfo.path = result.path;
+        fileInfo.error = null;
+        
+        // 如果服务器返回了清理后的文件名，更新显示
+        if (result.filename && result.filename !== fileInfo.filename) {
+            fileInfo.displayName = fileInfo.filename;  // 保存原始名称
+            fileInfo.filename = result.filename;  // 使用服务器返回的文件名
+        }
+        
+        if (result.exists) {
+            Toast.info(`文件 "${fileInfo.file.name}" 已存在于服务器`);
+        }
+    } catch (e) {
+        console.error('Upload failed:', e);
+        fileInfo.status = 'error';
+        fileInfo.error = e.message || '上传失败，请重试';
+    }
+    
+    renderUploadedFilesList();
+    
+    // 更新计数
+    const successCount = uploadedFiles.filter(f => f.status === 'success').length;
+    document.getElementById('uploaded-count').textContent = `${successCount} 个`;
+}
+
+// 重试上传失败的文件
+async function retryUpload(index) {
+    const fileInfo = uploadedFiles[index];
+    if (!fileInfo || !fileInfo.file) {
+        Toast.error('无法重试：文件对象不存在');
+        return;
+    }
+    
+    await uploadSingleFile(fileInfo);
+    
+    // 上传完成后保存草稿
+    saveDraft();
+}
+
+// 渲染已上传文件列表
+function renderUploadedFilesList() {
+    const contentContainer = document.getElementById('uploaded-files-content');
+    const countEl = document.getElementById('uploaded-count');
+    
+    const successCount = uploadedFiles.filter(f => f.status === 'success').length;
+    countEl.textContent = `${successCount} 个`;
+    
+    contentContainer.innerHTML = uploadedFiles.map((file, index) => {
+        let statusHtml = '';
+        let actionsHtml = '';
+        let itemClass = '';
+        let errorReasonHtml = '';
+        
+        // 显示的文件名（优先显示原始名称）
+        const displayFilename = file.displayName || file.filename;
+        
+        if (file.status === 'uploading') {
+            statusHtml = '<span class="uploaded-file-status status-uploading"><i class="fas fa-spinner fa-spin"></i> 上传中</span>';
+            itemClass = 'uploading';
+            actionsHtml = ''; // 上传中不显示操作按钮
+        } else if (file.status === 'success') {
+            statusHtml = '<span class="uploaded-file-status status-success"><i class="fas fa-check"></i> 已上传</span>';
+            actionsHtml = `
+                <div class="uploaded-file-actions">
+                    <button type="button" class="uploaded-file-delete" onclick="removeUploadedFile(${index})" title="移除">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+        } else if (file.status === 'error') {
+            statusHtml = '<span class="uploaded-file-status status-error"><i class="fas fa-times"></i> 失败</span>';
+            itemClass = 'error';
+            actionsHtml = `
+                <div class="uploaded-file-actions">
+                    <button type="button" class="uploaded-file-retry" onclick="retryUpload(${index})" title="重试">
+                        <i class="fas fa-redo"></i> 重试
+                    </button>
+                    <button type="button" class="uploaded-file-delete" onclick="removeUploadedFile(${index})" title="移除">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            // 显示错误原因
+            if (file.error) {
+                errorReasonHtml = `<div class="uploaded-file-error-reason"><i class="fas fa-exclamation-circle"></i> ${escapeHtml(file.error)}</div>`;
+            }
+        }
+        
+        return `
+            <div class="uploaded-file-item ${itemClass}">
+                <div class="uploaded-file-info">
+                    <i class="fas fa-file-pdf"></i>
+                    <span class="uploaded-file-name" title="${escapeHtml(displayFilename)}">${escapeHtml(displayFilename)}</span>
+                    <span class="uploaded-file-size">${formatFileSize(file.size)}</span>
+                </div>
+                ${statusHtml}
+                ${actionsHtml}
+                ${errorReasonHtml}
+            </div>
+        `;
+    }).join('');
+}
+
+// 格式化文件大小
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+// 移除已上传的文件（从列表中移除，不删除服务器文件）
+function removeUploadedFile(index) {
+    uploadedFiles.splice(index, 1);
+    renderUploadedFilesList();
+    
+    // 如果没有文件了，隐藏列表
+    if (uploadedFiles.length === 0) {
+        document.getElementById('uploaded-files-list').style.display = 'none';
+    }
+    
+    // 移除文件后保存草稿
+    saveDraft();
+}
+
+async function handleCreateTask(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = form.querySelector('button[type="submit"]');
+    
+    const topic = form.topic.value.trim();
+    if (!topic) {
+        Toast.error('请输入研究主题');
+        return;
+    }
+    
+    const enableArxiv = form.enable_arxiv.checked;
+    const successfulUploads = uploadedFiles.filter(f => f.status === 'success');
+    
+    if (!enableArxiv && successfulUploads.length === 0) {
+        Toast.error('请启用 arXiv 搜索或上传至少一个 PDF 文档');
+        return;
+    }
+    
+    // 收集暂停点
+    const pausePoints = [];
+    form.querySelectorAll('input[name="pause_point"]:checked').forEach(cb => {
+        pausePoints.push(parseInt(cb.value));
+    });
+    
+    // 收集关键词
+    let keywordsValue = form.keywords.value;
+    let keywordsWithWeights = null;
+    if (keywordsValue) {
+        const parts = keywordsValue.split(',').map(k => k.trim()).filter(k => k);
+        keywordsWithWeights = parts.map(part => {
+            if (part.includes(':')) {
+                const [text, weight] = part.split(':');
+                return { keyword: text.trim(), weight: parseFloat(weight) || 0.8 };
+            }
+            return { keyword: part, weight: 0.8 };
+        });
+    }
+    
+    Loading.button(btn, true);
+    try {
+        // 创建任务，直接包含已上传的文件信息
+        const taskData = {
+            topic: topic,
+            keywords: keywordsWithWeights ? keywordsWithWeights.map(k => k.keyword).join(', ') : null,
+            keywords_with_weights: keywordsWithWeights,
+            enable_arxiv: enableArxiv,
+            uploaded_files: successfulUploads.map(f => ({
+                filename: f.filename,
+                path: f.path,
+                type: 'pdf',
+                size: f.size
+            })),
+            config: {
+                max_papers: parseInt(form.max_papers.value) || 50,
+                year_start: parseInt(form.year_start.value) || 2020,
+                year_end: parseInt(form.year_end.value) || 2025,
+                language: form.language.value || 'en',
+                outline_depth: parseInt(form.outline_depth.value) || 3,
+                enable_figures: form.enable_figures.checked,
+                enable_evaluation: form.enable_evaluation.checked,
+                pause_points: pausePoints,
+                keywords_weights: keywordsWithWeights
+            }
+        };
+        
+        const task = await api.createTask(taskData);
+        
+        // 任务创建成功，清除草稿
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+        
+        Toast.success('任务创建成功');
+        window.location.href = `/task/${task.task_id}`;
+        
+    } catch (e) {
+        Toast.error(e.message || '创建任务失败');
+        Loading.button(btn, false);
+    }
+}
+
+// ==================== 知识库选择功能 ====================
+
+let knowledgeBaseFiles = []; // 知识库文件列表
+let selectedKbFiles = new Set(); // 已选中的知识库文件ID
+let kbSearchQuery = '';
+let kbSearchTimeout = null;
+
+// 显示知识库选择模态框
+async function showKnowledgeBaseModal() {
+    document.getElementById('kb-modal').classList.add('show');
+    selectedKbFiles.clear();
+    await loadKnowledgeBaseFiles();
+}
+
+// 关闭知识库选择模态框
+function closeKnowledgeBaseModal() {
+    document.getElementById('kb-modal').classList.remove('show');
+}
+
+// 加载知识库文件列表
+async function loadKnowledgeBaseFiles() {
+    const listContainer = document.getElementById('kb-file-list');
+    listContainer.innerHTML = '<div class="kb-loading"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+    
+    try {
+        const response = await api.getKnowledgeBaseFiles(1, 100, kbSearchQuery || null);
+        knowledgeBaseFiles = response.files || [];
+        renderKnowledgeBaseFiles();
+    } catch (e) {
+        listContainer.innerHTML = `
+            <div class="kb-empty-state">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>加载失败：${e.message || '未知错误'}</p>
+                <button class="btn btn-sm btn-secondary" onclick="loadKnowledgeBaseFiles()">重试</button>
+            </div>
+        `;
+    }
+}
+
+// 渲染知识库文件列表
+function renderKnowledgeBaseFiles() {
+    const listContainer = document.getElementById('kb-file-list');
+    
+    // 过滤掉已经在上传列表中的文件
+    const existingPaths = new Set(uploadedFiles.map(f => f.path));
+    const availableFiles = knowledgeBaseFiles.filter(f => !existingPaths.has(f.file_path));
+    
+    if (availableFiles.length === 0) {
+        listContainer.innerHTML = `
+            <div class="kb-empty-state">
+                <i class="fas fa-folder-open"></i>
+                <p>${knowledgeBaseFiles.length > 0 ? '所有文件已添加到当前任务' : '知识库为空'}</p>
+                <a href="/knowledge-base" class="btn btn-sm btn-primary" target="_blank">
+                    <i class="fas fa-plus"></i> 前往知识库上传
+                </a>
+            </div>
+        `;
+        return;
+    }
+    
+    listContainer.innerHTML = availableFiles.map(file => `
+        <div class="kb-file-item ${selectedKbFiles.has(file.id) ? 'selected' : ''}"
+             onclick="toggleKbFileSelection(${file.id})">
+            <input type="checkbox" ${selectedKbFiles.has(file.id) ? 'checked' : ''}
+                   onclick="event.stopPropagation(); toggleKbFileSelection(${file.id})">
+            <div class="kb-file-icon">
+                <i class="fas fa-file-pdf"></i>
+            </div>
+            <div class="kb-file-info">
+                <div class="kb-file-name" title="${escapeHtml(file.filename)}">${escapeHtml(file.title || file.filename)}</div>
+                <div class="kb-file-meta">${formatFileSize(file.file_size)} · ${formatKbDate(file.created_at)}</div>
+            </div>
+        </div>
+    `).join('');
+    
+    updateKbSelectedCount();
+}
+
+// 切换知识库文件选择
+function toggleKbFileSelection(fileId) {
+    if (selectedKbFiles.has(fileId)) {
+        selectedKbFiles.delete(fileId);
+    } else {
+        selectedKbFiles.add(fileId);
+    }
+    renderKnowledgeBaseFiles();
+}
+
+// 更新已选数量显示
+function updateKbSelectedCount() {
+    const countEl = document.getElementById('kb-selected-count');
+    countEl.textContent = `已选择 ${selectedKbFiles.size} 个文件`;
+}
+
+// 知识库搜索
+function handleKbSearch(event) {
+    clearTimeout(kbSearchTimeout);
+    kbSearchTimeout = setTimeout(() => {
+        kbSearchQuery = event.target.value.trim();
+        loadKnowledgeBaseFiles();
+    }, 300);
+}
+
+// 确认选择知识库文件
+function confirmKbSelection() {
+    if (selectedKbFiles.size === 0) {
+        Toast.warning('请选择至少一个文件');
+        return;
+    }
+    
+    // 将选中的文件添加到上传列表
+    const selectedFiles = knowledgeBaseFiles.filter(f => selectedKbFiles.has(f.id));
+    
+    for (const file of selectedFiles) {
+        // 检查是否已存在
+        if (uploadedFiles.some(f => f.path === file.file_path)) {
+            continue;
+        }
+        
+        uploadedFiles.push({
+            filename: file.filename,
+            path: file.file_path,
+            size: file.file_size,
+            status: 'success',
+            fromKnowledgeBase: true // 标记来自知识库
+        });
+    }
+    
+    // 显示文件列表
+    document.getElementById('uploaded-files-list').style.display = 'block';
+    renderUploadedFilesList();
+    
+    // 更新计数
+    const successCount = uploadedFiles.filter(f => f.status === 'success').length;
+    document.getElementById('uploaded-count').textContent = `${successCount} 个`;
+    
+    // 保存草稿
+    saveDraft();
+    
+    // 关闭模态框
+    closeKnowledgeBaseModal();
+    
+    Toast.success(`已添加 ${selectedFiles.length} 个文件`);
+}
+
+// 格式化知识库日期
+function formatKbDate(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('zh-CN');
+}
+
+// 直接上传文件处理
+async function handleDirectFileUpload(files) {
+    if (!files || files.length === 0) return;
+    
+    // 检查文件数量限制
+    const totalCount = uploadedFiles.length + files.length;
+    if (totalCount > MAX_FILE_COUNT) {
+        Toast.error(`最多只能上传 ${MAX_FILE_COUNT} 个文件，当前已有 ${uploadedFiles.length} 个`);
+        return;
+    }
+    
+    // 过滤非 PDF 文件
+    const pdfFiles = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+    if (pdfFiles.length !== files.length) {
+        Toast.warning('已过滤非 PDF 格式的文件');
+    }
+    
+    if (pdfFiles.length === 0) {
+        return;
+    }
+    
+    // 立即开始上传
+    await uploadFilesImmediately(pdfFiles);
+    
+    // 清空文件输入
+    document.getElementById('direct-file-input').value = '';
+}
+
+// 点击模态框外部关闭
+document.addEventListener('click', (e) => {
+    if (e.target.id === 'kb-modal') {
+        closeKnowledgeBaseModal();
+    }
+});
+</script>
+{% endblock %}

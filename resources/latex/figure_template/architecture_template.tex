@@ -1,0 +1,48 @@
+% Architecture Diagram Template - 架构图模板
+% 每层包含：层标题 + 垂直排列的组件
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    % 层标题样式 - 带颜色的标题栏
+    layer-title/.style={
+        rectangle,
+        rounded corners=3pt,
+        draw=#1!70,
+        fill=#1!25,
+        font=\small\sffamily\bfseries,
+        text=white,
+        minimum width=5.5cm,
+        minimum height=0.7cm,
+        text centered,
+        drop shadow={shadow xshift=0.5pt, shadow yshift=-0.5pt, opacity=0.15},
+    },
+    % 组件样式 - 垂直堆叠的组件
+    comp/.style={
+        rectangle,
+        rounded corners=5pt,
+        draw=#1!60,
+        fill=#1!12,
+        font=\footnotesize\sffamily,
+        text=black,
+        text width=5.2cm,
+        minimum height=0.65cm,
+        text centered,
+        inner sep=3pt,
+    },
+    % 箭头样式
+    arrow/.style={
+        ->,
+        thick,
+        >=stealth,
+        draw=gray!70,
+        line width=1.2pt,
+    },
+]
+
+<layers>
+
+\end{tikzpicture}
+\caption{<caption>}
+\label{fig:<label>}
+\end{figure}

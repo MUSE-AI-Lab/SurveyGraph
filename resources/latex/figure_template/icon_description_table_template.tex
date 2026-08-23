@@ -1,0 +1,17 @@
+% Icon Description Table Template
+% 带图标的描述表格 - 类似 (Natural language prompts)
+% 特点：左侧图标+标题，右侧详细描述，交替行背景色
+
+\begin{table}[H]
+\centering
+\caption{<caption>}
+\label{tab:<label>}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.22\textwidth} >{\raggedright\arraybackslash}p{0.73\textwidth}}
+\toprule
+\textbf{<header_left>} & \textbf{<header_right>} \\
+\midrule
+<rows>
+\bottomrule
+\end{tabular}
+\end{table}

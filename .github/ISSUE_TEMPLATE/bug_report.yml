@@ -1,0 +1,26 @@
+name: Bug report
+description: Report a reproducible problem in SurveyGraph.
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Include the smallest command, input, and commit that reproduce the issue. Remove credentials and private data.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Python version, operating system, and optional provider/backend versions.
+    validations:
+      required: true

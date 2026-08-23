@@ -1,0 +1,3037 @@
+{% extends "base.html" %}
+
+{% block title %}任务详情 - SurveyGraph{% endblock %}
+
+{% block head %}
+<style>
+/* 任务详情页面专用样式 */
+.task-detail-page {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* 任务头部信息 */
+.task-header-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    margin-bottom: 24px;
+}
+
+.task-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.task-title-section h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+}
+
+.task-topic {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.task-status-badge {
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.task-status-badge.pending { background: var(--bg-tertiary); color: var(--text-secondary); }
+.task-status-badge.running { background: var(--accent-primary); color: white; animation: pulse 2s infinite; }
+.task-status-badge.completed { background: var(--accent-success); color: white; }
+.task-status-badge.failed { background: var(--accent-error); color: white; }
+.task-status-badge.paused { background: var(--accent-warning); color: white; }
+.task-status-badge.cancelled { background: var(--text-muted); color: white; }
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* 任务元信息网格 */
+.task-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    padding: 24px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    margin-bottom: 24px;
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.meta-item.keywords-meta-item {
+    grid-column: span 2;
+}
+
+.keywords-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.keyword-item-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+}
+
+.keyword-item-display .keyword-text {
+    color: var(--text-primary);
+    font-weight: 500;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.keyword-item-display .keyword-weight {
+    color: var(--accent-primary);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    background: var(--accent-primary-light);
+    border-radius: var(--radius-full);
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.keywords-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.keywords-list::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 3px;
+}
+
+.keywords-list::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.keywords-list::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+.meta-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.meta-value {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* 进度步骤 - 修复对齐问题 */
+.progress-section {
+    margin-bottom: 24px;
+}
+
+.progress-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.progress-steps-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.progress-step-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: default;
+    transition: all var(--transition-fast);
+    min-height: 64px;
+}
+
+.progress-step-item.has-preview {
+    cursor: pointer;
+}
+
+.progress-step-item.has-preview:hover {
+    border-color: var(--accent-primary);
+    background: var(--accent-primary-light);
+}
+
+.progress-step-item.completed {
+    background: var(--accent-success-light);
+    border-color: var(--accent-success);
+}
+
+.progress-step-item.active {
+    background: var(--accent-primary-light);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.progress-step-item.failed {
+    background: var(--accent-error-light);
+    border-color: var(--accent-error);
+}
+
+.progress-step-item.paused {
+    background: var(--accent-warning-light);
+    border-color: var(--accent-warning);
+}
+
+.progress-step-item.paused .step-number {
+    background: var(--accent-warning);
+    color: white;
+}
+
+/* 暂停点标记 */
+.progress-step-item.pause-point {
+    position: relative;
+}
+
+.progress-step-item.pause-point::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    background: var(--accent-warning);
+    border-radius: 50%;
+}
+
+.step-number {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.progress-step-item.completed .step-number {
+    background: var(--accent-success);
+    color: white;
+}
+
+.progress-step-item.active .step-number {
+    background: var(--accent-primary);
+    color: white;
+}
+
+.progress-step-item.failed .step-number {
+    background: var(--accent-error);
+    color: white;
+}
+
+.step-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.step-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.step-status-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.step-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.progress-step-item:hover .step-actions {
+    opacity: 1;
+}
+
+.step-actions .btn {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+/* 操作按钮区 */
+.task-actions-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* 内容标签页 */
+.content-tabs {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.tabs-header {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    overflow-x: auto;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.tab-btn.active {
+    color: var(--accent-primary);
+    border-bottom-color: var(--accent-primary);
+    background: var(--bg-primary);
+}
+
+.tab-btn i {
+    font-size: 16px;
+}
+
+.tab-panel {
+    display: none;
+    padding: 24px;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+/* 步骤结果卡片 */
+.step-result-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.step-result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+}
+
+.step-result-header:hover {
+    background: var(--bg-hover);
+}
+
+.step-result-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.step-result-title i {
+    color: var(--accent-success);
+}
+
+.step-result-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.step-result-body {
+    padding: 20px;
+    display: none;
+}
+
+.step-result-card.expanded .step-result-body {
+    display: block;
+}
+
+/* MEKG 可视化 */
+.mekg-visualization {
+    height: 500px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+/* 日志面板 - 终端风格 */
+.logs-panel {
+    background: #0d1117;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid #30363d;
+}
+
+.logs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+}
+
+.logs-header h4 {
+    color: #c9d1d9;
+    margin: 0;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logs-header h4 .terminal-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #238636;
+    animation: terminal-blink 1s infinite;
+}
+
+.logs-header h4 .terminal-dot.disconnected {
+    background: #f85149;
+    animation: none;
+}
+
+@keyframes terminal-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.logs-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logs-filter {
+    display: flex;
+    gap: 4px;
+}
+
+.logs-filter-btn {
+    padding: 4px 10px;
+    font-size: 11px;
+    background: transparent;
+    border: 1px solid #30363d;
+    border-radius: var(--radius-sm);
+    color: #8b949e;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.logs-filter-btn:hover {
+    border-color: #58a6ff;
+    color: #58a6ff;
+}
+
+.logs-filter-btn.active {
+    background: #238636;
+    border-color: #238636;
+    color: white;
+}
+
+.logs-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.logs-action-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+    background: transparent;
+    border: 1px solid #30363d;
+    border-radius: var(--radius-sm);
+    color: #8b949e;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.logs-action-btn:hover {
+    border-color: #58a6ff;
+    color: #58a6ff;
+}
+
+.logs-content {
+    height: 500px;
+    overflow-y: auto;
+    padding: 12px 16px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    background: #0d1117;
+}
+
+.logs-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.logs-content::-webkit-scrollbar-track {
+    background: #161b22;
+}
+
+.logs-content::-webkit-scrollbar-thumb {
+    background: #30363d;
+    border-radius: 4px;
+}
+
+.logs-content::-webkit-scrollbar-thumb:hover {
+    background: #484f58;
+}
+
+.log-entry {
+    display: flex;
+    gap: 8px;
+    padding: 2px 0;
+    border-bottom: none;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.log-entry:hover {
+    background: rgba(56, 139, 253, 0.1);
+}
+
+.log-time {
+    color: #484f58;
+    flex-shrink: 0;
+    min-width: 70px;
+    font-size: 11px;
+}
+
+.log-level {
+    flex-shrink: 0;
+    min-width: 50px;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+.log-level.info { color: #58a6ff; }
+.log-level.warning { color: #d29922; }
+.log-level.error { color: #f85149; }
+.log-level.debug { color: #8b949e; }
+.log-level.success { color: #238636; }
+
+.log-step {
+    color: #a371f7;
+    flex-shrink: 0;
+    min-width: 90px;
+    font-size: 11px;
+}
+
+.log-message {
+    color: #c9d1d9;
+    flex: 1;
+    word-break: break-word;
+}
+
+.log-entry.highlight {
+    background: rgba(56, 139, 253, 0.15);
+    border-left: 2px solid #58a6ff;
+    padding-left: 8px;
+    margin-left: -10px;
+}
+
+/* 实时日志指示器 */
+.realtime-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #8b949e;
+}
+
+.realtime-indicator .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #238636;
+}
+
+.realtime-indicator.connected .dot {
+    animation: pulse-dot 1.5s infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+}
+
+/* 空日志状态 */
+.logs-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #484f58;
+    text-align: center;
+}
+
+.logs-empty i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.logs-empty p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* 进度消息样式 */
+.log-entry.progress-entry {
+    color: #58a6ff;
+    font-weight: 500;
+}
+
+.log-entry.progress-entry .log-message {
+    color: #58a6ff;
+}
+
+/* Outline 编辑器模态框 */
+.outline-modal-content {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.outline-tree {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.outline-node {
+    margin-bottom: 8px;
+}
+
+.outline-node-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.outline-node-header:hover {
+    border-color: var(--accent-primary);
+}
+
+.outline-node-number {
+    font-weight: 600;
+    color: var(--accent-primary);
+    min-width: 40px;
+}
+
+.outline-node-title {
+    flex: 1;
+    font-weight: 500;
+}
+
+.outline-node-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.outline-node-header:hover .outline-node-actions {
+    opacity: 1;
+}
+
+.outline-children {
+    margin-left: 32px;
+    padding-left: 16px;
+    border-left: 2px solid var(--border-color);
+    margin-top: 8px;
+}
+
+/* 步骤结果详情模态框 */
+.step-detail-modal {
+    max-width: 900px;
+}
+
+.step-detail-content {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.step-detail-section {
+    margin-bottom: 24px;
+}
+
+.step-detail-section h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.step-detail-section h4 i {
+    color: var(--accent-primary);
+}
+
+/* MEKG 统计信息 */
+.mekg-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.mekg-stat-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    text-align: center;
+}
+
+.mekg-stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent-primary);
+}
+
+.mekg-stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* 论文列表 */
+.papers-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.paper-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: 8px;
+}
+
+.paper-item:hover {
+    border-color: var(--accent-primary);
+}
+
+.paper-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--accent-primary-light);
+    color: var(--accent-primary);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.paper-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.paper-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.paper-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Outline 编辑器 */
+.outline-editor-container {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 24px;
+}
+
+.outline-editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.outline-editor-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.outline-section-editor {
+    margin-bottom: 16px;
+}
+
+.outline-section-input {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: 8px;
+}
+
+.outline-section-input input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    outline: none;
+}
+
+.outline-section-input .section-number {
+    font-weight: 600;
+    color: var(--accent-primary);
+    min-width: 30px;
+}
+
+.outline-subsections {
+    margin-left: 40px;
+    padding-left: 16px;
+    border-left: 2px solid var(--border-color);
+}
+
+.add-section-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.add-section-btn:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    background: var(--accent-primary-light);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .task-header-top {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .task-meta-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .progress-steps-container {
+        flex-direction: column;
+    }
+    
+    .progress-step-item {
+        width: 100%;
+    }
+    
+    .tabs-header {
+        flex-wrap: nowrap;
+    }
+    
+    .tab-btn {
+        padding: 12px 16px;
+        font-size: 13px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="task-detail-page">
+    <div class="page-header">
+        <a href="/dashboard" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            返回任务列表
+        </a>
+    </div>
+    
+    <div id="task-content">
+        <div class="loading-placeholder" style="text-align: center; padding: 60px;">
+            <div class="spinner"></div>
+            <p style="margin-top: 16px; color: var(--text-muted);">加载任务详情...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Pipeline 步骤配置 - 实际执行步骤从1到10，不包含"未开始"(0)和"已完成"(11)
+const TaskConfig_PIPELINE_STEPS = {
+    1: { name: "MEKG_BUILT", label: "MEKG构建", description: "论文采集与知识图谱构建", hasPreview: true, previewType: "mekg" },
+    2: { name: "OUTLINE_GENERATED", label: "大纲生成", description: "生成综述大纲", hasPreview: true, canEdit: true, previewType: "outline" },
+    3: { name: "CONTENT_GENERATED", label: "内容生成", description: "生成Survey主体内容", hasPreview: true, previewType: "content" },
+    4: { name: "POST_REFINED", label: "文本优化", description: "PostRefiner文本优化", hasPreview: true, previewType: "content" },
+    5: { name: "TABLES_GENERATED", label: "表格生成", description: "生成表格", hasPreview: true, previewType: "tables" },
+    6: { name: "VISUALS_GENERATED", label: "视觉元素", description: "生成动态视觉元素", hasPreview: true, previewType: "visuals" },
+    7: { name: "EVALUATED", label: "质量评估", description: "质量评估与全局反思", hasPreview: true, previewType: "evaluation" },
+    8: { name: "CRITICAL_ANALYZED", label: "批判分析", description: "批判性分析增强", hasPreview: true, previewType: "critical" },
+    9: { name: "LATEX_GENERATED", label: "LaTeX生成", description: "生成LaTeX文档", hasPreview: true, previewType: "latex" },
+    10: { name: "VISUALIZATION_DONE", label: "可视化导出", description: "导出可视化数据", hasPreview: true, previewType: "visualization" }
+};
+
+// 总步骤数（不包含"未开始"和"已完成"）
+const TOTAL_STEPS = 10;
+
+// 使用页面级变量，避免与 app.js 中的全局变量冲突
+let pageTaskWS = null;
+let pageTaskPollingInterval = null;
+let pageCurrentTaskId = null;
+let pageAutoScroll = true;
+let pageLogEntries = [];
+let pageCurrentLogFilter = 'all';
+
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', async () => {
+    const pathParts = window.location.pathname.split('/');
+    const taskId = pathParts[pathParts.length - 1];
+    
+    if (taskId && taskId !== 'task') {
+        await loadTaskDetailPage(taskId);
+    }
+});
+
+async function loadTaskDetailPage(taskId) {
+    pageCurrentTaskId = taskId;
+    pageLogEntries = [];
+    
+    try {
+        const task = await api.getTask(taskId);
+        
+        // 检查管理员权限
+        try {
+            const user = await api.getCurrentUser();
+            window.currentUserIsAdmin = user.is_admin;
+        } catch (e) {
+            console.error('Failed to get user info:', e);
+        }
+
+        renderTaskDetailContent(task);
+        
+        // 连接 WebSocket 获取实时日志
+        connectTaskWebSocket(taskId, task.status);
+        
+        if (task.status === 'running' || task.status === 'pending') {
+            startTaskPolling(taskId);
+        }
+    } catch (e) {
+        document.getElementById('task-content').innerHTML = `
+            <div class="error-state" style="text-align: center; padding: 60px;">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px; color: var(--accent-error); margin-bottom: 16px;"></i>
+                <h3>加载失败</h3>
+                <p>${escapeHtml(e.message)}</p>
+                <button class="btn btn-primary" onclick="loadTaskDetailPage('${taskId}')">
+                    <i class="fas fa-redo"></i> 重试
+                </button>
+            </div>
+        `;
+    }
+}
+
+// ==================== WebSocket 实时日志功能 ====================
+
+function connectTaskWebSocket(taskId, taskStatus) {
+    // 关闭之前的连接
+    if (pageTaskWS) {
+        pageTaskWS.close();
+        pageTaskWS = null;
+    }
+    
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+        updateWSStatus(false, '未登录');
+        return;
+    }
+    
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/api/ws/${taskId}?token=${token}`;
+    
+    updateWSStatus(false, '连接中...');
+    
+    try {
+        pageTaskWS = new WebSocket(wsUrl);
+        
+        pageTaskWS.onopen = () => {
+            console.log('WebSocket connected for task:', taskId);
+            updateWSStatus(true, '已连接');
+            
+            // 添加连接成功的日志
+            addLogEntry({
+                level: 'success',
+                message: `WebSocket 连接已建立，开始接收实时日志...`,
+                timestamp: new Date().toISOString()
+            });
+        };
+        
+        pageTaskWS.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                handleWSMessage(data);
+            } catch (e) {
+                console.error('Failed to parse WebSocket message:', e);
+            }
+        };
+        
+        pageTaskWS.onclose = (event) => {
+            console.log('WebSocket closed:', event.code, event.reason);
+            updateWSStatus(false, '已断开');
+            
+            // 如果任务还在运行，尝试重连
+            if (pageCurrentTaskId === taskId && taskStatus === 'running') {
+                addLogEntry({
+                    level: 'warning',
+                    message: `WebSocket 连接断开，5秒后尝试重连...`,
+                    timestamp: new Date().toISOString()
+                });
+                
+                setTimeout(() => {
+                    if (pageCurrentTaskId === taskId) {
+                        connectTaskWebSocket(taskId, taskStatus);
+                    }
+                }, 5000);
+            }
+        };
+        
+        pageTaskWS.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            updateWSStatus(false, '连接错误');
+        };
+        
+    } catch (e) {
+        console.error('Failed to create WebSocket:', e);
+        updateWSStatus(false, '连接失败');
+    }
+}
+
+function handleWSMessage(data) {
+    const { type, data: payload } = data;
+    
+    switch (type) {
+        case 'status':
+            // 初始状态
+            addLogEntry({
+                level: 'info',
+                message: `任务状态: ${payload.status}, 当前步骤: ${getStepName(payload.current_step) || '未开始'}, 进度: ${payload.progress_percent || 0}%`,
+                timestamp: new Date().toISOString(),
+                step: payload.current_step
+            });
+            break;
+            
+        case 'progress':
+            // 进度更新
+            const progressMsg = payload.message || `步骤 ${payload.step}: ${payload.step_name || getStepName(payload.step)} - ${payload.progress_percent}%`;
+            addLogEntry({
+                level: 'info',
+                message: progressMsg,
+                timestamp: new Date().toISOString(),
+                step: payload.step,
+                isProgress: true
+            });
+            
+            // 同时更新页面上的进度显示
+            updateTaskProgressUI({
+                current_step: payload.step,
+                progress_percent: payload.progress_percent,
+                status: 'running'
+            });
+            break;
+            
+        case 'log':
+            // 详细日志（仅管理员可见）
+            addLogEntry({
+                level: payload.level || 'info',
+                message: payload.message,
+                timestamp: new Date().toISOString(),
+                step: payload.step
+            });
+            break;
+            
+        case 'status_change':
+            // 状态变更
+            const statusText = getStatusText(payload.status);
+            let statusLevel = 'info';
+            if (payload.status === 'completed') statusLevel = 'success';
+            else if (payload.status === 'failed') statusLevel = 'error';
+            else if (payload.status === 'paused') statusLevel = 'warning';
+            
+            addLogEntry({
+                level: statusLevel,
+                message: `任务状态变更: ${statusText}${payload.error_message ? ' - ' + payload.error_message : ''}`,
+                timestamp: new Date().toISOString()
+            });
+            
+            // 如果任务完成或失败，刷新页面
+            if (payload.status === 'completed' || payload.status === 'failed' || payload.status === 'cancelled') {
+                setTimeout(() => loadTaskDetailPage(pageCurrentTaskId), 1000);
+            }
+            break;
+            
+        case 'completion':
+            // 任务完成
+            addLogEntry({
+                level: payload.success ? 'success' : 'error',
+                message: payload.success ? '🎉 任务执行完成！' : '❌ 任务执行失败',
+                timestamp: new Date().toISOString()
+            });
+            break;
+            
+        case 'heartbeat':
+        case 'pong':
+            // 心跳消息，忽略
+            break;
+            
+        default:
+            console.log('Unknown WS message type:', type, data);
+    }
+}
+
+function addLogEntry(entry) {
+    pageLogEntries.push(entry);
+    
+    // 限制日志数量，防止内存溢出
+    if (pageLogEntries.length > 1000) {
+        pageLogEntries = pageLogEntries.slice(-500);
+    }
+    
+    renderLogEntries();
+}
+
+function renderLogEntries() {
+    const container = document.getElementById('logs-container');
+    if (!container) return;
+    
+    // 过滤日志
+    const filteredLogs = pageCurrentLogFilter === 'all'
+        ? pageLogEntries
+        : pageLogEntries.filter(log => log.level === pageCurrentLogFilter);
+    
+    if (filteredLogs.length === 0) {
+        container.innerHTML = `
+            <div class="logs-empty">
+                <i class="fas fa-terminal"></i>
+                <p>等待日志输出...</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = filteredLogs.map(log => {
+        const time = formatLogTime(log.timestamp);
+        const level = (log.level || 'info').toLowerCase();
+        const stepName = log.step ? getStepName(log.step) : '';
+        const isProgress = log.isProgress ? ' progress-entry' : '';
+        const isHighlight = log.level === 'error' || log.level === 'warning' ? ' highlight' : '';
+        
+        return `
+            <div class="log-entry log-${level}${isProgress}${isHighlight}">
+                <span class="log-time">${time}</span>
+                <span class="log-level ${level}">${level.toUpperCase()}</span>
+                <span class="log-step">${stepName}</span>
+                <span class="log-message">${escapeHtml(log.message)}</span>
+            </div>
+        `;
+    }).join('');
+    
+    // 自动滚动到底部
+    if (pageAutoScroll) {
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+function formatLogTime(timestamp) {
+    if (!timestamp) return '--:--:--';
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+}
+
+function updateWSStatus(connected, text) {
+    const dot = document.getElementById('ws-status-dot');
+    const statusText = document.getElementById('ws-status-text');
+    const indicator = document.getElementById('realtime-indicator');
+    
+    if (dot) {
+        dot.classList.toggle('disconnected', !connected);
+    }
+    if (statusText) {
+        statusText.textContent = text;
+    }
+    if (indicator) {
+        indicator.classList.toggle('connected', connected);
+    }
+}
+
+function clearLogs() {
+    pageLogEntries = [];
+    renderLogEntries();
+}
+
+function toggleAutoScroll() {
+    pageAutoScroll = !pageAutoScroll;
+    const btn = document.getElementById('auto-scroll-btn');
+    if (btn) {
+        btn.style.background = pageAutoScroll ? '#238636' : 'transparent';
+        btn.style.color = pageAutoScroll ? 'white' : '#8b949e';
+    }
+    
+    if (pageAutoScroll) {
+        const container = document.getElementById('logs-container');
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+}
+
+function getStatusText(status) {
+    const map = {
+        pending: '等待中',
+        running: '运行中',
+        completed: '已完成',
+        failed: '失败',
+        paused: '已暂停',
+        cancelled: '已取消'
+    };
+    return map[status] || status;
+}
+
+function getStepStatusText(status) {
+    const map = {
+        pending: '等待执行',
+        active: '正在执行',
+        completed: '已完成',
+        failed: '执行失败',
+        paused: '已暂停'
+    };
+    return map[status] || status;
+}
+
+// 渲染带权重的关键词列表
+function renderKeywordsWithWeights(task) {
+    // 尝试从 config.keywords_weights 获取带权重的关键词
+    let keywordsWithWeights = null;
+    
+    if (task.config && task.config.keywords_weights) {
+        keywordsWithWeights = task.config.keywords_weights;
+    }
+    
+    // 如果有带权重的关键词数据
+    if (keywordsWithWeights && Array.isArray(keywordsWithWeights) && keywordsWithWeights.length > 0) {
+        return keywordsWithWeights.map(kw => {
+            const keyword = kw.keyword || kw.text || kw;
+            const weight = kw.weight !== undefined ? kw.weight : 0.8;
+            return `
+                <div class="keyword-item-display">
+                    <span class="keyword-text">${escapeHtml(keyword)}</span>
+                    <span class="keyword-weight">${(weight * 100).toFixed(0)}%</span>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    // 回退：尝试解析 keywords 字符串（可能包含权重信息，格式如 "keyword1:0.9,keyword2:0.8"）
+    if (task.keywords) {
+        const keywordsStr = task.keywords;
+        const parts = keywordsStr.split(',').map(s => s.trim()).filter(s => s);
+        
+        if (parts.length > 0) {
+            return parts.map(part => {
+                let keyword = part;
+                let weight = null;
+                
+                // 检查是否包含权重信息（格式：keyword:weight）
+                if (part.includes(':')) {
+                    const [kw, w] = part.split(':');
+                    keyword = kw.trim();
+                    weight = parseFloat(w);
+                    if (isNaN(weight)) weight = null;
+                }
+                
+                if (weight !== null) {
+                    return `
+                        <div class="keyword-item-display">
+                            <span class="keyword-text">${escapeHtml(keyword)}</span>
+                            <span class="keyword-weight">${(weight * 100).toFixed(0)}%</span>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="keyword-item-display">
+                            <span class="keyword-text">${escapeHtml(keyword)}</span>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+    }
+    
+    // 默认显示
+    return '<div class="keyword-item-display"><span class="keyword-text">自动生成</span></div>';
+}
+
+// 获取步骤名称
+function getStepName(stepIndex) {
+    if (!stepIndex || stepIndex === 0) return '准备中';
+    const stepInfo = TaskConfig_PIPELINE_STEPS[stepIndex];
+    return stepInfo ? stepInfo.label : `步骤 ${stepIndex}`;
+}
+
+// 显示暂停点设置模态框
+async function showPausePointsModal(taskId) {
+    try {
+        const task = await api.getTask(taskId);
+        const currentPausePoints = (task.config && task.config.pause_points) || [];
+        
+        let stepsCheckboxes = '';
+        for (let i = 1; i <= TOTAL_STEPS; i++) {
+            const stepInfo = TaskConfig_PIPELINE_STEPS[i];
+            if (!stepInfo) continue;
+            
+            const isChecked = currentPausePoints.includes(i);
+            // 推荐在 MEKG构建(1) 和 大纲生成(2) 后设置暂停点，与 task_new.html 保持一致
+            const isRecommended = i === 1 || i === 2;
+            
+            stepsCheckboxes += `
+                <label class="pause-point-option ${isRecommended ? 'recommended' : ''}">
+                    <input type="checkbox" name="pause_point" value="${i}" ${isChecked ? 'checked' : ''}>
+                    <span class="step-number">${i}</span>
+                    <span class="step-label">${stepInfo.label}</span>
+                    ${isRecommended ? '<span class="recommended-badge">推荐</span>' : ''}
+                    <span class="step-desc">${stepInfo.description}</span>
+                </label>
+            `;
+        }
+        
+        const modalHtml = `
+            <div class="modal-overlay active" id="pause-points-modal" onclick="closePausePointsModal(event)">
+                <div class="modal" style="max-width: 600px;" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3 class="modal-title"><i class="fas fa-pause-circle"></i> 设置暂停点</h3>
+                        <button class="modal-close" onclick="closePausePointsModal()"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info" style="margin-bottom: 20px;">
+                            <i class="fas fa-info-circle"></i>
+                            <div class="alert-content">
+                                <strong>什么是暂停点？</strong>
+                                <p>任务执行到暂停点时会自动暂停，您可以预览当前步骤的结果，进行修改后再继续执行。</p>
+                                <p style="margin-top: 8px;"><strong>推荐：</strong>在"MEKG构建"和"大纲生成"步骤设置暂停点。MEKG构建后可以预览收集到的论文和知识图谱；大纲生成后可以调整综述的整体结构。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="pause-points-list">
+                            ${stepsCheckboxes}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closePausePointsModal()">取消</button>
+                        <button class="btn btn-primary" onclick="savePausePoints('${taskId}')">
+                            <i class="fas fa-save"></i> 保存设置
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // 添加样式
+        if (!document.getElementById('pause-points-styles')) {
+            const styleEl = document.createElement('style');
+            styleEl.id = 'pause-points-styles';
+            styleEl.textContent = `
+                .pause-points-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    max-height: 400px;
+                    overflow-y: auto;
+                }
+                .pause-point-option {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 12px 16px;
+                    background: var(--bg-secondary);
+                    border: 1px solid var(--border-color);
+                    border-radius: var(--radius-md);
+                    cursor: pointer;
+                    transition: all var(--transition-fast);
+                }
+                .pause-point-option:hover {
+                    border-color: var(--accent-primary);
+                    background: var(--accent-primary-light);
+                }
+                .pause-point-option.recommended {
+                    border-color: var(--accent-warning);
+                    background: var(--accent-warning-light);
+                }
+                .pause-point-option input[type="checkbox"] {
+                    width: 18px;
+                    height: 18px;
+                    accent-color: var(--accent-primary);
+                }
+                .pause-point-option .step-number {
+                    width: 28px;
+                    height: 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: var(--bg-tertiary);
+                    border-radius: 50%;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: var(--text-muted);
+                }
+                .pause-point-option .step-label {
+                    font-weight: 600;
+                    color: var(--text-primary);
+                    min-width: 80px;
+                }
+                .pause-point-option .step-desc {
+                    flex: 1;
+                    font-size: 12px;
+                    color: var(--text-muted);
+                }
+                .pause-point-option .recommended-badge {
+                    padding: 2px 8px;
+                    background: var(--accent-warning);
+                    color: white;
+                    border-radius: var(--radius-full);
+                    font-size: 10px;
+                    font-weight: 600;
+                }
+            `;
+            document.head.appendChild(styleEl);
+        }
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+    } catch (e) {
+        Toast.error('加载暂停点设置失败: ' + e.message);
+    }
+}
+
+function closePausePointsModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const modal = document.getElementById('pause-points-modal');
+    if (modal) modal.remove();
+}
+
+async function savePausePoints(taskId) {
+    const checkboxes = document.querySelectorAll('#pause-points-modal input[name="pause_point"]:checked');
+    const pausePoints = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    
+    try {
+        // 更新任务配置
+        await api.put(`/tasks/${taskId}`, {
+            config: {
+                pause_points: pausePoints
+            }
+        });
+        
+        Toast.success('暂停点设置已保存');
+        closePausePointsModal();
+        
+        // 刷新页面
+        loadTaskDetailPage(taskId);
+        
+    } catch (e) {
+        Toast.error('保存暂停点失败: ' + e.message);
+    }
+}
+
+function renderTaskDetailContent(task) {
+    const taskId = task.task_id;
+    const currentStepLabel = getStepName(task.current_step) || '准备中';
+    
+    // 获取暂停点配置
+    const pausePoints = (task.config && task.config.pause_points) || [];
+    
+    // 构建操作按钮
+    let actionButtons = '';
+    if (task.status === 'pending') {
+        actionButtons += `<button class="btn btn-primary" onclick="startTask('${taskId}')"><i class="fas fa-play"></i> 开始任务</button>`;
+        actionButtons += `<button class="btn btn-secondary" onclick="showPausePointsModal('${taskId}')"><i class="fas fa-pause-circle"></i> 设置暂停点</button>`;
+        actionButtons += `<button class="btn btn-danger btn-outline" onclick="deleteTask('${taskId}')"><i class="fas fa-trash"></i> 删除</button>`;
+    }
+    if (task.status === 'running') {
+        actionButtons += `<button class="btn btn-warning" onclick="pauseTask('${taskId}')"><i class="fas fa-pause"></i> 暂停</button>`;
+        actionButtons += `<button class="btn btn-danger" onclick="cancelTask('${taskId}')"><i class="fas fa-stop"></i> 取消</button>`;
+    }
+    if (task.status === 'paused') {
+        // 检查是否是因为到达暂停点而暂停
+        const isAtPausePoint = pausePoints.includes(task.current_step);
+        if (isAtPausePoint) {
+            actionButtons += `<button class="btn btn-success" onclick="resumeTask('${taskId}')"><i class="fas fa-play"></i> 确认并继续</button>`;
+            // 如果是在大纲步骤暂停，显示编辑大纲按钮
+            if (task.current_step === 2) {
+                actionButtons += `<button class="btn btn-secondary" onclick="showOutlineEditor('${taskId}')"><i class="fas fa-edit"></i> 编辑大纲</button>`;
+            }
+        } else {
+            actionButtons += `<button class="btn btn-primary" onclick="resumeTask('${taskId}')"><i class="fas fa-play"></i> 继续</button>`;
+        }
+        actionButtons += `<button class="btn btn-danger" onclick="cancelTask('${taskId}')"><i class="fas fa-stop"></i> 取消</button>`;
+    }
+    if (task.status === 'failed' || task.status === 'cancelled') {
+        actionButtons += `<button class="btn btn-primary" onclick="showRetryModal('${taskId}')"><i class="fas fa-redo"></i> 重试</button>`;
+        actionButtons += `<button class="btn btn-danger btn-outline" onclick="deleteTask('${taskId}')"><i class="fas fa-trash"></i> 删除</button>`;
+    }
+    if (task.status === 'completed') {
+        actionButtons += `<a href="/task/${taskId}/results" class="btn btn-primary"><i class="fas fa-eye"></i> 查看结果</a>`;
+        actionButtons += `<button class="btn btn-secondary" onclick="showRetryModal('${taskId}')"><i class="fas fa-redo"></i> 重新生成</button>`;
+    }
+    
+    // 管理员专用：强制从头开始
+    if (window.currentUserIsAdmin) {
+        actionButtons += `<button class="btn btn-warning btn-outline" onclick="forceRetryTask('${taskId}')" style="margin-left: 8px;"><i class="fas fa-redo"></i> 从头开始(Admin)</button>`;
+    }
+
+    // 构建进度步骤 - 只显示实际执行步骤1-10
+    let stepsHtml = '';
+    for (let i = 1; i <= TOTAL_STEPS; i++) {
+        const stepInfo = TaskConfig_PIPELINE_STEPS[i];
+        if (!stepInfo) continue;
+        
+        let status = 'pending';
+        // 判断步骤状态 - 基于 current_step 来判断，而不是仅依赖 task.status
+        // current_step >= 11 表示任务完成，所有步骤都完成
+        if (task.current_step >= 11 || (task.status === 'completed' && task.current_step >= 10)) {
+            // 任务完成（current_step >= 11），所有步骤都完成
+            status = 'completed';
+        } else if (i < task.current_step) {
+            // 步骤号小于当前步骤，已完成
+            status = 'completed';
+        } else if (i === task.current_step) {
+            // 当前步骤
+            if (task.status === 'running') status = 'active';
+            else if (task.status === 'failed') status = 'failed';
+            else if (task.status === 'paused') status = 'paused';
+            else if (task.status === 'completed') status = 'completed';
+            else status = 'pending';
+        }
+        // 步骤号大于当前步骤，保持 pending 状态
+        
+        const iconHtml = status === 'completed' ? '<i class="fas fa-check"></i>' :
+                         status === 'active' ? '<i class="fas fa-spinner fa-spin"></i>' :
+                         status === 'failed' ? '<i class="fas fa-times"></i>' :
+                         status === 'paused' ? '<i class="fas fa-pause"></i>' : i;
+        
+        // 判断是否可以预览（已完成的步骤可以预览）
+        const canPreview = stepInfo.hasPreview && (status === 'completed' || (status === 'paused' && i === task.current_step));
+        const canEdit = stepInfo.canEdit && canPreview && task.status !== 'running';
+        
+        // 判断是否是暂停点
+        const isPausePoint = pausePoints.includes(i);
+        
+        stepsHtml += `
+            <div class="progress-step-item ${status}${canPreview ? ' has-preview' : ''}${isPausePoint ? ' pause-point' : ''}"
+                 data-step="${i}"
+                 ${canPreview ? `onclick="viewStepResult(${i}, '${taskId}')"` : ''}>
+                <div class="step-number">${iconHtml}</div>
+                <div class="step-info">
+                    <div class="step-name">${stepInfo.label}</div>
+                    <div class="step-status-text">${getStepStatusText(status)}${isPausePoint ? ' · 暂停点' : ''}</div>
+                </div>
+                ${canPreview ? `
+                <div class="step-actions">
+                    <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation(); viewStepResult(${i}, '${taskId}')" title="查看结果">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    ${canEdit ? `
+                    <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation(); editStepResult(${i}, '${taskId}')" title="编辑">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    ` : ''}
+                </div>
+                ` : ''}
+            </div>
+        `;
+    }
+    
+    document.getElementById('task-content').innerHTML = `
+        <!-- 任务头部信息 -->
+        <div class="task-header-card">
+            <div class="task-header-top">
+                <div class="task-title-section">
+                    <h1>${escapeHtml(task.topic)}</h1>
+                    <div class="task-topic">任务 ID: ${escapeHtml(taskId)}</div>
+                </div>
+                <div class="task-status-badge ${task.status}">${getStatusText(task.status)}</div>
+            </div>
+            
+            <div class="task-meta-grid">
+                <div class="meta-item keywords-meta-item">
+                    <span class="meta-label">关键词</span>
+                    <div class="meta-value keywords-list" data-field="keywords">
+                        ${renderKeywordsWithWeights(task)}
+                    </div>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">当前步骤</span>
+                    <span class="meta-value" data-field="current_step">${currentStepLabel}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">进度</span>
+                    <span class="meta-value" data-field="progress">${task.progress_percent || 0}%</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">论文数量</span>
+                    <span class="meta-value" data-field="papers_count">${task.papers_count || '-'}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">章节数量</span>
+                    <span class="meta-value" data-field="sections_count">${task.sections_count || '-'}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">创建时间</span>
+                    <span class="meta-value">${formatDate(task.created_at)}</span>
+                </div>
+            </div>
+            
+            <!-- 进度步骤 -->
+            <div class="progress-section">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                    <h3 style="margin: 0;"><i class="fas fa-tasks"></i> 执行进度</h3>
+                    <div class="pause-points-info" style="font-size: 12px; color: var(--text-muted);">
+                        <i class="fas fa-pause-circle"></i> 暂停点:
+                        ${task.config && task.config.pause_points && task.config.pause_points.length > 0
+                            ? task.config.pause_points.map(p => TaskConfig_PIPELINE_STEPS[p]?.label || p).join(', ')
+                            : '未设置'}
+                    </div>
+                </div>
+                <div class="progress-steps-container" id="progress-steps">
+                    ${stepsHtml}
+                </div>
+            </div>
+            
+            ${task.status === 'failed' ? `
+            <div class="alert alert-error" style="margin-bottom: 24px;">
+                <i class="fas fa-exclamation-circle"></i>
+                <div class="alert-content">
+                    <strong>任务执行失败</strong>
+                    <p>${escapeHtml(task.error_message || '未知错误')}</p>
+                </div>
+            </div>
+            ` : ''}
+            
+            <div class="task-actions-bar">
+                ${actionButtons}
+                ${task.current_step >= 2 && task.status !== 'running' ? `
+                <button class="btn btn-secondary" onclick="showOutlineEditor('${taskId}')">
+                    <i class="fas fa-edit"></i> 编辑大纲
+                </button>
+                ` : ''}
+            </div>
+        </div>
+        
+        <!-- 内容标签页 -->
+        <div class="content-tabs">
+            <div class="tabs-header">
+                <button class="tab-btn active" data-tab="results" onclick="switchTab('results')">
+                    <i class="fas fa-folder-open"></i> 步骤结果
+                </button>
+                <button class="tab-btn" data-tab="logs" onclick="switchTab('logs')">
+                    <i class="fas fa-terminal"></i> 执行日志
+                </button>
+                ${task.current_step >= 1 ? `
+                <button class="tab-btn" data-tab="mekg" onclick="switchTab('mekg'); loadMekgVisualization('${taskId}')">
+                    <i class="fas fa-project-diagram"></i> 知识图谱
+                </button>
+                ` : ''}
+                ${task.current_step >= 2 ? `
+                <button class="tab-btn" data-tab="outline" onclick="switchTab('outline'); loadOutlinePreview('${taskId}')">
+                    <i class="fas fa-list-ol"></i> 大纲预览
+                </button>
+                ` : ''}
+            </div>
+            
+            <div class="tab-panel active" id="panel-results">
+                <div id="step-results-container">
+                    ${renderStepResults(task)}
+                </div>
+            </div>
+            
+            <div class="tab-panel" id="panel-logs">
+                <div class="logs-panel">
+                    <div class="logs-header">
+                        <h4>
+                            <span class="terminal-dot" id="ws-status-dot"></span>
+                            <i class="fas fa-terminal"></i> 实时执行日志
+                        </h4>
+                        <div class="logs-controls">
+                            <div class="realtime-indicator" id="realtime-indicator">
+                                <span class="dot"></span>
+                                <span id="ws-status-text">连接中...</span>
+                            </div>
+                            <div class="logs-filter">
+                                <button class="logs-filter-btn active" onclick="filterLogs('all')">全部</button>
+                                <button class="logs-filter-btn" onclick="filterLogs('info')">INFO</button>
+                                <button class="logs-filter-btn" onclick="filterLogs('warning')">WARN</button>
+                                <button class="logs-filter-btn" onclick="filterLogs('error')">ERROR</button>
+                            </div>
+                            <div class="logs-actions">
+                                <button class="logs-action-btn" onclick="clearLogs()" title="清空日志">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <button class="logs-action-btn" onclick="toggleAutoScroll()" id="auto-scroll-btn" title="自动滚动">
+                                    <i class="fas fa-arrow-down"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="logs-content" id="logs-container">
+                        <div class="logs-empty">
+                            <i class="fas fa-terminal"></i>
+                            <p>等待日志输出...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-panel" id="panel-mekg">
+                <div id="mekg-container">
+                    <div class="mekg-visualization" id="mekg-chart">
+                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);">
+                            <i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> 加载知识图谱...
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-panel" id="panel-outline">
+                <div id="outline-container">
+                    <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <i class="fas fa-spinner fa-spin"></i> 加载大纲...
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 加载日志
+    loadTaskLogs(taskId);
+}
+
+function renderStepResults(task) {
+    let html = '';
+    
+    // 计算已完成的步骤数
+    const completedSteps = task.status === 'completed' ? TOTAL_STEPS : Math.max(0, task.current_step - 1);
+    const currentStepCompleted = task.status === 'completed' || task.status === 'paused';
+    const maxStep = currentStepCompleted ? task.current_step : completedSteps;
+    
+    for (let i = 1; i <= maxStep && i <= TOTAL_STEPS; i++) {
+        const stepInfo = TaskConfig_PIPELINE_STEPS[i];
+        if (!stepInfo) continue;
+        
+        html += `
+            <div class="step-result-card" id="step-result-${i}">
+                <div class="step-result-header" onclick="toggleStepResult(${i})">
+                    <div class="step-result-title">
+                        <i class="fas fa-check-circle"></i>
+                        <span>步骤 ${i}: ${stepInfo.label}</span>
+                    </div>
+                    <div class="step-result-actions">
+                        <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation(); viewStepDetail(${i}, '${task.task_id}')">
+                            <i class="fas fa-eye"></i> 查看详情
+                        </button>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                <div class="step-result-body">
+                    <p style="color: var(--text-muted);">${stepInfo.description || '步骤已完成'}</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (!html) {
+        html = `
+            <div style="text-align: center; padding: 60px; color: var(--text-muted);">
+                <i class="fas fa-hourglass-start" style="font-size: 48px; margin-bottom: 16px;"></i>
+                <p>任务尚未开始执行，暂无步骤结果</p>
+            </div>
+        `;
+    }
+    
+    return html;
+}
+
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+    });
+    document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.toggle('active', panel.id === `panel-${tabName}`);
+    });
+}
+
+function toggleStepResult(stepIndex) {
+    const card = document.getElementById(`step-result-${stepIndex}`);
+    if (card) {
+        card.classList.toggle('expanded');
+    }
+}
+
+async function loadTaskLogs(taskId) {
+    // 从 API 加载历史日志并添加到实时日志列表
+    try {
+        const result = await api.getTaskLogs(taskId);
+        const logs = result.logs || result || [];
+        
+        if (logs.length > 0) {
+            // 将历史日志添加到日志列表开头
+            logs.forEach(log => {
+                pageLogEntries.push({
+                    level: log.level || 'info',
+                    message: log.message,
+                    timestamp: log.created_at,
+                    step: log.step
+                });
+            });
+            
+            // 添加分隔线
+            pageLogEntries.push({
+                level: 'info',
+                message: '─────────── 以上为历史日志，以下为实时日志 ───────────',
+                timestamp: new Date().toISOString()
+            });
+            
+            renderLogEntries();
+        }
+    } catch (e) {
+        console.error('Failed to load historical logs:', e);
+        addLogEntry({
+            level: 'warning',
+            message: '加载历史日志失败: ' + e.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+}
+
+function formatTime(dateStr) {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function filterLogs(level) {
+    pageCurrentLogFilter = level;
+    
+    document.querySelectorAll('.logs-filter-btn').forEach(btn => {
+        const btnText = btn.textContent.toLowerCase();
+        const isActive = (level === 'all' && btnText === '全部') ||
+                        (level === 'info' && btnText === 'info') ||
+                        (level === 'warning' && btnText === 'warn') ||
+                        (level === 'error' && btnText === 'error');
+        btn.classList.toggle('active', isActive);
+    });
+    
+    renderLogEntries();
+}
+
+async function loadMekgVisualization(taskId) {
+    const container = document.getElementById('mekg-chart');
+    try {
+        const results = await api.getTaskResults(taskId);
+        if (results && results.mekg_data) {
+            // 添加全屏查看按钮
+            const btnContainer = document.createElement('div');
+            btnContainer.style.position = 'absolute';
+            btnContainer.style.top = '10px';
+            btnContainer.style.right = '10px';
+            btnContainer.style.zIndex = '100';
+            btnContainer.innerHTML = `
+                <a href="/api/tasks/${taskId}/hierarchy_visualization" target="_blank" class="btn btn-primary btn-sm">
+                    <i class="fas fa-sitemap"></i> 查看层级图谱 (全屏)
+                </a>
+            `;
+            container.style.position = 'relative';
+            container.appendChild(btnContainer);
+            
+            initMekgChart(results.mekg_data);
+        } else {
+            container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);">知识图谱数据尚未生成</div>';
+        }
+    } catch (e) {
+        container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--accent-error);">加载知识图谱失败</div>';
+    }
+}
+
+function initMekgChart(data) {
+    const container = document.getElementById('mekg-chart');
+    if (!container || !window.echarts) {
+        console.error('Container or echarts not found for mekg-chart');
+        return;
+    }
+    
+    // 清除旧的 canvas (除了按钮)
+    Array.from(container.children).forEach(child => {
+        if (child.tagName !== 'DIV') {
+            container.removeChild(child);
+        }
+    });
+    
+    const chart = echarts.init(container);
+    const rawNodes = data.nodes || [];
+    const rawLinks = data.edges || data.links || [];
+    
+    // 如果没有节点，显示提示
+    if (rawNodes.length === 0) {
+        container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);">暂无图谱数据</div>';
+        return;
+    }
+    
+    // 定义节点类型的颜色
+    const categoryColors = {
+        'paper': '#0066cc',
+        'concept': '#28cd41',
+        'keyword': '#ff9f0a',
+        'author': '#ba68c8',
+        'default': '#999999'
+    };
+    
+    // 构建节点，使用索引作为边的引用
+    const nodes = rawNodes.map((n, index) => {
+        const name = n.name || n.id || `node_${index}`;
+        return {
+            id: index,
+            name: name,
+            category: n.type || 'default',
+            symbolSize: Math.min(40, Math.max(10, 8 + (n.weight || 1) * 2)),
+            value: n.weight || 1,
+            itemStyle: { color: categoryColors[n.type] || '#999' }
+        };
+    });
+    
+    // 构建名称到索引的映射
+    const nameToIndex = {};
+    nodes.forEach((n, idx) => {
+        nameToIndex[n.name] = idx;
+    });
+    
+    // 过滤并转换边
+    const links = [];
+    rawLinks.forEach(l => {
+        const sourceName = typeof l.source === 'object' ? (l.source.name || l.source.id) : l.source;
+        const targetName = typeof l.target === 'object' ? (l.target.name || l.target.id) : l.target;
+        
+        if (nameToIndex[sourceName] !== undefined && nameToIndex[targetName] !== undefined) {
+            links.push({
+                source: nameToIndex[sourceName],
+                target: nameToIndex[targetName],
+                value: l.weight || 1
+            });
+        }
+    });
+    
+    // 获取类别
+    const categoryTypes = [...new Set(nodes.map(n => n.category))];
+    const categories = categoryTypes.map(type => ({
+        name: type,
+        itemStyle: { color: categoryColors[type] || '#999' }
+    }));
+    
+    // 为节点分配类别索引
+    const categoryIndexMap = {};
+    categoryTypes.forEach((type, idx) => {
+        categoryIndexMap[type] = idx;
+    });
+    nodes.forEach(n => {
+        n.category = categoryIndexMap[n.category] !== undefined ? categoryIndexMap[n.category] : 0;
+    });
+    
+    try {
+        chart.setOption({
+            tooltip: {
+                trigger: 'item',
+                formatter: function(params) {
+                    if (params.dataType === 'node') {
+                        return params.data.name;
+                    }
+                    return '';
+                }
+            },
+            legend: {
+                data: categoryTypes,
+                bottom: 10
+            },
+            series: [{
+                type: 'graph',
+                layout: 'force',
+                data: nodes,
+                links: links,
+                categories: categories,
+                roam: true,
+                draggable: true,
+                label: {
+                    show: nodes.length < 80,
+                    position: 'right',
+                    fontSize: 9,
+                    formatter: function(params) {
+                        const name = params.data.name || '';
+                        return name.length > 10 ? name.substring(0, 10) + '...' : name;
+                    }
+                },
+                force: {
+                    repulsion: Math.max(80, 400 / Math.sqrt(nodes.length)),
+                    edgeLength: [40, 120],
+                    gravity: 0.1
+                },
+                lineStyle: {
+                    color: 'source',
+                    curveness: 0.3,
+                    opacity: 0.4,
+                    width: 1
+                }
+            }]
+        });
+        
+        window.addEventListener('resize', () => chart.resize());
+    } catch (e) {
+        console.error('ECharts error:', e);
+        container.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--accent-error);">图表渲染失败</div>`;
+    }
+}
+
+async function loadOutlinePreview(taskId) {
+    const container = document.getElementById('outline-container');
+    try {
+        const outline = await api.getTaskOutline(taskId);
+        if (outline) {
+            container.innerHTML = renderOutlineTree(outline);
+        } else {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">大纲尚未生成</div>';
+        }
+    } catch (e) {
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--accent-error);">加载大纲失败</div>';
+    }
+}
+
+function renderOutlineTree(outline) {
+    if (!outline || !outline.sections) {
+        return '<div style="text-align: center; padding: 40px; color: var(--text-muted);">大纲数据为空</div>';
+    }
+    
+    function renderSection(section, prefix = '') {
+        let html = `
+            <div class="outline-node">
+                <div class="outline-node-header">
+                    <span class="outline-node-number">${prefix}</span>
+                    <span class="outline-node-title">${escapeHtml(section.title || section.name || '未命名章节')}</span>
+                </div>
+        `;
+        
+        if (section.subsections && section.subsections.length > 0) {
+            html += '<div class="outline-children">';
+            section.subsections.forEach((sub, idx) => {
+                html += renderSection(sub, `${prefix}${idx + 1}.`);
+            });
+            html += '</div>';
+        }
+        
+        html += '</div>';
+        return html;
+    }
+    
+    let html = '<div class="outline-tree">';
+    outline.sections.forEach((section, idx) => {
+        html += renderSection(section, `${idx + 1}.`);
+    });
+    html += '</div>';
+    
+    return html;
+}
+
+// 查看步骤结果
+async function viewStepResult(stepIndex, taskId) {
+    const stepInfo = TaskConfig_PIPELINE_STEPS[stepIndex] || { label: `步骤 ${stepIndex}` };
+    
+    // 根据步骤类型显示不同的内容
+    switch(stepIndex) {
+        case 1: // MEKG构建
+            await showMekgDetail(taskId);
+            break;
+        case 2: // 大纲生成
+            await showOutlineDetail(taskId);
+            break;
+        case 3: // 内容生成
+        case 4: // 文本优化
+            await showContentDetail(taskId, stepIndex);
+            break;
+        case 5: // 表格生成
+            Toast.info('表格详情功能开发中...');
+            break;
+        case 6: // 视觉元素
+            Toast.info('视觉元素详情功能开发中...');
+            break;
+        case 7: // 质量评估
+            await showEvaluationDetail(taskId);
+            break;
+        case 9: // LaTeX生成
+            Toast.info('LaTeX详情功能开发中，请使用"查看结果"页面下载PDF');
+            break;
+        default:
+            Toast.info(`步骤 ${stepIndex}: ${stepInfo.label} 已完成`);
+    }
+}
+
+function viewStepDetail(stepIndex, taskId) {
+    viewStepResult(stepIndex, taskId);
+}
+
+// 编辑步骤结果
+async function editStepResult(stepIndex, taskId) {
+    if (stepIndex === 2) {
+        await showOutlineEditor(taskId);
+    } else {
+        Toast.info('此步骤暂不支持编辑');
+    }
+}
+
+// 显示MEKG详情
+async function showMekgDetail(taskId) {
+    try {
+        const results = await api.getTaskResults(taskId);
+        const mekgData = results.mekg_data;
+        
+        if (!mekgData) {
+            Toast.warning('知识图谱数据尚未生成');
+            return;
+        }
+        
+        const nodes = mekgData.nodes || [];
+        const edges = mekgData.edges || mekgData.links || [];
+        const papers = mekgData.papers || [];
+        
+        const modalHtml = `
+            <div class="modal-overlay active" id="mekg-detail-modal" onclick="closeMekgModal(event)">
+                <div class="modal step-detail-modal" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3 class="modal-title"><i class="fas fa-project-diagram"></i> 知识图谱详情</h3>
+                        <button class="modal-close" onclick="closeMekgModal()"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="modal-body step-detail-content">
+                        <!-- 统计信息 -->
+                        <div class="mekg-stats">
+                            <div class="mekg-stat-card">
+                                <div class="mekg-stat-value">${papers.length || nodes.filter(n => n.type === 'paper').length}</div>
+                                <div class="mekg-stat-label">论文数量</div>
+                            </div>
+                            <div class="mekg-stat-card">
+                                <div class="mekg-stat-value">${nodes.filter(n => n.type === 'concept' || n.type === 'keyword').length}</div>
+                                <div class="mekg-stat-label">概念/关键词</div>
+                            </div>
+                            <div class="mekg-stat-card">
+                                <div class="mekg-stat-value">${edges.length}</div>
+                                <div class="mekg-stat-label">关系数量</div>
+                            </div>
+                            <div class="mekg-stat-card">
+                                <div class="mekg-stat-value">${nodes.filter(n => n.type === 'author').length}</div>
+                                <div class="mekg-stat-label">作者数量</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 知识图谱可视化 -->
+                        <div class="step-detail-section">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <h4><i class="fas fa-sitemap"></i> 图谱可视化</h4>
+                                <a href="/api/tasks/${taskId}/hierarchy_visualization" target="_blank" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-external-link-alt"></i> 全屏查看层级图谱
+                                </a>
+                            </div>
+                            <div class="mekg-visualization" id="mekg-detail-chart" style="height: 400px;"></div>
+                        </div>
+                        
+                        <!-- 论文列表 -->
+                        <div class="step-detail-section">
+                            <h4><i class="fas fa-file-alt"></i> 收录论文 (${papers.length || '0'}篇)</h4>
+                            <div class="papers-list">
+                                ${renderPapersList(papers.slice(0, 20))}
+                            </div>
+                            ${papers.length > 20 ? `<p style="text-align: center; color: var(--text-muted); margin-top: 12px;">还有 ${papers.length - 20} 篇论文...</p>` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // 初始化图表
+        setTimeout(() => {
+            initMekgDetailChart(mekgData);
+        }, 100);
+        
+    } catch (e) {
+        Toast.error('加载知识图谱详情失败: ' + e.message);
+    }
+}
+
+function renderPapersList(papers) {
+    if (!papers || papers.length === 0) {
+        return '<div style="text-align: center; padding: 20px; color: var(--text-muted);">暂无论文数据</div>';
+    }
+    
+    return papers.map(paper => `
+        <div class="paper-item">
+            <div class="paper-icon"><i class="fas fa-file-alt"></i></div>
+            <div class="paper-info">
+                <div class="paper-title">${escapeHtml(paper.title || paper.name || '未知标题')}</div>
+                <div class="paper-meta">
+                    ${paper.authors ? `<span><i class="fas fa-user"></i> ${escapeHtml(paper.authors.slice(0, 3).join(', '))}${paper.authors.length > 3 ? ' 等' : ''}</span>` : ''}
+                    ${paper.year ? `<span style="margin-left: 12px;"><i class="fas fa-calendar"></i> ${paper.year}</span>` : ''}
+                    ${paper.venue ? `<span style="margin-left: 12px;"><i class="fas fa-book"></i> ${escapeHtml(paper.venue)}</span>` : ''}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function initMekgDetailChart(data) {
+    const container = document.getElementById('mekg-detail-chart');
+    if (!container || !window.echarts) {
+        console.error('Container or echarts not found');
+        return;
+    }
+    
+    const chart = echarts.init(container);
+    const rawNodes = data.nodes || [];
+    const rawLinks = data.edges || data.links || [];
+    
+    console.log('MEKG Data:', { nodes: rawNodes.length, links: rawLinks.length });
+    
+    // 如果没有节点，显示提示
+    if (rawNodes.length === 0) {
+        container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);">暂无图谱数据</div>';
+        return;
+    }
+    
+    // 定义节点类型的颜色
+    const categoryColors = {
+        'paper': '#0066cc',
+        'concept': '#28cd41',
+        'keyword': '#ff9f0a',
+        'author': '#ba68c8',
+        'method': '#ef5350',
+        'dataset': '#4fc3f7',
+        'default': '#999999'
+    };
+    
+    // 构建节点名称集合，用于过滤无效边
+    const nodeNameSet = new Set();
+    const nodes = rawNodes.map((n, index) => {
+        const name = n.name || n.id || `node_${index}`;
+        nodeNameSet.add(name);
+        return {
+            id: index,
+            name: name,
+            category: n.type || 'default',
+            symbolSize: Math.min(40, Math.max(10, 8 + (n.weight || 1) * 2)),
+            value: n.weight || 1,
+            itemStyle: { color: categoryColors[n.type] || '#999' }
+        };
+    });
+    
+    // 构建名称到索引的映射
+    const nameToIndex = {};
+    nodes.forEach((n, idx) => {
+        nameToIndex[n.name] = idx;
+    });
+    
+    // 过滤并转换边，只保留两端节点都存在的边
+    const links = [];
+    rawLinks.forEach(l => {
+        const sourceName = typeof l.source === 'object' ? (l.source.name || l.source.id) : l.source;
+        const targetName = typeof l.target === 'object' ? (l.target.name || l.target.id) : l.target;
+        
+        // 只添加两端节点都存在的边
+        if (nameToIndex[sourceName] !== undefined && nameToIndex[targetName] !== undefined) {
+            links.push({
+                source: nameToIndex[sourceName],
+                target: nameToIndex[targetName],
+                value: l.weight || 1
+            });
+        }
+    });
+    
+    console.log('Processed:', { nodes: nodes.length, links: links.length });
+    
+    // 获取所有类别
+    const categoryTypes = [...new Set(nodes.map(n => n.category))];
+    const categories = categoryTypes.map(type => ({
+        name: type,
+        itemStyle: { color: categoryColors[type] || '#999' }
+    }));
+    
+    // 为节点分配类别索引
+    const categoryIndexMap = {};
+    categoryTypes.forEach((type, idx) => {
+        categoryIndexMap[type] = idx;
+    });
+    nodes.forEach(n => {
+        n.category = categoryIndexMap[n.category] !== undefined ? categoryIndexMap[n.category] : 0;
+    });
+    
+    try {
+        chart.setOption({
+            tooltip: {
+                trigger: 'item',
+                formatter: function(params) {
+                    if (params.dataType === 'node') {
+                        const catName = categoryTypes[params.data.category] || '未知';
+                        return `<strong>${params.data.name}</strong><br/>类型: ${catName}`;
+                    }
+                    return `${nodes[params.data.source]?.name || params.data.source} → ${nodes[params.data.target]?.name || params.data.target}`;
+                }
+            },
+            legend: {
+                data: categoryTypes,
+                orient: 'horizontal',
+                bottom: 10
+            },
+            series: [{
+                type: 'graph',
+                layout: 'force',
+                data: nodes,
+                links: links,
+                categories: categories,
+                roam: true,
+                draggable: true,
+                label: {
+                    show: nodes.length < 100,  // 节点太多时隐藏标签
+                    position: 'right',
+                    fontSize: 9,
+                    formatter: function(params) {
+                        const name = params.data.name || '';
+                        return name.length > 12 ? name.substring(0, 12) + '...' : name;
+                    }
+                },
+                force: {
+                    repulsion: Math.max(100, 500 / Math.sqrt(nodes.length)),
+                    edgeLength: [50, 150],
+                    gravity: 0.1,
+                    layoutAnimation: true
+                },
+                lineStyle: {
+                    color: 'source',
+                    curveness: 0.3,
+                    opacity: 0.4,
+                    width: 1
+                },
+                emphasis: {
+                    focus: 'adjacency',
+                    lineStyle: { width: 2 }
+                }
+            }]
+        });
+        
+        window.addEventListener('resize', () => chart.resize());
+    } catch (e) {
+        console.error('ECharts error:', e);
+        container.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--accent-error);">图表渲染失败: ${e.message}</div>`;
+    }
+}
+
+function closeMekgModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const modal = document.getElementById('mekg-detail-modal');
+    if (modal) modal.remove();
+}
+
+// 显示大纲详情
+async function showOutlineDetail(taskId) {
+    try {
+        const outline = await api.getTaskOutline(taskId);
+        
+        if (!outline) {
+            Toast.warning('大纲尚未生成');
+            return;
+        }
+        
+        const modalHtml = `
+            <div class="modal-overlay active" id="outline-detail-modal" onclick="closeOutlineModal(event)">
+                <div class="modal step-detail-modal" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3 class="modal-title"><i class="fas fa-list-ol"></i> 大纲详情</h3>
+                        <button class="modal-close" onclick="closeOutlineModal()"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="modal-body step-detail-content">
+                        <div class="outline-editor-container">
+                            <div class="outline-editor-header">
+                                <div class="outline-editor-title">${escapeHtml(outline.title || '综述大纲')}</div>
+                                <button class="btn btn-primary btn-sm" onclick="closeOutlineModal(); showOutlineEditor('${taskId}')">
+                                    <i class="fas fa-edit"></i> 编辑大纲
+                                </button>
+                            </div>
+                            <div class="outline-tree">
+                                ${renderOutlineTreeWithActions(outline)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+    } catch (e) {
+        Toast.error('加载大纲详情失败: ' + e.message);
+    }
+}
+
+function renderOutlineTreeWithActions(outline) {
+    if (!outline || !outline.sections) {
+        return '<div style="text-align: center; padding: 40px; color: var(--text-muted);">大纲数据为空</div>';
+    }
+    
+    function renderSection(section, prefix = '', level = 1) {
+        const hasSubsections = section.subsections && section.subsections.length > 0;
+        let html = `
+            <div class="outline-node" data-level="${level}">
+                <div class="outline-node-header">
+                    <span class="outline-node-number">${prefix}</span>
+                    <span class="outline-node-title">${escapeHtml(section.title || section.name || '未命名章节')}</span>
+                    ${section.description ? `<span style="color: var(--text-muted); font-size: 12px; margin-left: 8px;">${escapeHtml(section.description.substring(0, 50))}${section.description.length > 50 ? '...' : ''}</span>` : ''}
+                </div>
+        `;
+        
+        if (hasSubsections) {
+            html += '<div class="outline-children">';
+            section.subsections.forEach((sub, idx) => {
+                html += renderSection(sub, `${prefix}${idx + 1}.`, level + 1);
+            });
+            html += '</div>';
+        }
+        
+        html += '</div>';
+        return html;
+    }
+    
+    let html = '';
+    outline.sections.forEach((section, idx) => {
+        html += renderSection(section, `${idx + 1}.`, 1);
+    });
+    
+    return html;
+}
+
+function closeOutlineModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const modal = document.getElementById('outline-detail-modal');
+    if (modal) modal.remove();
+}
+
+// 显示大纲编辑器
+async function showOutlineEditor(taskId) {
+    try {
+        const outline = await api.getTaskOutline(taskId);
+        
+        if (!outline) {
+            Toast.warning('大纲尚未生成，无法编辑');
+            return;
+        }
+        
+        const modalHtml = `
+            <div class="modal-overlay active" id="outline-editor-modal" onclick="closeOutlineEditorModal(event)">
+                <div class="modal step-detail-modal" style="max-width: 1000px;" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3 class="modal-title"><i class="fas fa-edit"></i> 编辑大纲</h3>
+                        <button class="modal-close" onclick="closeOutlineEditorModal()"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="modal-body step-detail-content">
+                        <div class="alert alert-info" style="margin-bottom: 20px;">
+                            <i class="fas fa-info-circle"></i>
+                            <div class="alert-content">
+                                <strong>提示</strong>
+                                <p>修改大纲后，您可以从"内容生成"步骤重新开始，系统将根据新大纲重新生成内容。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">综述标题</label>
+                            <input type="text" class="form-input" id="outline-title-input" value="${escapeHtml(outline.title || '')}" placeholder="输入综述标题">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">章节结构</label>
+                            <div id="outline-sections-editor">
+                                ${renderOutlineEditorSections(outline.sections || [])}
+                            </div>
+                            <button class="add-section-btn" onclick="addOutlineSection()">
+                                <i class="fas fa-plus"></i> 添加章节
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeOutlineEditorModal()">取消</button>
+                        <button class="btn btn-primary" onclick="saveOutline('${taskId}')">
+                            <i class="fas fa-save"></i> 保存大纲
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // 存储当前大纲数据
+        window.currentOutlineData = JSON.parse(JSON.stringify(outline));
+        
+    } catch (e) {
+        Toast.error('加载大纲编辑器失败: ' + e.message);
+    }
+}
+
+function renderOutlineEditorSections(sections, prefix = '', level = 1) {
+    return sections.map((section, idx) => {
+        const sectionNum = prefix ? `${prefix}${idx + 1}` : `${idx + 1}`;
+        const hasSubsections = section.subsections && section.subsections.length > 0;
+        
+        return `
+            <div class="outline-section-editor" data-section-path="${sectionNum}" data-level="${level}">
+                <div class="outline-section-input">
+                    <span class="section-number">${sectionNum}.</span>
+                    <input type="text" value="${escapeHtml(section.title || '')}"
+                           onchange="updateSectionTitle('${sectionNum}', this.value)"
+                           placeholder="章节标题">
+                    <button class="btn btn-sm btn-ghost" onclick="addSubsection('${sectionNum}')" title="添加子章节">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button class="btn btn-sm btn-ghost" onclick="removeSection('${sectionNum}')" title="删除章节">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                ${hasSubsections ? `
+                <div class="outline-subsections">
+                    ${renderOutlineEditorSections(section.subsections, `${sectionNum}.`, level + 1)}
+                </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+function addOutlineSection() {
+    if (!window.currentOutlineData) return;
+    
+    window.currentOutlineData.sections = window.currentOutlineData.sections || [];
+    window.currentOutlineData.sections.push({
+        title: '新章节',
+        description: '',
+        subsections: []
+    });
+    
+    refreshOutlineEditor();
+}
+
+function addSubsection(sectionPath) {
+    if (!window.currentOutlineData) return;
+    
+    const section = getSectionByPath(sectionPath);
+    if (section) {
+        section.subsections = section.subsections || [];
+        section.subsections.push({
+            title: '新子章节',
+            description: '',
+            subsections: []
+        });
+        refreshOutlineEditor();
+    }
+}
+
+function removeSection(sectionPath) {
+    if (!window.currentOutlineData) return;
+    
+    const pathParts = sectionPath.split('.').map(p => parseInt(p) - 1);
+    
+    if (pathParts.length === 1) {
+        window.currentOutlineData.sections.splice(pathParts[0], 1);
+    } else {
+        const parentPath = pathParts.slice(0, -1);
+        let parent = window.currentOutlineData;
+        for (const idx of parentPath) {
+            parent = parent.sections ? parent.sections[idx] : parent.subsections[idx];
+        }
+        if (parent && parent.subsections) {
+            parent.subsections.splice(pathParts[pathParts.length - 1], 1);
+        }
+    }
+    
+    refreshOutlineEditor();
+}
+
+function updateSectionTitle(sectionPath, newTitle) {
+    if (!window.currentOutlineData) return;
+    
+    const section = getSectionByPath(sectionPath);
+    if (section) {
+        section.title = newTitle;
+    }
+}
+
+function getSectionByPath(sectionPath) {
+    if (!window.currentOutlineData) return null;
+    
+    const pathParts = sectionPath.split('.').map(p => parseInt(p) - 1);
+    let current = window.currentOutlineData;
+    
+    for (let i = 0; i < pathParts.length; i++) {
+        const idx = pathParts[i];
+        if (i === 0) {
+            current = current.sections[idx];
+        } else {
+            current = current.subsections ? current.subsections[idx] : null;
+        }
+        if (!current) return null;
+    }
+    
+    return current;
+}
+
+function refreshOutlineEditor() {
+    const container = document.getElementById('outline-sections-editor');
+    if (container && window.currentOutlineData) {
+        container.innerHTML = renderOutlineEditorSections(window.currentOutlineData.sections || []);
+    }
+}
+
+async function saveOutline(taskId) {
+    if (!window.currentOutlineData) return;
+    
+    const titleInput = document.getElementById('outline-title-input');
+    if (titleInput) {
+        window.currentOutlineData.title = titleInput.value;
+    }
+    
+    try {
+        await api.put(`/tasks/${taskId}/outline`, {
+            title: window.currentOutlineData.title,
+            sections: window.currentOutlineData.sections
+        });
+        
+        Toast.success('大纲已保存');
+        closeOutlineEditorModal();
+        
+        // 刷新页面
+        loadTaskDetailPage(taskId);
+        
+    } catch (e) {
+        Toast.error('保存大纲失败: ' + e.message);
+    }
+}
+
+function closeOutlineEditorModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const modal = document.getElementById('outline-editor-modal');
+    if (modal) modal.remove();
+    window.currentOutlineData = null;
+}
+
+// 显示内容详情
+async function showContentDetail(taskId, stepIndex) {
+    try {
+        const results = await api.getTaskResults(taskId);
+        
+        if (!results.markdown_content) {
+            Toast.warning('内容尚未生成');
+            return;
+        }
+        
+        const modalHtml = `
+            <div class="modal-overlay active" id="content-detail-modal" onclick="closeContentModal(event)">
+                <div class="modal step-detail-modal" style="max-width: 1000px;" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3 class="modal-title"><i class="fas fa-file-alt"></i> ${stepIndex === 3 ? '生成内容' : '优化后内容'}</h3>
+                        <button class="modal-close" onclick="closeContentModal()"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="modal-body step-detail-content">
+                        <div class="markdown-preview" id="content-preview">
+                            ${marked.parse(results.markdown_content)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+    } catch (e) {
+        Toast.error('加载内容详情失败: ' + e.message);
+    }
+}
+
+function closeContentModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const modal = document.getElementById('content-detail-modal');
+    if (modal) modal.remove();
+}
+
+// 显示评估详情
+async function showEvaluationDetail(taskId) {
+    try {
+        const results = await api.getTaskResults(taskId);
+        
+        if (!results.evaluation_report) {
+            Toast.warning('评估报告尚未生成');
+            return;
+        }
+        
+        const modalHtml = `
+            <div class="modal-overlay active" id="evaluation-detail-modal" onclick="closeEvaluationModal(event)">
+                <div class="modal step-detail-modal" style="max-width: 900px;" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3 class="modal-title"><i class="fas fa-chart-bar"></i> 质量评估报告</h3>
+                        <button class="modal-close" onclick="closeEvaluationModal()"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="modal-body step-detail-content">
+                        <div class="markdown-preview">
+                            ${marked.parse(results.evaluation_report)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+    } catch (e) {
+        Toast.error('加载评估报告失败: ' + e.message);
+    }
+}
+
+function closeEvaluationModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const modal = document.getElementById('evaluation-detail-modal');
+    if (modal) modal.remove();
+}
+
+// 轮询机制
+function startTaskPolling(taskId) {
+    stopTaskPolling();
+    
+    pageTaskPollingInterval = setInterval(async () => {
+        if (pageCurrentTaskId !== taskId) {
+            stopTaskPolling();
+            return;
+        }
+        
+        try {
+            const progress = await api.getTaskProgress(taskId);
+            updateTaskProgressUI(progress);
+            
+            if (progress.status === 'completed' || progress.status === 'failed' || progress.status === 'cancelled') {
+                stopTaskPolling();
+                setTimeout(() => loadTaskDetailPage(taskId), 500);
+            }
+        } catch (e) {
+            console.error('Polling error:', e);
+        }
+    }, 2000);
+}
+
+function stopTaskPolling() {
+    if (pageTaskPollingInterval) {
+        clearInterval(pageTaskPollingInterval);
+        pageTaskPollingInterval = null;
+    }
+}
+
+function updateTaskProgressUI(progress) {
+    // 更新状态徽章
+    const statusBadge = document.querySelector('.task-status-badge');
+    if (statusBadge && progress.status) {
+        statusBadge.className = `task-status-badge ${progress.status}`;
+        statusBadge.textContent = getStatusText(progress.status);
+    }
+    
+    // 如果状态变为 paused，停止轮询并刷新页面（只刷新一次）
+    if (progress.status === 'paused') {
+        // 先停止轮询，防止重复刷新
+        stopTaskPolling();
+        if (pageTaskWS) {
+            pageTaskWS.close();
+            pageTaskWS = null;
+        }
+        // 延迟刷新页面，确保轮询已停止
+        setTimeout(() => loadTaskDetailPage(pageCurrentTaskId), 500);
+        return; // 提前返回，不再更新其他 UI 元素
+    }
+    
+    // 更新当前步骤
+    const stepEl = document.querySelector('[data-field="current_step"]');
+    if (stepEl) {
+        stepEl.textContent = getStepName(progress.current_step) || '-';
+    }
+    
+    // 更新进度
+    const progressEl = document.querySelector('[data-field="progress"]');
+    if (progressEl && progress.progress_percent !== undefined) {
+        progressEl.textContent = `${progress.progress_percent}%`;
+    }
+    
+    // 更新步骤状态 - 基于 current_step 来判断
+    document.querySelectorAll('.progress-step-item').forEach(item => {
+        const stepIndex = parseInt(item.dataset.step);
+        item.classList.remove('completed', 'active', 'failed', 'pending', 'paused');
+        
+        // current_step >= 11 表示任务完成，所有步骤都完成
+        if (progress.current_step >= 11 || (progress.status === 'completed' && progress.current_step >= 10)) {
+            // 任务完成，所有步骤都完成
+            item.classList.add('completed');
+            item.querySelector('.step-number').innerHTML = '<i class="fas fa-check"></i>';
+            item.querySelector('.step-status-text').textContent = '已完成';
+        } else if (stepIndex < progress.current_step) {
+            // 步骤号小于当前步骤，已完成
+            item.classList.add('completed');
+            item.querySelector('.step-number').innerHTML = '<i class="fas fa-check"></i>';
+            item.querySelector('.step-status-text').textContent = '已完成';
+        } else if (stepIndex === progress.current_step) {
+            // 当前步骤
+            if (progress.status === 'running') {
+                item.classList.add('active');
+                item.querySelector('.step-number').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                item.querySelector('.step-status-text').textContent = '正在执行';
+            } else if (progress.status === 'failed') {
+                item.classList.add('failed');
+                item.querySelector('.step-number').innerHTML = '<i class="fas fa-times"></i>';
+                item.querySelector('.step-status-text').textContent = '执行失败';
+            } else if (progress.status === 'paused') {
+                item.classList.add('paused');
+                item.querySelector('.step-number').innerHTML = '<i class="fas fa-pause"></i>';
+                item.querySelector('.step-status-text').textContent = '已暂停';
+            } else if (progress.status === 'completed') {
+                item.classList.add('completed');
+                item.querySelector('.step-number').innerHTML = '<i class="fas fa-check"></i>';
+                item.querySelector('.step-status-text').textContent = '已完成';
+            } else {
+                item.classList.add('pending');
+                item.querySelector('.step-number').textContent = stepIndex;
+                item.querySelector('.step-status-text').textContent = '等待执行';
+            }
+        } else {
+            // 步骤号大于当前步骤，等待执行
+            item.classList.add('pending');
+            item.querySelector('.step-number').textContent = stepIndex;
+            item.querySelector('.step-status-text').textContent = '等待执行';
+        }
+    });
+}
+
+// 页面卸载时清理
+window.addEventListener('beforeunload', () => {
+    stopTaskPolling();
+    if (pageTaskWS) {
+        pageTaskWS.close();
+    }
+});
+
+// ==================== 任务操作函数 ====================
+// 这些函数需要在页面级别定义，因为按钮的 onclick 属性需要调用它们
+
+async function startTask(taskId) {
+    try {
+        await api.startTask(taskId);
+        Toast.success('任务已启动');
+        loadTaskDetailPage(taskId);
+    } catch (e) {
+        Toast.error(e.message || '启动失败');
+    }
+}
+
+async function pauseTask(taskId) {
+    try {
+        await api.pauseTask(taskId);
+        Toast.success('任务已暂停');
+        loadTaskDetailPage(taskId);
+    } catch (e) {
+        Toast.error(e.message || '暂停失败');
+    }
+}
+
+async function resumeTask(taskId) {
+    try {
+        await api.startTask(taskId);
+        Toast.success('任务已继续');
+        loadTaskDetailPage(taskId);
+    } catch (e) {
+        Toast.error(e.message || '继续失败');
+    }
+}
+
+async function cancelTask(taskId) {
+    if (!await Modal.confirm('确定要取消此任务吗？')) return;
+    try {
+        await api.cancelTask(taskId);
+        Toast.success('任务已取消');
+        loadTaskDetailPage(taskId);
+    } catch (e) {
+        Toast.error(e.message || '取消失败');
+    }
+}
+
+async function deleteTask(taskId) {
+    if (!await Modal.confirm('确定要删除此任务吗？此操作不可恢复。')) return;
+    try {
+        await api.deleteTask(taskId);
+        Toast.success('任务已删除');
+        window.location.href = '/dashboard';
+    } catch (e) {
+        Toast.error(e.message || '删除失败');
+    }
+}
+
+async function showRetryModal(taskId) {
+    let task;
+    try {
+        task = await api.getTask(taskId);
+    } catch (e) {
+        Toast.error('获取任务信息失败');
+        return;
+    }
+    
+    // 构建步骤选项
+    let stepsOptions = '<option value="">从头开始</option>';
+    for (let i = 1; i <= Math.min(task.current_step, TOTAL_STEPS); i++) {
+        const stepInfo = TaskConfig_PIPELINE_STEPS[i];
+        if (stepInfo) {
+            stepsOptions += `<option value="${i}">从 ${stepInfo.label} 开始</option>`;
+        }
+    }
+    
+    const modal = new Modal({
+        title: '重试任务',
+        content: `
+            <div class="retry-modal">
+                <p>选择从哪个步骤开始重试：</p>
+                <div class="form-group">
+                    <select id="retry-step" class="form-select">
+                        ${stepsOptions}
+                    </select>
+                </div>
+                <p class="form-hint">今日剩余重试次数：${5 - (task.retry_count || 0)}</p>
+            </div>
+        `,
+        onConfirm: async (m) => {
+            const fromStep = document.getElementById('retry-step').value || null;
+            try {
+                await api.retryTask(taskId, fromStep ? parseInt(fromStep) : null);
+                Toast.success('任务已重新开始');
+                m.close();
+                loadTaskDetailPage(taskId);
+            } catch (e) {
+                Toast.error(e.message || '重试失败');
+            }
+        },
+    });
+    modal.show();
+}
+</script>
+{% endblock %}

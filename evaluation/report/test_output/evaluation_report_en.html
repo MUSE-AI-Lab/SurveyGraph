@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey Quality Evaluation Report</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#3b82f6;--primary-dark:#2563eb;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;--gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;--gray-800:#1f2937;--gray-900:#111827;--shadow-md:0 4px 6px -1px rgb(0 0 0/0.1),0 2px 4px -2px rgb(0 0 0/0.1)}
+body{font-family:'Inter','Noto Sans SC',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--gray-100);color:var(--gray-800);line-height:1.6}
+.report-container{width:800px;margin:0 auto;background:white;min-height:100vh}
+.report-header{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);color:white;padding:48px 40px;position:relative;overflow:hidden}
+.report-header::before{content:'';position:absolute;top:-50%;right:-20%;width:400px;height:400px;background:rgba(255,255,255,0.1);border-radius:50%}
+.report-header::after{content:'';position:absolute;bottom:-30%;left:-10%;width:300px;height:300px;background:rgba(255,255,255,0.05);border-radius:50%}
+.header-content{position:relative;z-index:1}
+.header-icon{font-size:48px;margin-bottom:16px;opacity:0.9}
+.header-title{font-size:32px;font-weight:700;margin-bottom:8px;letter-spacing:-0.5px}
+.header-subtitle{font-size:16px;opacity:0.85;font-weight:400}
+.header-meta{margin-top:24px;display:flex;gap:32px;font-size:13px;opacity:0.8;flex-wrap:wrap}
+.header-meta-item{display:flex;align-items:center;gap:8px}
+.report-body{padding:40px}
+.score-section{background:var(--gray-50);border-radius:16px;padding:40px;margin-bottom:32px;text-align:center;border:1px solid var(--gray-200)}
+.score-label{font-size:14px;color:var(--gray-500);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:600}
+.score-value{font-size:80px;font-weight:700;line-height:1;margin-bottom:8px;margin-top:16px}
+.score-value.excellent{color:var(--success)}.score-value.good{color:#22c55e}.score-value.fair{color:var(--warning)}.score-value.poor{color:var(--danger)}
+.score-max{font-size:24px;color:var(--gray-400);font-weight:400}
+.score-grade{display:inline-block;padding:8px 20px;border-radius:24px;font-size:14px;font-weight:600;margin-top:16px;vertical-align:middle}
+.score-grade i{display:inline-block;margin-right:8px;vertical-align:middle}
+.score-grade span{display:inline-block;vertical-align:middle}
+.score-grade.excellent{background:#dcfce7;color:#166534}.score-grade.good{background:#dcfce7;color:#166534}.score-grade.fair{background:#fef3c7;color:#92400e}.score-grade.poor{background:#fee2e2;color:#991b1b}
+.section-title{display:flex;align-items:center;gap:12px;font-size:20px;font-weight:600;color:var(--gray-800);margin-bottom:24px;padding-bottom:12px;border-bottom:2px solid var(--gray-200)}
+.section-title i{color:var(--primary);font-size:22px}
+.key-metrics{background:var(--gray-50);border-radius:16px;padding:32px;margin-bottom:40px;border:1px solid var(--gray-200)}
+.key-metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.key-metric-card{background:white;border-radius:12px;padding:20px;text-align:center;border:1px solid var(--gray-200)}
+.key-metric-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:20px}
+.key-metric-icon.green{background:#dcfce7;color:#166534}.key-metric-icon.blue{background:#dbeafe;color:#1e40af}.key-metric-icon.orange{background:#fef3c7;color:#92400e}.key-metric-icon.purple{background:#f3e8ff;color:#6b21a8}
+.key-metric-value{font-size:24px;font-weight:700;color:var(--gray-800);margin-bottom:4px}
+.key-metric-name{font-size:12px;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.5px}
+.dimensions-grid{display:flex;flex-direction:column;gap:16px;margin-bottom:40px}
+.dimension-card{background:white;border:1px solid var(--gray-200);border-radius:12px;padding:24px;transition:all 0.2s ease}
+.dimension-card:hover{box-shadow:var(--shadow-md);border-color:var(--gray-300)}
+.dimension-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.dimension-info{display:flex;align-items:center;gap:12px}
+.dimension-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;color:white}
+.dimension-icon.reference{background:linear-gradient(135deg,#10b981,#059669)}.dimension-icon.structure{background:linear-gradient(135deg,#3b82f6,#2563eb)}.dimension-icon.content{background:linear-gradient(135deg,#f59e0b,#d97706)}.dimension-icon.ethics{background:linear-gradient(135deg,#8b5cf6,#7c3aed)}.dimension-icon.media{background:linear-gradient(135deg,#ec4899,#db2777)}
+.dimension-name{font-size:16px;font-weight:600;color:var(--gray-800)}
+.dimension-desc{font-size:13px;color:var(--gray-500);margin-top:2px}
+.dimension-score{text-align:right}
+.dimension-score-value{font-size:28px;font-weight:700}
+.dimension-score-value.excellent{color:var(--success)}.dimension-score-value.good{color:#22c55e}.dimension-score-value.fair{color:var(--warning)}.dimension-score-value.poor{color:var(--danger)}
+.dimension-weight{font-size:12px;color:var(--gray-400)}
+.dimension-progress{height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden;margin-bottom:16px}
+.dimension-progress-bar{height:100%;border-radius:4px;transition:width 0.5s ease}
+.dimension-progress-bar.excellent{background:linear-gradient(90deg,#10b981,#34d399)}.dimension-progress-bar.good{background:linear-gradient(90deg,#22c55e,#4ade80)}.dimension-progress-bar.fair{background:linear-gradient(90deg,#f59e0b,#fbbf24)}.dimension-progress-bar.poor{background:linear-gradient(90deg,#ef4444,#f87171)}
+.metrics-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.metric-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--gray-50);border-radius:8px;font-size:13px}
+.metric-name{color:var(--gray-600);display:flex;align-items:center;gap:6px}
+.metric-name i{font-size:8px;color:var(--gray-400)}
+.metric-value{font-weight:600;color:var(--gray-800)}
+.analysis-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;margin-bottom:40px}
+.analysis-card{border-radius:12px;padding:24px;border:1px solid}
+.analysis-card.strengths{background:#f0fdf4;border-color:#bbf7d0}
+.analysis-card.weaknesses{background:#fef2f2;border-color:#fecaca}
+.analysis-title{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:600;margin-bottom:16px}
+.analysis-card.strengths .analysis-title{color:#166534}
+.analysis-card.weaknesses .analysis-title{color:#991b1b}
+.analysis-list{list-style:none}
+.analysis-list li{display:flex;align-items:flex-start;gap:10px;padding:8px 0;font-size:14px;color:var(--gray-700)}
+.analysis-list li i{margin-top:3px;font-size:12px}
+.analysis-card.strengths .analysis-list li i{color:var(--success)}
+.analysis-card.weaknesses .analysis-list li i{color:var(--danger)}
+.recommendations{background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);border-radius:16px;padding:32px;margin-bottom:40px;border:1px solid #bfdbfe}
+.recommendations .section-title{border-bottom-color:#93c5fd}
+.recommendations .section-title i{color:#2563eb}
+.recommendation-list{list-style:none}
+.recommendation-item{display:flex;align-items:flex-start;gap:16px;padding:16px;background:white;border-radius:10px;margin-bottom:12px;border:1px solid #bfdbfe}
+.recommendation-item:last-child{margin-bottom:0}
+.recommendation-number{width:28px;height:28px;border-radius:8px;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0}
+.recommendation-text{font-size:14px;color:var(--gray-700);line-height:1.6}
+.metrics-table-container{overflow-x:auto;border-radius:12px;border:1px solid var(--gray-200);margin-bottom:40px}
+.metrics-table{width:100%;border-collapse:collapse;font-size:14px}
+.metrics-table thead{background:var(--gray-100)}
+.metrics-table th{padding:14px 16px;text-align:left;font-weight:600;color:var(--gray-700);border-bottom:2px solid var(--gray-200)}
+.metrics-table td{padding:12px 16px;border-bottom:1px solid var(--gray-100);color:var(--gray-700)}
+.metrics-table tbody tr:hover{background:var(--gray-50)}
+.metrics-table .category-header{background:var(--gray-50)}
+.metrics-table .category-header td{font-weight:600;color:var(--gray-800);padding:10px 16px}
+.metrics-table .category-header i{margin-right:8px;color:var(--primary)}
+.status-badge{display:inline-block;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:500}
+.status-badge.excellent{background:#dcfce7;color:#166534}.status-badge.good{background:#dbeafe;color:#1e40af}.status-badge.fair{background:#fef3c7;color:#92400e}.status-badge.poor{background:#fee2e2;color:#991b1b}
+.report-footer{background:var(--gray-800);color:white;padding:32px 40px;text-align:center}
+.footer-logo{font-size:18px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:10px}
+.footer-logo i{color:var(--primary)}
+.footer-desc{font-size:13px;color:var(--gray-400);margin-bottom:16px}
+.footer-meta{font-size:12px;color:var(--gray-500)}
+@media print{.report-container{width:100%}}
+</style>
+</head>
+<body>
+    <div class="report-container" id="report">
+        <header class="report-header">
+            <div class="header-content">
+                <div class="header-icon"><i class="fas fa-chart-line"></i></div>
+                <h1 class="header-title">Survey Quality Evaluation Report</h1>
+                <p class="header-subtitle">Comprehensive Analysis of Academic Survey Quality</p>
+                <div class="header-meta">
+                    <div class="header-meta-item"><i class="far fa-calendar"></i><span>2024-12-20</span></div>
+                    <div class="header-meta-item"><i class="far fa-file-alt"></i><span>Survey</span></div>
+                    <div class="header-meta-item"><i class="fas fa-cog"></i><span>MEKG Evaluation System v2.0</span></div>
+                </div>
+            </div>
+        </header>
+        <main class="report-body">
+            <section class="score-section">
+            <div class="score-label"><i class="fas fa-star"></i> Overall Score</div>
+            <div class="score-grade good">
+                <i class="fas fa-trophy"></i>
+                <span>Good</span>
+            </div>
+            <div class="score-value good">85.6</div>
+            <span class="score-max">/ 100</span>
+        </section>
+            <section class="key-metrics">
+            <h2 class="section-title"><i class="fas fa-chart-bar"></i>Key Metrics Overview</h2>
+            <div class="key-metrics-grid">
+                <div class="key-metric-card">
+                    <div class="key-metric-icon green"><i class="fas fa-book"></i></div>
+                    <div class="key-metric-value">78.5%</div>
+                    <div class="key-metric-name">WCR</div>
+                </div>
+                <div class="key-metric-card">
+                    <div class="key-metric-icon blue"><i class="fas fa-sitemap"></i></div>
+                    <div class="key-metric-value">82.3%</div>
+                    <div class="key-metric-name">Community Coverage</div>
+                </div>
+                <div class="key-metric-card">
+                    <div class="key-metric-icon orange"><i class="fas fa-align-left"></i></div>
+                    <div class="key-metric-value">91.2%</div>
+                    <div class="key-metric-name">Structural Coherence</div>
+                </div>
+                <div class="key-metric-card">
+                    <div class="key-metric-icon purple"><i class="fas fa-pen-fancy"></i></div>
+                    <div class="key-metric-value">88.7%</div>
+                    <div class="key-metric-name">Writing Quality</div>
+                </div>
+            </div>
+        </section>
+            <section class="dimensions-section">
+            <h2 class="section-title"><i class="fas fa-layer-group"></i>Dimension Analysis</h2>
+            <div class="dimensions-grid"><div class="dimension-card">
+            <div class="dimension-header">
+                <div class="dimension-info">
+                    <div class="dimension-icon reference"><i class="fas fa-book-open"></i></div>
+                    <div>
+                        <div class="dimension-name">Reference Quality</div>
+                        <div class="dimension-desc">Coverage of core literature and citation accuracy</div>
+                    </div>
+                </div>
+                <div class="dimension-score">
+                    <div class="dimension-score-value good">87.2</div>
+                    <div class="dimension-weight">Weight: 25%</div>
+                </div>
+            </div>
+            <div class="dimension-progress">
+                <div class="dimension-progress-bar good" style="width: 87.2%"></div>
+            </div>
+            <div class="metrics-grid"><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> WCR</span>
+                    <span class="metric-value">78.5%</span>
+                </div><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> Community Coverage</span>
+                    <span class="metric-value">82.3%</span>
+                </div><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> Bibliographic Integrity</span>
+                    <span class="metric-value">95.1%</span>
+                </div><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> Citation Faithfulness</span>
+                    <span class="metric-value">92.8%</span>
+                </div></div>
+        </div><div class="dimension-card">
+            <div class="dimension-header">
+                <div class="dimension-info">
+                    <div class="dimension-icon structure"><i class="fas fa-project-diagram"></i></div>
+                    <div>
+                        <div class="dimension-name">Structural Soundness</div>
+                        <div class="dimension-desc">Organization structure and logical coherence</div>
+                    </div>
+                </div>
+                <div class="dimension-score">
+                    <div class="dimension-score-value excellent">91.5</div>
+                    <div class="dimension-weight">Weight: 20%</div>
+                </div>
+            </div>
+            <div class="dimension-progress">
+                <div class="dimension-progress-bar excellent" style="width: 91.5%"></div>
+            </div>
+            <div class="metrics-grid"><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> Structural Coherence</span>
+                    <span class="metric-value">91.2%</span>
+                </div><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> Structural Completeness</span>
+                    <span class="metric-value">88.6%</span>
+                </div><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> Content-Structure Fidelity</span>
+                    <span class="metric-value">94.7%</span>
+                </div></div>
+        </div><div class="dimension-card">
+            <div class="dimension-header">
+                <div class="dimension-info">
+                    <div class="dimension-icon content"><i class="fas fa-file-alt"></i></div>
+                    <div>
+                        <div class="dimension-name">Content Integrity</div>
+                        <div class="dimension-desc">Content accuracy, depth and writing quality</div>
+                    </div>
+                </div>
+                <div class="dimension-score">
+                    <div class="dimension-score-value good">82.8</div>
+                    <div class="dimension-weight">Weight: 25%</div>
+                </div>
+            </div>
+            <div class="dimension-progress">
+                <div class="dimension-progress-bar good" style="width: 82.8%"></div>
+            </div>
+            <div class="metrics-grid"><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> General Factualness</span>
+                    <span class="metric-value">85.3%</span>
+                </div><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> Writing Quality</span>
+                    <span class="metric-value">88.7%</span>
+                </div><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> Scholarly Depth</span>
+                    <span class="metric-value">79.2%</span>
+                </div><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> Temporal Coverage</span>
+                    <span class="metric-value">78.1%</span>
+                </div></div>
+        </div><div class="dimension-card">
+            <div class="dimension-header">
+                <div class="dimension-info">
+                    <div class="dimension-icon ethics"><i class="fas fa-balance-scale"></i></div>
+                    <div>
+                        <div class="dimension-name">Ethics & Integrity</div>
+                        <div class="dimension-desc">Originality, societal impact and fairness</div>
+                    </div>
+                </div>
+                <div class="dimension-score">
+                    <div class="dimension-score-value good">79.4</div>
+                    <div class="dimension-weight">Weight: 15%</div>
+                </div>
+            </div>
+            <div class="dimension-progress">
+                <div class="dimension-progress-bar good" style="width: 79.4%"></div>
+            </div>
+            <div class="metrics-grid"><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> Originality</span>
+                    <span class="metric-value">82.5%</span>
+                </div><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> Societal Impact</span>
+                    <span class="metric-value">75.8%</span>
+                </div><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> Fairness</span>
+                    <span class="metric-value">80.0%</span>
+                </div></div>
+        </div><div class="dimension-card">
+            <div class="dimension-header">
+                <div class="dimension-info">
+                    <div class="dimension-icon media"><i class="fas fa-images"></i></div>
+                    <div>
+                        <div class="dimension-name">Rich Media Quality</div>
+                        <div class="dimension-desc">Figure/table quality and visual effectiveness</div>
+                    </div>
+                </div>
+                <div class="dimension-score">
+                    <div class="dimension-score-value fair">72.6</div>
+                    <div class="dimension-weight">Weight: 15%</div>
+                </div>
+            </div>
+            <div class="dimension-progress">
+                <div class="dimension-progress-bar fair" style="width: 72.6%"></div>
+            </div>
+            <div class="metrics-grid"><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> Figure Quality</span>
+                    <span class="metric-value">75.2%</span>
+                </div><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> Table Quality</span>
+                    <span class="metric-value">78.9%</span>
+                </div><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> Visual-Content Alignment</span>
+                    <span class="metric-value">68.4%</span>
+                </div><div class="metric-item">
+                    <span class="metric-name"><i class="fas fa-circle"></i> Resource Accessibility</span>
+                    <span class="metric-value">68.0%</span>
+                </div></div>
+        </div></div>
+        </section>
+            <section class="analysis-section">
+            <h2 class="section-title"><i class="fas fa-search-plus"></i>Strengths & Weaknesses</h2>
+            <div class="analysis-grid">
+                <div class="analysis-card strengths">
+                    <div class="analysis-title"><i class="fas fa-check-circle"></i>Strengths</div>
+                    <ul class="analysis-list"><li><i class="fas fa-check"></i><span>Bibliographic Integrity (95.1%)</span></li><li><i class="fas fa-check"></i><span>Citation Faithfulness (92.8%)</span></li><li><i class="fas fa-check"></i><span>Structural Coherence (91.2%)</span></li><li><i class="fas fa-check"></i><span>Structural Completeness (88.6%)</span></li></ul>
+                </div>
+                <div class="analysis-card weaknesses">
+                    <div class="analysis-title"><i class="fas fa-exclamation-circle"></i>Areas for Improvement</div>
+                    <ul class="analysis-list"><li><i class="fas fa-times"></i><span>Visual-Content Alignment (68.4%)</span></li><li><i class="fas fa-times"></i><span>Resource Accessibility (68.0%)</span></li></ul>
+                </div>
+            </div>
+        </section>
+            <section class="recommendations">
+            <h2 class="section-title"><i class="fas fa-lightbulb"></i>Recommendations</h2>
+            <ul class="recommendation-list"><li class="recommendation-item">
+                <div class="recommendation-number">1</div>
+                <div class="recommendation-text">Improve visual-content alignment by ensuring all figures and tables are directly referenced and explained in the text.</div>
+            </li><li class="recommendation-item">
+                <div class="recommendation-number">2</div>
+                <div class="recommendation-text">Enhance resource accessibility by providing working links to code repositories and datasets mentioned in the survey.</div>
+            </li><li class="recommendation-item">
+                <div class="recommendation-number">3</div>
+                <div class="recommendation-text">Expand the discussion on societal impact and ethical considerations of the surveyed technologies.</div>
+            </li><li class="recommendation-item">
+                <div class="recommendation-number">4</div>
+                <div class="recommendation-text">Consider adding more recent publications to improve temporal coverage of the literature.</div>
+            </li><li class="recommendation-item">
+                <div class="recommendation-number">5</div>
+                <div class="recommendation-text">Add more comparative analysis tables to help readers understand the differences between approaches.</div>
+            </li></ul>
+        </section>
+            <section class="all-metrics-section">
+            <h2 class="section-title"><i class="fas fa-table"></i>Complete Metrics Summary</h2>
+            <div class="metrics-table-container">
+                <table class="metrics-table">
+                    <thead><tr>
+                        <th>Category</th>
+                        <th>Metric</th>
+                        <th>Score</th>
+                        <th>Status</th>
+                    </tr></thead>
+                    <tbody><tr class="category-header">
+                <td colspan="4"><i class="fas fa-book-open"></i> Reference Quality</td>
+            </tr><tr>
+                        <td></td>
+                        <td>WCR</td>
+                        <td>78.5%</td>
+                        <td><span class="status-badge good">Good</span></td>
+                    </tr><tr>
+                        <td></td>
+                        <td>Community Coverage</td>
+                        <td>82.3%</td>
+                        <td><span class="status-badge good">Good</span></td>
+                    </tr><tr>
+                        <td></td>
+                        <td>Bibliographic Integrity</td>
+                        <td>95.1%</td>
+                        <td><span class="status-badge excellent">Excellent</span></td>
+                    </tr><tr>
+                        <td></td>
+                        <td>Citation Faithfulness</td>
+                        <td>92.8%</td>
+                        <td><span class="status-badge excellent">Excellent</span></td>
+                    </tr><tr class="category-header">
+                <td colspan="4"><i class="fas fa-project-diagram"></i> Structural Soundness</td>
+            </tr><tr>
+                        <td></td>
+                        <td>Structural Coherence</td>
+                        <td>91.2%</td>
+                        <td><span class="status-badge excellent">Excellent</span></td>
+                    </tr><tr>
+                        <td></td>
+                        <td>Structural Completeness</td>
+                        <td>88.6%</td>
+                        <td><span class="status-badge good">Good</span></td>
+                    </tr><tr>
+                        <td></td>
+                        <td>Content-Structure Fidelity</td>
+                        <td>94.7%</td>
+                        <td><span class="status-badge excellent">Excellent</span></td>
+                    </tr><tr class="category-header">
+                <td colspan="4"><i class="fas fa-file-alt"></i> Content Integrity</td>
+            </tr><tr>
+                        <td></td>
+                        <td>General Factualness</td>
+                        <td>85.3%</td>
+                        <td><span class="status-badge good">Good</span></td>
+                    </tr><tr>
+                        <td></td>
+                        <td>Writing Quality</td>
+                        <td>88.7%</td>
+                        <td><span class="status-badge good">Good</span></td>
+                    </tr><tr>
+                        <td></td>
+                        <td>Scholarly Depth</td>
+                        <td>79.2%</td>
+                        <td><span class="status-badge good">Good</span></td>
+                    </tr><tr>
+                        <td></td>
+                        <td>Temporal Coverage</td>
+                        <td>78.1%</td>
+                        <td><span class="status-badge good">Good</span></td>
+                    </tr><tr class="category-header">
+                <td colspan="4"><i class="fas fa-balance-scale"></i> Ethics & Integrity</td>
+            </tr><tr>
+                        <td></td>
+                        <td>Originality</td>
+                        <td>82.5%</td>
+                        <td><span class="status-badge good">Good</span></td>
+                    </tr><tr>
+                        <td></td>
+                        <td>Societal Impact</td>
+                        <td>75.8%</td>
+                        <td><span class="status-badge good">Good</span></td>
+                    </tr><tr>
+                        <td></td>
+                        <td>Fairness</td>
+                        <td>80.0%</td>
+                        <td><span class="status-badge good">Good</span></td>
+                    </tr><tr class="category-header">
+                <td colspan="4"><i class="fas fa-images"></i> Rich Media Quality</td>
+            </tr><tr>
+                        <td></td>
+                        <td>Figure Quality</td>
+                        <td>75.2%</td>
+                        <td><span class="status-badge good">Good</span></td>
+                    </tr><tr>
+                        <td></td>
+                        <td>Table Quality</td>
+                        <td>78.9%</td>
+                        <td><span class="status-badge good">Good</span></td>
+                    </tr><tr>
+                        <td></td>
+                        <td>Visual-Content Alignment</td>
+                        <td>68.4%</td>
+                        <td><span class="status-badge fair">Fair</span></td>
+                    </tr><tr>
+                        <td></td>
+                        <td>Resource Accessibility</td>
+                        <td>68.0%</td>
+                        <td><span class="status-badge fair">Fair</span></td>
+                    </tr></tbody>
+                </table>
+            </div>
+        </section>
+        </main>
+        <footer class="report-footer">
+            <div class="footer-logo"><i class="fas fa-chart-line"></i>MEKG Evaluation System v2.0</div>
+            <p class="footer-desc">Powered by Knowledge Graph & Large Language Models</p>
+            <p class="footer-meta">Generated: 2024-12-20T15:30:00</p>
+        </footer>
+    </div>
+    <script>
+// 保存为图片功能 (需要 html2canvas 库)
+async function saveAsImage(format) {
+    if (typeof html2canvas === 'undefined') {
+        // 动态加载 html2canvas
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        script.onload = () => captureAndSave(format);
+        document.head.appendChild(script);
+    } else {
+        captureAndSave(format);
+    }
+}
+
+async function captureAndSave(format) {
+    const element = document.getElementById('report');
+    const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+    });
+    
+    const link = document.createElement('a');
+    link.download = 'evaluation_report.' + (format || 'png');
+    link.href = canvas.toDataURL('image/' + (format || 'png'), 0.95);
+    link.click();
+}
+</script>
+</body>
+</html>

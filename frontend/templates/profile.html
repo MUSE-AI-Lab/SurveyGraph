@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}个人设置 - SurveyGraph{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <a href="/dashboard" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            返回任务列表
+        </a>
+        <div class="page-title-section">
+            <h1>个人设置</h1>
+            <p class="page-subtitle">管理您的账户信息和配额</p>
+        </div>
+    </div>
+    
+    <div class="profile-grid">
+        <div class="profile-main">
+            <!-- 账户信息 -->
+            <div class="card profile-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-user"></i> 账户信息</h2>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>用户名</label>
+                        <span id="profile-username" class="info-value">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>邮箱</label>
+                        <span id="profile-email" class="info-value">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>注册时间</label>
+                        <span id="profile-created" class="info-value">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>账户角色</label>
+                        <span id="profile-role" class="info-value">-</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 配额信息 -->
+            <div class="card profile-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-chart-pie"></i> 配额信息</h2>
+                </div>
+                <div class="quota-cards">
+                    <div class="quota-card">
+                        <div class="quota-value" id="profile-daily-quota">-</div>
+                        <div class="quota-label">每日配额</div>
+                    </div>
+                    <div class="quota-card">
+                        <div class="quota-value" id="profile-daily-remaining">-</div>
+                        <div class="quota-label">今日剩余</div>
+                    </div>
+                    <div class="quota-card quota-card-bonus">
+                        <div class="quota-value" id="profile-bonus-quota">-</div>
+                        <div class="quota-label">额外配额</div>
+                    </div>
+                </div>
+                <p class="form-hint" style="margin-top: 16px;">
+                    <i class="fas fa-info-circle"></i> 
+                    每日配额在每天 00:00 重置，额外配额永久有效。邀请好友可获得额外配额。
+                </p>
+            </div>
+            
+            <!-- 修改密码 -->
+            <div class="card profile-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-lock"></i> 修改密码</h2>
+                </div>
+                <form id="password-form" class="password-form">
+                    <div class="form-group">
+                        <label>当前密码</label>
+                        <input type="password" name="current_password" class="form-input" required placeholder="请输入当前密码">
+                    </div>
+                    <div class="form-group">
+                        <label>新密码</label>
+                        <input type="password" name="new_password" class="form-input" required minlength="6" placeholder="至少6个字符">
+                    </div>
+                    <div class="form-group">
+                        <label>确认新密码</label>
+                        <input type="password" name="confirm_new_password" class="form-input" required placeholder="再次输入新密码">
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 修改密码
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 侧边栏 - 邀请卡片 -->
+        <div class="profile-sidebar">
+            <div class="card invite-card" id="invite">
+                <div class="invite-header">
+                    <i class="fas fa-gift" style="font-size: 32px;"></i>
+                    <h3>邀请好友</h3>
+                </div>
+                <p class="invite-desc">邀请好友注册，双方各得 <strong>1 次</strong> 额外生成配额！</p>
+                <div class="invite-code-box">
+                    <label>您的邀请码</label>
+                    <div class="invite-code" id="invite-code">加载中...</div>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="copyInviteLink()">
+                    <i class="fas fa-copy"></i> 复制邀请链接
+                </button>
+                <div class="invite-stats">
+                    <span>已成功邀请 <strong id="invite-count">0</strong> 人</span>
+                </div>
+            </div>
+            
+            <!-- 使用统计 -->
+            <div class="card" style="margin-top: 24px; padding: 24px;">
+                <h3 style="margin: 0 0 16px 0; font-size: 16px;"><i class="fas fa-chart-bar"></i> 使用统计</h3>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">总任务数</span>
+                        <span id="stat-total-tasks" style="font-weight: 600;">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">已完成</span>
+                        <span id="stat-completed-tasks" style="font-weight: 600; color: var(--accent-success);">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: var(--text-muted);">进行中</span>
+                        <span id="stat-running-tasks" style="font-weight: 600; color: var(--accent-primary);">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadProfileData();
+    document.getElementById('password-form').addEventListener('submit', handleChangePassword);
+});
+
+async function loadProfileData() {
+    // 检查页面是否已被 SPA 路由替换
+    const profileRoleEl = document.getElementById('profile-role');
+    if (!profileRoleEl) {
+        // 页面已被 app.js 的 renderProfilePage 替换，不需要再执行
+        return;
+    }
+    
+    try {
+        const [user, quota, inviteCode, invitations, stats] = await Promise.all([
+            api.getCurrentUser(),
+            api.getQuota(),
+            api.getInviteCode(),
+            api.getInvitations(),
+            api.getUserStats()
+        ]);
+        
+        // 账户信息
+        const usernameEl = document.getElementById('profile-username');
+        const emailEl = document.getElementById('profile-email');
+        const createdEl = document.getElementById('profile-created');
+        const roleEl = document.getElementById('profile-role');
+        
+        if (usernameEl) usernameEl.textContent = user.username;
+        if (emailEl) emailEl.textContent = user.email;
+        if (createdEl) createdEl.textContent = formatDate(user.created_at);
+        if (roleEl) roleEl.innerHTML = user.is_admin ?
+            '<span class="badge badge-primary">管理员</span>' :
+            '<span class="badge badge-secondary">普通用户</span>';
+        
+        // 配额信息
+        const dailyQuotaEl = document.getElementById('profile-daily-quota');
+        const dailyRemainingEl = document.getElementById('profile-daily-remaining');
+        const bonusQuotaEl = document.getElementById('profile-bonus-quota');
+        
+        if (dailyQuotaEl) dailyQuotaEl.textContent = quota.daily_quota;
+        if (dailyRemainingEl) dailyRemainingEl.textContent = quota.remaining_today;
+        if (bonusQuotaEl) bonusQuotaEl.textContent = quota.bonus_quota;
+        
+        // 邀请信息
+        const inviteCodeEl = document.getElementById('invite-code');
+        const inviteCountEl = document.getElementById('invite-count');
+        
+        if (inviteCodeEl) inviteCodeEl.textContent = inviteCode.invite_code;
+        if (inviteCountEl) inviteCountEl.textContent = invitations.total || 0;
+        
+        // 使用统计
+        const totalTasksEl = document.getElementById('stat-total-tasks');
+        const completedTasksEl = document.getElementById('stat-completed-tasks');
+        const runningTasksEl = document.getElementById('stat-running-tasks');
+        
+        if (totalTasksEl) totalTasksEl.textContent = stats.total_tasks || 0;
+        if (completedTasksEl) completedTasksEl.textContent = stats.completed_tasks || 0;
+        if (runningTasksEl) runningTasksEl.textContent = stats.running_tasks || 0;
+    } catch (e) {
+        Toast.error('加载数据失败: ' + e.message);
+    }
+}
+
+function copyInviteLink() {
+    const code = document.getElementById('invite-code').textContent;
+    const link = `${window.location.origin}/register?invite=${code}`;
+    navigator.clipboard.writeText(link)
+        .then(() => Toast.success('邀请链接已复制到剪贴板'))
+        .catch(() => Toast.error('复制失败，请手动复制'));
+}
+
+async function handleChangePassword(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = form.querySelector('button[type="submit"]');
+    const currentPassword = form.current_password.value;
+    const newPassword = form.new_password.value;
+    const confirmPassword = form.confirm_new_password.value;
+    
+    if (newPassword !== confirmPassword) {
+        Toast.error('两次输入的新密码不一致');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        Toast.error('新密码至少需要6个字符');
+        return;
+    }
+    
+    Loading.button(btn, true);
+    try {
+        await api.changePassword(currentPassword, newPassword);
+        Toast.success('密码修改成功');
+        form.reset();
+    } catch (e) {
+        Toast.error(e.message || '修改失败');
+    } finally {
+        Loading.button(btn, false);
+    }
+}
+</script>
+{% endblock %}

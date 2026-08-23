@@ -1,0 +1,36 @@
+You will be provided with a segment of text from a survey paper. This text describes a series of methods or theories. Your task is to extract **three representative and appropriately abstract attributes** and provide a **brief description** for each attribute. The attributes and descriptions should meet the following criteria:  
+
+1. **Representative**: The attributes must capture the key characteristics of the methods or theories.  
+2. **Descriptive**: Each attribute must be accompanied by a clear, concise description of its meaning.  
+3. **Abstract**: The attributes should be sufficiently abstract to accommodate diverse content in the text. Avoid overly specific attributes and prefer generalized terms, such as *"Structural Features"*, *"Task Type"*, or *"Applicable Scenarios"*.  
+4. **Concise**: Each attribute name must be **no longer than three words**.  
+5. **Limited to three**: Provide exactly three attributes and their corresponding descriptions.  
+
+Output your results in the following dictionary format:  
+{{
+    'Attribute1': 'XXX',
+    'Description1': 'XXX',
+    'Attribute2': 'XXX',
+    'Description2': 'XXX',
+    'Attribute3': 'XXX',
+    'Description3': 'XXX'
+}}
+Please strictly follow the output format requirements.
+
+Your response should be enclosed within `<Answer>` and `</Answer>` tags.
+
+Example Output:
+```
+<Answer>
+{{
+    'Attribute1': 'XXX',
+    'Description1': 'XXX',
+    'Attribute2': 'XXX',
+    'Description2': 'XXX',
+    'Attribute3': 'XXX',
+    'Description3': 'XXX'
+}}
+</Answer>
+```  
+Here is the content:
+{Content}

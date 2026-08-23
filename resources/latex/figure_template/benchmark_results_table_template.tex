@@ -1,0 +1,21 @@
+% Benchmark Results Table Template
+% 基准测试结果表格 - 类似 (Open-Loop Planning comparisons)
+% 特点：多级表头，数值精确对齐，分组行，emoji图标支持
+
+\begin{table*}[t]
+\centering
+\caption{<caption>}
+\label{tab:<label>}
+\renewcommand{\arraystretch}{1.15}
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{<column_spec>}
+\toprule
+<headers_level1>
+<headers_level2>
+\midrule
+<rows>
+\bottomrule
+\end{tabular}%
+}
+\end{table*}

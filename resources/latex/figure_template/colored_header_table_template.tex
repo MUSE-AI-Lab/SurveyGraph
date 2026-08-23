@@ -1,0 +1,19 @@
+% Colored Header Table Template
+% 带彩色标题栏的表格 - 类似 (Training Strategies)
+% 特点：顶部彩色标题栏，嵌套行结构，专业学术风格
+
+\begin{table}[H]
+\centering
+\caption{<caption>}
+\label{tab:<label>}
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{<column_spec>}
+\arrayrulecolor{<header_color>}\toprule[1.5pt]
+\rowcolor{<header_color>!15}
+<headers>
+\arrayrulecolor{black}\midrule
+<rows>
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,500 @@
+% from: https://www.overleaf.com/latex/templates/neurips-2024/tpsbbrdqcmsh
+% \documentclass[final]{article}
+\documentclass{article}
+
+% 在加载 neurips_2024 之前配置 natbib 选项
+% sort&compress: 对引用编号排序并压缩连续编号 (如 [2-14] 而不是 [3,4,5,6,7,8,2,9,10,11,12,13,14])
+% numbers: 使用数字引用格式
+\PassOptionsToPackage{sort&compress,numbers}{natbib}
+
+\usepackage[preprint]{neurips_2024}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+% used for drawing
+\usepackage{xcolor}         % colors
+\usepackage{tikz}
+\usepackage{adjustbox}
+\usepackage{forest}
+% used for sheet
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{caption}        % caption formatting and spacing
+\usepackage{colortbl}       % colored table cells (\rowcolor, \cellcolor)
+\usepackage{array}          % enhanced column types
+\usepackage{tabularx}       % tables with auto-width columns (X type)
+\usepackage{makecell}       % line breaks in cells (\makecell)
+\usepackage{pifont}         % ding symbols for checkmarks/crosses
+\usepackage{amssymb}        % math symbols including \checkmark
+% used for float control - force figures/tables to stay in place
+\usepackage{float}          % provides [H] option for strict placement
+\usepackage{placeins}       % provides \FloatBarrier command
+% for page footer
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead{}
+% \fancyfoot[L]{\footnotesize \hrule width 2.3in height 0.5pt \vspace{2pt} AI-generated, for reference only.}
+% used for timeshaft drawing
+\usepackage[usenames,dvipsnames]{xcolor}
+\usetikzlibrary{calc, arrows.meta, intersections, patterns, positioning, shapes.misc, shapes.symbols, shapes.geometric, fadings, through, decorations.pathreplacing, shadows, chains, mindmap, backgrounds}
+% for fontawesome icons (used in some generated TikZ figures)
+\usepackage{fontawesome5}
+% for colored boxes (tcolorbox) - used in key insights, definitions, etc.
+\usepackage{tcolorbox}
+\tcbuselibrary{skins, breakable}
+% for itemize in tcolorbox
+\usepackage{enumitem}
+
+% Note: natbib is already loaded by neurips_2024.sty, so we don't load it again
+% \usepackage[numbers]{natbib}
+% Note: \bibliographystyle should be defined at the end of the document (near \bibliography)
+% Do NOT define it here to avoid "Illegal, another \bibstyle command" error
+
+% Override flushbottom from neurips_2024.sty to prevent large gaps between sections
+% flushbottom forces pages to have aligned bottoms by stretching vertical space
+% raggedbottom allows pages to have natural spacing, with extra space at the bottom
+\raggedbottom
+
+% Float placement settings - reduce float movement
+\renewcommand{\topfraction}{0.9}        % max fraction of floats at top
+\renewcommand{\bottomfraction}{0.9}     % max fraction of floats at bottom
+\renewcommand{\textfraction}{0.1}       % min fraction of text on page
+\renewcommand{\floatpagefraction}{0.8}  % min fraction of floats on float page
+\setcounter{topnumber}{3}               % max floats at top of page
+\setcounter{bottomnumber}{3}            % max floats at bottom of page
+\setcounter{totalnumber}{6}             % max floats on a page
+
+% Caption spacing settings - add space between caption and table/figure
+\captionsetup[table]{skip=8pt}          % space between table caption and table content
+\captionsetup[figure]{skip=8pt}         % space between figure caption and figure content
+
+% ———————————— Professional Survey Table Definitions ————————————
+% Category header colors for survey tables
+\definecolor{categorygreen}{RGB}{198, 224, 180}   % Light green for category rows
+\definecolor{categoryblue}{RGB}{189, 215, 238}    % Light blue alternative
+\definecolor{categoryyellow}{RGB}{255, 242, 204}  % Light yellow for chronological
+\definecolor{categorygray}{RGB}{217, 217, 217}    % Light gray alternative
+
+% Symbol commands for feature comparison tables
+\newcommand{\cmark}{\textcolor{green!70!black}{\checkmark}}  % Green checkmark (supported)
+\newcommand{\xmark}{\textcolor{red}{\ding{55}}}              % Red X mark (not supported)
+\newcommand{\pmark}{\textcolor{orange}{$\circ$}}             % Orange circle (partial support)
+
+% Highlighting commands for best results
+\newcommand{\best}[1]{\textbf{#1}}           % Bold for best result
+\newcommand{\second}[1]{\underline{#1}}      % Underline for second best
+% ———————————— Dynamic Visual Element Colors ————————————
+% Flowchart colors
+\definecolor{flow-start}{RGB}{16, 185, 129}        % 绿色 - 开始/结束
+\definecolor{flow-start-border}{RGB}{5, 150, 105}
+\definecolor{flow-process}{RGB}{59, 130, 246}      % 蓝色 - 处理过程
+\definecolor{flow-process-border}{RGB}{37, 99, 235}
+\definecolor{flow-decision}{RGB}{245, 158, 11}     % 橙色 - 判断
+\definecolor{flow-decision-border}{RGB}{217, 119, 6}
+\definecolor{flow-io}{RGB}{139, 92, 246}           % 紫色 - 输入/输出
+\definecolor{flow-io-border}{RGB}{109, 62, 216}
+\definecolor{flow-text}{RGB}{30, 41, 59}           % 深色文字
+\definecolor{flow-arrow}{RGB}{100, 116, 139}       % 箭头颜色
+
+% Performance chart colors
+\definecolor{perf-bar1}{RGB}{59, 130, 246}         % 蓝色
+\definecolor{perf-bar2}{RGB}{16, 185, 129}         % 绿色
+\definecolor{perf-bar3}{RGB}{245, 158, 11}         % 橙色
+\definecolor{perf-bar4}{RGB}{139, 92, 246}         % 紫色
+\definecolor{perf-grid}{RGB}{226, 232, 240}        % 网格线
+\definecolor{perf-text}{RGB}{30, 41, 59}           % 文字
+
+% Pipeline colors
+\definecolor{pipe-stage1}{RGB}{59, 130, 246}        % 蓝色
+\definecolor{pipe-stage2}{RGB}{16, 185, 129}        % 绿色
+\definecolor{pipe-stage3}{RGB}{245, 158, 11}        % 橙色
+\definecolor{pipe-stage4}{RGB}{139, 92, 246}        % 紫色
+\definecolor{pipe-stage5}{RGB}{236, 72, 153}        % 粉色
+\definecolor{pipe-stage6}{RGB}{14, 165, 233}        % 青色
+\definecolor{pipe-text}{RGB}{30, 41, 59}            % 深色文字
+\definecolor{pipe-arrow}{RGB}{148, 163, 184}        % 箭头颜色
+
+% Taxonomy colors
+\definecolor{tax-root}{RGB}{30, 41, 59}           % 深蓝灰 - 根节点
+\definecolor{tax-root-text}{RGB}{255, 255, 255}   % 白色文字
+\definecolor{tax-cat1}{RGB}{59, 130, 246}         % 蓝色 - Benchmarks
+\definecolor{tax-cat2}{RGB}{16, 185, 129}         % 绿色 - Metrics
+\definecolor{tax-cat3}{RGB}{245, 158, 11}         % 橙色 - Robustness
+\definecolor{tax-cat4}{RGB}{139, 92, 246}         % 紫色 - Multimodal
+\definecolor{tax-sub1}{RGB}{219, 234, 254}        % 浅蓝
+\definecolor{tax-sub2}{RGB}{209, 250, 229}        % 浅绿
+\definecolor{tax-sub3}{RGB}{254, 243, 199}        % 浅橙
+\definecolor{tax-sub4}{RGB}{237, 233, 254}        % 浅紫
+\definecolor{tax-leaf}{RGB}{248, 250, 252}        % 极浅灰
+\definecolor{tax-leaf-border}{RGB}{203, 213, 225} % 边框灰
+\definecolor{tax-text}{RGB}{30, 41, 59}           % 深色文字
+\definecolor{tax-edge}{RGB}{148, 163, 184}        % 连接线
+
+% Architecture colors
+\definecolor{arch-layer1}{RGB}{67, 56, 202}        % 深靛蓝 - 顶层
+\definecolor{arch-layer2}{RGB}{99, 102, 241}       % 靛蓝
+\definecolor{arch-layer3}{RGB}{139, 92, 246}       % 紫色
+\definecolor{arch-layer4}{RGB}{168, 85, 247}       % 浅紫
+\definecolor{arch-layer5}{RGB}{192, 132, 252}      % 淡紫
+\definecolor{arch-comp1}{RGB}{59, 130, 246}        % 蓝色组件
+\definecolor{arch-comp2}{RGB}{16, 185, 129}        % 绿色组件
+\definecolor{arch-comp3}{RGB}{245, 158, 11}        % 橙色组件
+\definecolor{arch-comp4}{RGB}{236, 72, 153}        % 粉色组件
+\definecolor{arch-text}{RGB}{255, 255, 255}        % 白色文字（层）
+\definecolor{arch-text-dark}{RGB}{30, 41, 59}      % 深色文字（组件）
+\definecolor{arch-border}{RGB}{148, 163, 184}      % 边框色
+\definecolor{arch-arrow}{RGB}{100, 116, 139}       % 箭头色
+
+% Dataflow colors
+\definecolor{df-external}{RGB}{239, 68, 68}        % 红色 - 外部实体
+\definecolor{df-process}{RGB}{59, 130, 246}        % 蓝色 - 处理过程
+\definecolor{df-datastore}{RGB}{16, 185, 129}      % 绿色 - 数据存储
+\definecolor{df-flow}{RGB}{100, 116, 139}          % 灰色 - 数据流
+\definecolor{df-text}{RGB}{30, 41, 59}             % 深色文字
+
+% Tree colors
+\definecolor{tree-primary}{RGB}{59, 130, 246}       % 主蓝色
+\definecolor{tree-secondary}{RGB}{99, 102, 241}     % 靛蓝
+\definecolor{tree-accent}{RGB}{16, 185, 129}        % 绿色强调
+\definecolor{tree-bg}{RGB}{248, 250, 252}           % 浅灰背景
+\definecolor{tree-border}{RGB}{148, 163, 184}       % 边框色
+\definecolor{tree-text}{RGB}{30, 41, 59}            % 深色文字
+
+% Mindmap colors (additional)
+\definecolor{mind-root}{RGB}{67, 56, 202}          % 深靛蓝 - 中心节点
+\definecolor{mind-annotation}{RGB}{248, 250, 252}  % 注释背景
+\definecolor{mind-annotation-border}{RGB}{99, 102, 241} % 注释边框
+
+% Tiny tree colors
+\definecolor{tiny-root}{RGB}{67, 56, 202}          % 深靛蓝 - 根节点
+\definecolor{tiny-root-bg}{RGB}{238, 242, 255}     % 浅靛蓝背景
+\definecolor{tiny-branch}{RGB}{16, 185, 129}       % 翠绿 - 分支节点
+\definecolor{tiny-branch-bg}{RGB}{209, 250, 229}   % 浅绿背景
+\definecolor{tiny-leaf}{RGB}{236, 72, 153}         % 粉红 - 叶子节点
+\definecolor{tiny-leaf-bg}{RGB}{252, 231, 243}     % 浅粉背景
+\definecolor{tiny-text}{RGB}{30, 41, 59}           % 深色文字
+\definecolor{tiny-edge}{RGB}{148, 163, 184}        % 连接线
+
+% ———————————— Forest Tree Styles for Structure Diagrams ————————————
+% 定义配色方案 - 参考 "Efficient Architectures for LLMs" 风格设计
+% 主分类颜色（左侧大类）
+\definecolor{cat-main-bg}{RGB}{255, 245, 238}        % 主分类背景 - 浅橙色
+\definecolor{cat-main-border}{RGB}{200, 150, 100}    % 主分类边框
+
+% 一级分类颜色（不同主题使用不同颜色）
+\definecolor{cat-blue-bg}{RGB}{230, 245, 255}        % 蓝色系背景
+\definecolor{cat-blue-border}{RGB}{100, 150, 200}    % 蓝色系边框
+\definecolor{cat-blue-dark}{RGB}{50, 100, 150}       % 蓝色系深色文字
+
+\definecolor{cat-green-bg}{RGB}{235, 255, 235}       % 绿色系背景
+\definecolor{cat-green-border}{RGB}{100, 180, 100}   % 绿色系边框
+\definecolor{cat-green-dark}{RGB}{50, 120, 50}       % 绿色系深色文字
+
+\definecolor{cat-yellow-bg}{RGB}{255, 255, 230}      % 黄色系背景
+\definecolor{cat-yellow-border}{RGB}{200, 180, 100}  % 黄色系边框
+\definecolor{cat-yellow-dark}{RGB}{150, 120, 50}     % 黄色系深色文字
+
+\definecolor{cat-pink-bg}{RGB}{255, 240, 245}        % 粉色系背景
+\definecolor{cat-pink-border}{RGB}{200, 150, 170}    % 粉色系边框
+\definecolor{cat-pink-dark}{RGB}{150, 80, 100}       % 粉色系深色文字
+
+\definecolor{cat-cyan-bg}{RGB}{235, 255, 255}        % 青色系背景
+\definecolor{cat-cyan-border}{RGB}{100, 180, 180}    % 青色系边框
+\definecolor{cat-cyan-dark}{RGB}{50, 120, 120}       % 青色系深色文字
+
+\definecolor{cat-orange-bg}{RGB}{255, 245, 230}      % 橙色系背景
+\definecolor{cat-orange-border}{RGB}{220, 160, 100}  % 橙色系边框
+\definecolor{cat-orange-dark}{RGB}{180, 100, 50}     % 橙色系深色文字
+
+\definecolor{cat-purple-bg}{RGB}{245, 240, 255}      % 紫色系背景
+\definecolor{cat-purple-border}{RGB}{160, 140, 200}  % 紫色系边框
+\definecolor{cat-purple-dark}{RGB}{100, 80, 150}     % 紫色系深色文字
+
+% 内容框颜色（最右侧的引用列表）
+\definecolor{content-bg}{RGB}{255, 255, 255}         % 内容框背景 - 白色
+\definecolor{content-border}{RGB}{200, 200, 200}     % 内容框边框 - 浅灰
+\definecolor{content-text}{RGB}{60, 60, 60}          % 内容文字 - 深灰
+
+% 连接线颜色
+\definecolor{line-color}{RGB}{150, 150, 150}         % 连接线 - 中灰
+
+% Mindmap 颜色定义
+\definecolor{mind-l1-1}{RGB}{100, 150, 200}          % 蓝色
+\definecolor{mind-l1-2}{RGB}{100, 180, 100}          % 绿色
+\definecolor{mind-l1-3}{RGB}{200, 180, 100}          % 黄色
+\definecolor{mind-l1-4}{RGB}{200, 150, 170}          % 粉色
+\definecolor{mind-l1-5}{RGB}{100, 180, 180}          % 青色
+\definecolor{mind-l1-6}{RGB}{220, 160, 100}          % 橙色
+
+% 基础节点样式
+\tikzstyle{base-node}=[
+    rectangle,
+    rounded corners=3pt,
+    align=left,
+    text opacity=1,
+    inner xsep=8pt,
+    inner ysep=5pt,
+    line width=0.8pt,
+    font=\small,
+    anchor=west,
+]
+
+% 主分类节点样式（最左侧的大类）
+\tikzstyle{main-category}=[
+    base-node,
+    draw=cat-main-border,
+    fill=cat-main-bg,
+    text=black,
+    font=\normalsize\bfseries,
+    minimum height=3em,
+    minimum width=4cm,
+    text width=3.5cm,
+    align=center,
+]
+
+% 一级分类节点样式
+\tikzstyle{level1-blue}=[
+    base-node,
+    draw=cat-blue-border,
+    fill=cat-blue-bg,
+    text=cat-blue-dark,
+    font=\small\bfseries,
+    minimum height=2.2em,
+    minimum width=3.5cm,
+    text width=3.2cm,
+]
+
+\tikzstyle{level1-green}=[
+    base-node,
+    draw=cat-green-border,
+    fill=cat-green-bg,
+    text=cat-green-dark,
+    font=\small\bfseries,
+    minimum height=2.2em,
+    minimum width=3.5cm,
+    text width=3.2cm,
+]
+
+\tikzstyle{level1-yellow}=[
+    base-node,
+    draw=cat-yellow-border,
+    fill=cat-yellow-bg,
+    text=cat-yellow-dark,
+    font=\small\bfseries,
+    minimum height=2.2em,
+    minimum width=3.5cm,
+    text width=3.2cm,
+]
+
+\tikzstyle{level1-pink}=[
+    base-node,
+    draw=cat-pink-border,
+    fill=cat-pink-bg,
+    text=cat-pink-dark,
+    font=\small\bfseries,
+    minimum height=2.2em,
+    minimum width=3.5cm,
+    text width=3.2cm,
+]
+
+\tikzstyle{level1-cyan}=[
+    base-node,
+    draw=cat-cyan-border,
+    fill=cat-cyan-bg,
+    text=cat-cyan-dark,
+    font=\small\bfseries,
+    minimum height=2.2em,
+    minimum width=3.5cm,
+    text width=3.2cm,
+]
+
+\tikzstyle{level1-orange}=[
+    base-node,
+    draw=cat-orange-border,
+    fill=cat-orange-bg,
+    text=cat-orange-dark,
+    font=\small\bfseries,
+    minimum height=2.2em,
+    minimum width=3.5cm,
+    text width=3.2cm,
+]
+
+\tikzstyle{level1-purple}=[
+    base-node,
+    draw=cat-purple-border,
+    fill=cat-purple-bg,
+    text=cat-purple-dark,
+    font=\small\bfseries,
+    minimum height=2.2em,
+    minimum width=3.5cm,
+    text width=3.2cm,
+]
+
+% 二级分类节点样式
+\tikzstyle{level2}=[
+    base-node,
+    draw=content-border,
+    fill=white,
+    text=black,
+    font=\footnotesize,
+    minimum height=1.8em,
+    minimum width=3cm,
+    text width=2.8cm,
+]
+
+\tikzstyle{level2-blue}=[
+    level2,
+    draw=cat-blue-border!70,
+    fill=cat-blue-bg!50,
+]
+
+\tikzstyle{level2-green}=[
+    level2,
+    draw=cat-green-border!70,
+    fill=cat-green-bg!50,
+]
+
+\tikzstyle{level2-yellow}=[
+    level2,
+    draw=cat-yellow-border!70,
+    fill=cat-yellow-bg!50,
+]
+
+\tikzstyle{level2-pink}=[
+    level2,
+    draw=cat-pink-border!70,
+    fill=cat-pink-bg!50,
+]
+
+\tikzstyle{level2-cyan}=[
+    level2,
+    draw=cat-cyan-border!70,
+    fill=cat-cyan-bg!50,
+]
+
+\tikzstyle{level2-orange}=[
+    level2,
+    draw=cat-orange-border!70,
+    fill=cat-orange-bg!50,
+]
+
+\tikzstyle{level2-purple}=[
+    level2,
+    draw=cat-purple-border!70,
+    fill=cat-purple-bg!50,
+]
+
+% 三级分类节点样式
+\tikzstyle{level3}=[
+    base-node,
+    draw=content-border,
+    fill=white,
+    text=content-text,
+    font=\scriptsize,
+    minimum height=1.5em,
+    minimum width=2.5cm,
+    text width=2.3cm,
+]
+
+% 内容节点样式（最右侧的引用列表）
+\tikzstyle{content-node}=[
+    base-node,
+    draw=content-border,
+    fill=content-bg,
+    text=content-text,
+    font=\scriptsize,
+    minimum height=1.2em,
+    align=left,
+    text width=12cm,
+    inner xsep=6pt,
+    inner ysep=4pt,
+]
+
+% 连接线样式
+\tikzstyle{tree-line}=[
+    draw=line-color,
+    line width=0.6pt,
+]
+
+% Forest 树状图样式
+\forestset{
+    survey-tree/.style={
+        for tree={
+            grow=east,
+            parent anchor=east,
+            child anchor=west,
+            anchor=west,
+            align=left,
+            edge={tree-line},
+            l sep=15pt,
+            s sep=4pt,
+            tier/.pgfmath=level(),
+            edge path={
+                \noexpand\path [tree-line, \forestoption{edge}]
+                (!u.parent anchor) -- +(8pt,0) |- (.child anchor)\forestoption{edge label};
+            },
+        },
+        where level=0{main-category}{},
+        where level=1{level1-blue}{},
+        where level=2{level2}{},
+        where level=3{level3}{},
+        where level=4{content-node}{},
+    }
+}
+
+% 带编号的树样式 (用于 structure 图)
+\forestset{
+    survey-tree-numbered/.style={
+        for tree={
+            grow=east,
+            parent anchor=east,
+            child anchor=west,
+            anchor=west,
+            align=left,
+            edge={tree-line},
+            l sep=18pt,
+            s sep=6pt,
+            edge path={
+                \noexpand\path [tree-line, \forestoption{edge}]
+                (!u.parent anchor) -- +(10pt,0) |- (.child anchor)\forestoption{edge label};
+            },
+        },
+        where level=0{main-category}{},
+    }
+}
+
+% 带颜色变化的树样式
+\forestset{
+    survey-tree-colored/.style={
+        for tree={
+            grow=east,
+            parent anchor=east,
+            child anchor=west,
+            anchor=west,
+            align=left,
+            edge={tree-line},
+            l sep=15pt,
+            s sep=4pt,
+            edge path={
+                \noexpand\path [tree-line, \forestoption{edge}]
+                (!u.parent anchor) -- +(8pt,0) |- (.child anchor)\forestoption{edge label};
+            },
+        },
+        where level=0{main-category}{},
+    }
+}
+
+% ———————————— inited by: resource/latex/survey.ini.tex ————————————
+
+
+
+
+
+

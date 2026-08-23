@@ -1,0 +1,25 @@
+% Taxonomy Matrix Table Template
+% 矩阵式分类表格 - 类似 (Taxonomy Matrix for MM-RAG Studies)
+% 特点：斜线表头，勾选标记，分组行，脚注支持
+
+\begin{table*}[t]
+\centering
+\caption{<caption>}
+\label{tab:<label>}
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{<column_spec>}
+\toprule
+<headers>
+\midrule
+<rows>
+\bottomrule
+\end{tabular}%
+}
+\vspace{2pt}
+\begin{minipage}{\textwidth}
+\footnotesize
+<footnote>
+\end{minipage}
+\end{table*}

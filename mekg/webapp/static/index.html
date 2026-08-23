@@ -1,0 +1,2032 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEKG 企业级控制台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#1e293b', // Custom dark shade
+                            950: '#020617', // Darker background
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .network-container { height: 700px; background: #0f172a; border: 1px solid #1e293b; border-radius: 0.5rem; }
+        .log-terminal { font-family: 'JetBrains Mono', monospace; height: 250px; overflow-y: auto; background: #020617; border: 1px solid #1e293b; border-radius: 0.5rem; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Transitions */
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        
+        /* Drawer Transition */
+        .slide-enter-active, .slide-leave-active { transition: transform 0.3s ease; }
+        .slide-enter-from, .slide-leave-to { transform: translateX(100%); }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-300 h-screen overflow-hidden flex">
+    <div id="app" class="flex w-full h-full">
+        
+        <!-- Sidebar -->
+        <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col flex-shrink-0 transition-all duration-300">
+            <!-- Logo Area -->
+            <div class="h-16 flex items-center px-6 border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm">
+                <div class="flex items-center gap-3 text-blue-500">
+                    <i class="fa-solid fa-layer-group text-xl"></i>
+                    <span class="font-bold text-lg tracking-tight text-slate-100">MEKG <span class="text-xs font-normal text-slate-500 ml-1">v3.0</span></span>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 overflow-y-auto py-6 px-3 space-y-1">
+                <div class="px-3 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">平台功能</div>
+                
+                <a @click="activeTab = 'build'" 
+                   :class="['flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer', 
+                            activeTab === 'build' ? 'bg-blue-600/10 text-blue-400 border border-blue-600/20' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200']">
+                    <i class="fa-solid fa-rocket w-5 text-center"></i>
+                    构建流水线
+                </a>
+                
+                <a @click="activeTab = 'graph'"
+                   :class="['flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer',
+                            activeTab === 'graph' ? 'bg-blue-600/10 text-blue-400 border border-blue-600/20' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200']">
+                    <i class="fa-solid fa-project-diagram w-5 text-center"></i>
+                    图谱探索
+                </a>
+
+                <a @click="activeTab = 'community_view'"
+                   :class="['flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer',
+                            activeTab === 'community_view' ? 'bg-blue-600/10 text-blue-400 border border-blue-600/20' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200']">
+                    <i class="fa-solid fa-layer-group w-5 text-center"></i>
+                    社区视图
+                </a>
+                
+                <a @click="activeTab = 'community'"
+                   :class="['flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer',
+                            activeTab === 'community' ? 'bg-blue-600/10 text-blue-400 border border-blue-600/20' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200']">
+                    <i class="fa-solid fa-users-viewfinder w-5 text-center"></i>
+                    社区管理
+                </a>
+
+                <div class="px-3 mt-8 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">系统监控</div>
+                
+                <div class="px-3 py-2">
+                    <div class="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-slate-400">系统状态</span>
+                            <span class="flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-2 w-2 rounded-full opacity-75" :class="wsStatus === 'connected' ? 'bg-emerald-400' : 'bg-red-400'"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2" :class="wsStatus === 'connected' ? 'bg-emerald-500' : 'bg-red-500'"></span>
+                            </span>
+                        </div>
+                        <div class="text-xs font-mono text-slate-500">{{ wsStatus === 'connected' ? '已连接' : '未连接' }}</div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- User / Footer -->
+            <div class="p-4 border-t border-slate-800">
+                <button @click="confirmClearDb" class="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium text-red-400 bg-red-400/10 hover:bg-red-400/20 border border-red-400/20 rounded-lg transition-colors">
+                    <i class="fa-solid fa-trash-can"></i> 清空数据库
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col min-w-0 bg-slate-950 relative">
+            <!-- Top Header -->
+            <header class="h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 flex items-center justify-between px-8 sticky top-0 z-10">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-lg font-semibold text-slate-100">
+                        {{ activeTab === 'build' ? '构建流水线' : activeTab === 'graph' ? '图谱探索' : '社区管理' }}
+                    </h2>
+                    <span class="px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700">企业版</span>
+                </div>
+                
+                <!-- Stats Row (Mini) -->
+                <div class="flex items-center gap-6 text-sm">
+                    <div class="flex flex-col items-end">
+                        <span class="text-xs text-slate-500">论文数</span>
+                        <span class="font-mono font-medium text-slate-200">{{ stats.papers }}</span>
+                    </div>
+                    <div class="w-px h-8 bg-slate-800"></div>
+                    <div class="flex flex-col items-end">
+                        <span class="text-xs text-slate-500">主题数</span>
+                        <span class="font-mono font-medium text-slate-200">{{ stats.topics }}</span>
+                    </div>
+                    <div class="w-px h-8 bg-slate-800"></div>
+                    <div class="flex flex-col items-end">
+                        <span class="text-xs text-slate-500">关系数</span>
+                        <span class="font-mono font-medium text-slate-200">{{ stats.relations }}</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Scrollable Content Area -->
+            <div class="flex-1 overflow-y-auto p-8 scroll-smooth">
+                <div class="max-w-7xl mx-auto space-y-6">
+                    
+                    <!-- Tab: Build Pipeline -->
+                    <div v-show="activeTab === 'build'" class="space-y-6">
+                        
+                        <!-- Input Card -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl shadow-sm overflow-hidden">
+                            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                                <h3 class="font-medium text-slate-200 flex items-center gap-2">
+                                    <i class="fa-solid fa-pen-to-square text-blue-500"></i> 新建任务
+                                </h3>
+                                <button @click="showAiModal = true" class="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 border border-purple-500/20 transition-colors">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> AI 灵感
+                                </button>
+                            </div>
+                            <div class="p-6">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-slate-400 mb-2">研究主题</label>
+                                    <textarea v-model="topicInput" 
+                                        class="w-full h-32 bg-slate-950 border border-slate-700 rounded-lg p-4 text-sm font-mono text-slate-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder-slate-700"
+                                        placeholder="输入主题 (每行一个)...&#10;例如: Large Language Model Agents"></textarea>
+                                </div>
+                                <div class="flex gap-3">
+                                    <button @click="startBuild" :disabled="building" 
+                                        class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg shadow-lg shadow-blue-900/20 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i v-if="!building" class="fa-solid fa-play"></i>
+                                        <span v-else class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+                                        {{ building ? '构建中...' : '开始构建' }}
+                                    </button>
+                                    <button @click="analyzeTopics" :disabled="!topicInput"
+                                        class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-lg border border-slate-700 transition-all flex items-center gap-2">
+                                        <i class="fa-solid fa-chart-pie"></i> 分析状态
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Card -->
+                        <div v-if="currentProgress" class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-sm animate-fade-in">
+                            <div class="flex justify-between items-center mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                                        <span class="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-medium text-slate-200">{{ currentProgress.topic }}</h4>
+                                        <p class="text-xs text-slate-500">{{ currentProgress.stage }}</p>
+                                    </div>
+                                </div>
+                                <span class="text-2xl font-mono font-bold text-blue-500">{{ Math.round(currentProgress.progress) }}%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-1.5 mb-2">
+                                <div class="bg-blue-500 h-1.5 rounded-full transition-all duration-500" :style="{ width: currentProgress.progress + '%' }"></div>
+                            </div>
+                            <p class="text-xs text-slate-500 font-mono text-right">{{ currentProgress.detail }}</p>
+                        </div>
+
+                        <!-- Tasks Table -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-xl shadow-sm overflow-hidden">
+                            <div class="px-6 py-4 border-b border-slate-800 bg-slate-900/50">
+                                <h3 class="font-medium text-slate-200">任务历史</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="text-xs text-slate-500 uppercase bg-slate-950/50 border-b border-slate-800">
+                                        <tr>
+                                            <th class="px-6 py-3 font-medium">任务 ID</th>
+                                            <th class="px-6 py-3 font-medium">主题</th>
+                                            <th class="px-6 py-3 font-medium">状态</th>
+                                            <th class="px-6 py-3 font-medium">时间</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-800">
+                                        <tr v-for="(task, id) in activeTasks" :key="id" class="hover:bg-slate-800/30 transition-colors">
+                                            <td class="px-6 py-4 font-mono text-xs text-slate-500">{{ id.slice(11, 19) }}</td>
+                                            <td class="px-6 py-4 text-slate-300">{{ task.topics.join(', ') }}</td>
+                                            <td class="px-6 py-4">
+                                                <span :class="['px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                                                    task.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                                    task.status === 'running' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                                                    'bg-red-500/10 text-red-400 border-red-500/20']">
+                                                    {{ task.status }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 text-slate-500 font-mono text-xs">{{ task.start_time.split('T')[1].split('.')[0] }}</td>
+                                        </tr>
+                                        <tr v-if="Object.keys(activeTasks).length === 0">
+                                            <td colspan="4" class="px-6 py-8 text-center text-slate-600">暂无任务记录</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Graph Explorer -->
+                    <div v-show="activeTab === 'graph'" class="h-full flex flex-col gap-4">
+                        <!-- RAG 智能搜索面板 -->
+                        <div class="bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/30 rounded-xl p-4">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                                    <i class="fa-solid fa-brain text-purple-400"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-slate-200">Graph-RAG 智能搜索</h3>
+                                    <p class="text-xs text-slate-400">结合语义理解与图结构分析，从知识图谱中精准检索</p>
+                                </div>
+                                <button @click="showRagHelp = !showRagHelp" class="ml-auto text-slate-400 hover:text-slate-200">
+                                    <i class="fa-solid fa-circle-question"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- 帮助提示 -->
+                            <div v-if="showRagHelp" class="mb-4 p-3 bg-slate-900/50 rounded-lg border border-slate-700 text-xs text-slate-400">
+                                <p class="mb-2"><strong class="text-slate-300">搜索类型说明：</strong></p>
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li><span class="text-purple-400">语义搜索</span>：基于向量相似度，理解查询意图</li>
+                                    <li><span class="text-blue-400">关键词搜索</span>：精确匹配标题和摘要中的关键词</li>
+                                    <li><span class="text-emerald-400">混合搜索</span>：综合两种方式，推荐使用</li>
+                                </ul>
+                                <p class="mt-2"><strong class="text-slate-300">子图提取：</strong>从大图谱中提取与查询相关的高质量小图谱，支持社区感知和多跳扩展。</p>
+                            </div>
+                            
+                            <div class="flex flex-col lg:flex-row gap-4">
+                                <!-- 搜索输入 -->
+                                <div class="flex-1">
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                                            <i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i>
+                                        </div>
+                                        <input type="text" v-model="ragQuery" @keyup.enter="executeRagSearch"
+                                            placeholder="输入研究主题、方法名称或问题描述..."
+                                            class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block pl-12 pr-4 py-3">
+                                        <div v-if="ragSuggestions.length > 0" class="absolute top-full left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-xl z-20 max-h-48 overflow-y-auto">
+                                            <div v-for="sug in ragSuggestions" :key="sug.text"
+                                                @click="ragQuery = sug.text; ragSuggestions = []"
+                                                class="px-4 py-2 hover:bg-slate-800 cursor-pointer flex items-center gap-2 text-sm">
+                                                <span :class="sug.type === 'topic' ? 'text-blue-400' : sug.type === 'method' ? 'text-emerald-400' : 'text-purple-400'">
+                                                    <i :class="sug.type === 'topic' ? 'fa-solid fa-tag' : sug.type === 'method' ? 'fa-solid fa-microchip' : 'fa-solid fa-users'"></i>
+                                                </span>
+                                                <span class="text-slate-300">{{ sug.text }}</span>
+                                                <span class="text-xs text-slate-500 ml-auto">{{ sug.type }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 搜索选项 -->
+                                <div class="flex flex-wrap gap-2 items-center">
+                                    <!-- 搜索类型 -->
+                                    <div class="flex rounded-lg border border-slate-700 overflow-hidden">
+                                        <button @click="ragSearchType = 'hybrid'"
+                                            :class="['px-3 py-2 text-xs font-medium transition-colors', ragSearchType === 'hybrid' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700']">
+                                            <i class="fa-solid fa-shuffle mr-1"></i> 混合
+                                        </button>
+                                        <button @click="ragSearchType = 'semantic'"
+                                            :class="['px-3 py-2 text-xs font-medium transition-colors', ragSearchType === 'semantic' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700']">
+                                            <i class="fa-solid fa-brain mr-1"></i> 语义
+                                        </button>
+                                        <button @click="ragSearchType = 'keyword'"
+                                            :class="['px-3 py-2 text-xs font-medium transition-colors', ragSearchType === 'keyword' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700']">
+                                            <i class="fa-solid fa-font mr-1"></i> 关键词
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- 高级过滤 -->
+                                    <button @click="showRagFilters = !showRagFilters"
+                                        :class="['px-3 py-2 text-xs font-medium rounded-lg border transition-colors', showRagFilters ? 'bg-slate-700 border-slate-600 text-slate-200' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700']">
+                                        <i class="fa-solid fa-filter mr-1"></i> 过滤
+                                    </button>
+                                    
+                                    <!-- 搜索按钮 -->
+                                    <button @click="executeRagSearch" :disabled="ragSearching || !ragQuery"
+                                        class="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <span v-if="ragSearching" class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+                                        <i v-else class="fa-solid fa-magnifying-glass"></i>
+                                        搜索
+                                    </button>
+                                    
+                                    <!-- 子图提取按钮 -->
+                                    <button @click="extractSubgraph" :disabled="ragSearching || !ragQuery"
+                                        class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fa-solid fa-diagram-project"></i>
+                                        提取子图
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- 高级过滤选项 -->
+                            <div v-if="showRagFilters" class="mt-4 p-4 bg-slate-900/50 rounded-lg border border-slate-700 space-y-4">
+                                <!-- 第一行：基础过滤 -->
+                                <div class="flex flex-wrap gap-4">
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-xs text-slate-400">年份范围:</label>
+                                        <input type="number" v-model.number="ragFilters.yearFrom" placeholder="从"
+                                            class="w-20 bg-slate-950 border border-slate-700 text-slate-300 text-xs rounded px-2 py-1">
+                                        <span class="text-slate-500">-</span>
+                                        <input type="number" v-model.number="ragFilters.yearTo" placeholder="到"
+                                            class="w-20 bg-slate-950 border border-slate-700 text-slate-300 text-xs rounded px-2 py-1">
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-xs text-slate-400">最小引用:</label>
+                                        <input type="number" v-model.number="ragFilters.minCitations" placeholder="0"
+                                            class="w-20 bg-slate-950 border border-slate-700 text-slate-300 text-xs rounded px-2 py-1">
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-xs text-slate-400">结果数量:</label>
+                                        <select v-model.number="ragFilters.maxResults" class="bg-slate-950 border border-slate-700 text-slate-300 text-xs rounded px-2 py-1">
+                                            <option :value="20">20</option>
+                                            <option :value="50">50</option>
+                                            <option :value="100">100</option>
+                                            <option :value="200">200</option>
+                                            <option :value="500">500</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-xs text-slate-400">扩展跳数:</label>
+                                        <select v-model.number="ragFilters.expandHops" class="bg-slate-950 border border-slate-700 text-slate-300 text-xs rounded px-2 py-1">
+                                            <option :value="1">1跳</option>
+                                            <option :value="2">2跳</option>
+                                            <option :value="3">3跳</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-xs text-slate-400">
+                                            <input type="checkbox" v-model="ragFilters.communityAware" class="mr-1">
+                                            社区感知
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- 第二行：关系类型筛选 -->
+                                <div class="border-t border-slate-700 pt-3">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <label class="text-xs text-slate-400 font-medium">
+                                            <i class="fa-solid fa-link mr-1"></i> 关系类型筛选
+                                        </label>
+                                        <div class="flex gap-2">
+                                            <button @click="selectAllRelationTypes" class="text-xs text-blue-400 hover:text-blue-300">全选</button>
+                                            <button @click="clearRelationTypes" class="text-xs text-slate-500 hover:text-slate-400">清空</button>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1">
+                                        <!-- 引用关系 -->
+                                        <div class="flex flex-wrap gap-1 mr-3">
+                                            <span class="text-[10px] text-blue-400 mr-1">引用:</span>
+                                            <button v-for="rt in availableRelationTypes.citation || []" :key="rt"
+                                                @click="toggleRelationType(rt)"
+                                                :class="['px-2 py-0.5 text-[10px] rounded border transition-colors',
+                                                    ragFilters.relationTypes.includes(rt)
+                                                        ? 'bg-blue-600/30 border-blue-500/50 text-blue-300'
+                                                        : 'bg-slate-800 border-slate-700 text-slate-500 hover:border-slate-600']">
+                                                {{ rt }}
+                                            </button>
+                                        </div>
+                                        <!-- 方法演进关系 -->
+                                        <div class="flex flex-wrap gap-1 mr-3">
+                                            <span class="text-[10px] text-purple-400 mr-1">方法:</span>
+                                            <button v-for="rt in availableRelationTypes.method || []" :key="rt"
+                                                @click="toggleRelationType(rt)"
+                                                :class="['px-2 py-0.5 text-[10px] rounded border transition-colors',
+                                                    ragFilters.relationTypes.includes(rt)
+                                                        ? 'bg-purple-600/30 border-purple-500/50 text-purple-300'
+                                                        : 'bg-slate-800 border-slate-700 text-slate-500 hover:border-slate-600']">
+                                                {{ rt }}
+                                            </button>
+                                        </div>
+                                        <!-- 共享实体关系 -->
+                                        <div class="flex flex-wrap gap-1">
+                                            <span class="text-[10px] text-emerald-400 mr-1">共享:</span>
+                                            <button v-for="rt in availableRelationTypes.shared || []" :key="rt"
+                                                @click="toggleRelationType(rt)"
+                                                :class="['px-2 py-0.5 text-[10px] rounded border transition-colors',
+                                                    ragFilters.relationTypes.includes(rt)
+                                                        ? 'bg-emerald-600/30 border-emerald-500/50 text-emerald-300'
+                                                        : 'bg-slate-800 border-slate-700 text-slate-500 hover:border-slate-600']">
+                                                {{ rt }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div v-if="ragFilters.relationTypes.length > 0" class="mt-2 text-[10px] text-slate-500">
+                                        已选择 {{ ragFilters.relationTypes.length }} 种关系类型
+                                    </div>
+                                </div>
+                                
+                                <!-- 第三行：主题和社区筛选 -->
+                                <div class="border-t border-slate-700 pt-3 flex flex-wrap gap-4">
+                                    <!-- 主题筛选 -->
+                                    <div class="flex-1 min-w-[200px]">
+                                        <label class="text-xs text-slate-400 font-medium mb-2 block">
+                                            <i class="fa-solid fa-tag mr-1"></i> 主题筛选
+                                        </label>
+                                        <div class="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                                            <button v-for="topic in availableTopics" :key="topic"
+                                                @click="toggleTopicFilter(topic)"
+                                                :class="['px-2 py-0.5 text-[10px] rounded border transition-colors',
+                                                    ragFilters.topicFilter.includes(topic)
+                                                        ? 'bg-yellow-600/30 border-yellow-500/50 text-yellow-300'
+                                                        : 'bg-slate-800 border-slate-700 text-slate-500 hover:border-slate-600']">
+                                                {{ topic }}
+                                            </button>
+                                        </div>
+                                        <div v-if="availableTopics.length === 0" class="text-[10px] text-slate-600">
+                                            暂无可用主题
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 社区筛选 -->
+                                    <div class="flex-1 min-w-[200px]">
+                                        <label class="text-xs text-slate-400 font-medium mb-2 block">
+                                            <i class="fa-solid fa-users mr-1"></i> 社区筛选
+                                        </label>
+                                        <div class="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                                            <button v-for="(name, id) in availableCommunities" :key="id"
+                                                @click="toggleCommunityFilter(parseInt(id))"
+                                                :class="['px-2 py-0.5 text-[10px] rounded border transition-colors',
+                                                    ragFilters.communityFilter.includes(parseInt(id))
+                                                        ? 'bg-cyan-600/30 border-cyan-500/50 text-cyan-300'
+                                                        : 'bg-slate-800 border-slate-700 text-slate-500 hover:border-slate-600']">
+                                                #{{ id }}: {{ name || '未命名' }}
+                                            </button>
+                                        </div>
+                                        <div v-if="Object.keys(availableCommunities).length === 0" class="text-[10px] text-slate-600">
+                                            暂无可用社区
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 筛选状态摘要 -->
+                                <div v-if="hasActiveFilters" class="border-t border-slate-700 pt-2 flex items-center justify-between">
+                                    <div class="text-[10px] text-slate-400">
+                                        <span v-if="ragFilters.relationTypes.length > 0" class="mr-2">
+                                            <i class="fa-solid fa-link text-blue-400"></i> {{ ragFilters.relationTypes.length }} 种关系
+                                        </span>
+                                        <span v-if="ragFilters.topicFilter.length > 0" class="mr-2">
+                                            <i class="fa-solid fa-tag text-yellow-400"></i> {{ ragFilters.topicFilter.length }} 个主题
+                                        </span>
+                                        <span v-if="ragFilters.communityFilter.length > 0">
+                                            <i class="fa-solid fa-users text-cyan-400"></i> {{ ragFilters.communityFilter.length }} 个社区
+                                        </span>
+                                    </div>
+                                    <button @click="clearAllFilters" class="text-xs text-red-400 hover:text-red-300">
+                                        <i class="fa-solid fa-xmark mr-1"></i> 清除所有筛选
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 搜索结果面板 -->
+                        <div v-if="ragResults && ragResults.papers && ragResults.papers.length > 0"
+                            class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                            <div class="px-4 py-3 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <h3 class="font-medium text-slate-200">
+                                        <i class="fa-solid fa-list-check text-purple-400 mr-2"></i>
+                                        搜索结果
+                                    </h3>
+                                    <span class="px-2 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                                        {{ ragResults.returned }} / {{ ragResults.total_found }} 篇
+                                    </span>
+                                    <span class="text-xs text-slate-500">
+                                        耗时 {{ ragResults.search_time }}s · {{ ragResults.search_strategy }}
+                                    </span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button @click="visualizeRagResults" class="px-3 py-1.5 text-xs bg-blue-600/20 text-blue-400 rounded hover:bg-blue-600/30 transition-colors">
+                                        <i class="fa-solid fa-project-diagram mr-1"></i> 可视化
+                                    </button>
+                                    <button @click="ragResults = null" class="px-3 py-1.5 text-xs bg-slate-800 text-slate-400 rounded hover:bg-slate-700 transition-colors">
+                                        <i class="fa-solid fa-xmark mr-1"></i> 关闭
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="max-h-64 overflow-y-auto">
+                                <div v-for="(paper, idx) in ragResults.papers" :key="paper.id || idx"
+                                    @click="showPaperDetail(paper)"
+                                    class="px-4 py-3 border-b border-slate-800/50 hover:bg-slate-800/30 cursor-pointer transition-colors group">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                                            :class="idx < 3 ? 'bg-yellow-500 text-slate-900' : 'bg-slate-700 text-slate-400'">
+                                            {{ idx + 1 }}
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <h4 class="text-sm font-medium text-slate-300 group-hover:text-blue-400 line-clamp-1">
+                                                {{ paper.title || paper.full_label || paper.id }}
+                                            </h4>
+                                            <div class="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                                                <span v-if="paper.year">{{ paper.year }}</span>
+                                                <span v-if="paper.citations" class="text-yellow-600">
+                                                    <i class="fa-solid fa-quote-left"></i> {{ paper.citations }}
+                                                </span>
+                                                <span v-if="paper._similarity" class="text-purple-400">
+                                                    相似度: {{ (paper._similarity * 100).toFixed(1) }}%
+                                                </span>
+                                                <span v-if="paper.community_id !== undefined" class="text-blue-400">
+                                                    社区 #{{ paper.community_id }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right text-slate-600 group-hover:text-slate-400"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 原有的图谱控制栏 -->
+                        <div class="flex gap-4 items-center bg-slate-900 p-4 rounded-xl border border-slate-800 flex-wrap">
+                            <div class="flex-1 flex gap-4 items-center min-w-[300px]">
+                                <select v-model="selectedTopic" class="w-48 bg-slate-950 border border-slate-700 text-slate-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                                    <option value="">全部主题</option>
+                                    <option v-for="t in topics" :value="t">{{ t }}</option>
+                                </select>
+                                
+                                <div class="flex items-center gap-2 bg-slate-950 px-3 py-2 rounded-lg border border-slate-700">
+                                    <span class="text-xs text-slate-500 whitespace-nowrap">节点数: {{ nodeLimit }}</span>
+                                    <input type="range" v-model="nodeLimit" min="50" max="500" step="50" class="w-24 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                                </div>
+
+                                <div class="relative w-full max-w-xs">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <i class="fa-solid fa-magnifying-glass text-slate-500"></i>
+                                    </div>
+                                    <input type="text" v-model="searchQuery" @keyup.enter="performSearch" placeholder="搜索节点..."
+                                        class="bg-slate-950 border border-slate-700 text-slate-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5">
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button @click="performSearch" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-lg border border-slate-700 transition-colors">
+                                    搜索
+                                </button>
+                                <button @click="loadGraph" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
+                                    <i class="fa-solid fa-rotate"></i> 刷新
+                                </button>
+                                <button @click="fitGraph" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-lg border border-slate-700 transition-colors flex items-center gap-2">
+                                    <i class="fa-solid fa-compress"></i> 适应
+                                </button>
+                            </div>
+                        </div>
+                        <div class="network-container shadow-inner relative">
+                            <div id="network" class="w-full h-full absolute inset-0"></div>
+                            
+                            <!-- Custom Tooltip -->
+                            <div v-show="hoveredNode"
+                                 class="absolute z-50 bg-slate-900/95 backdrop-blur border border-slate-700 rounded-lg shadow-xl p-4 max-w-xs pointer-events-none transition-opacity duration-200"
+                                 :style="{ left: tooltipPos.x + 'px', top: tooltipPos.y + 'px', transform: 'translate(10px, 10px)' }">
+                                <div v-if="hoveredNode">
+                                    <div class="font-bold text-slate-200 mb-1">{{ hoveredNode.full_label || hoveredNode.label }}</div>
+                                    <div class="text-xs text-slate-400 mb-2">{{ hoveredNode.type }}</div>
+                                    <div v-if="hoveredNode.community !== undefined" class="text-xs text-blue-400 mb-1">
+                                        社区: #{{ hoveredNode.community }}
+                                    </div>
+                                    <div v-if="hoveredNode.citations" class="text-xs text-yellow-500">
+                                        引用: {{ hoveredNode.citations }}
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Tab: Community View (Pyramid/Grid) -->
+                    <div v-show="activeTab === 'community_view'" class="h-full overflow-y-auto">
+                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-8">
+                            <div v-for="comm in communityData" :key="comm.id" class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col h-[500px]">
+                                <!-- Header -->
+                                <div class="px-4 py-3 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center"
+                                     :style="{ borderTop: '3px solid ' + comm.color }">
+                                    <div>
+                                        <h3 class="font-bold text-slate-200 text-sm truncate max-w-[200px]" :title="comm.name">{{ comm.name }}</h3>
+                                        <span class="text-xs text-slate-500">社区 #{{ comm.id }} · {{ comm.papers.length }} 篇论文</span>
+                                    </div>
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center bg-slate-800 text-slate-400 text-xs font-mono">
+                                        {{ comm.papers.length }}
+                                    </div>
+                                </div>
+                                
+                                <!-- Content (Pyramid List) -->
+                                <div class="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                                    <div v-for="(paper, idx) in comm.papers" :key="paper.id"
+                                         @click="showPaperDetail(paper)"
+                                         class="p-3 rounded-lg border border-slate-800 hover:border-blue-500/50 hover:bg-slate-800/50 transition-all cursor-pointer group relative">
+                                        
+                                        <!-- Rank Badge -->
+                                        <div class="absolute -left-1 -top-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm"
+                                             :class="idx < 3 ? 'bg-yellow-500 text-slate-900' : 'bg-slate-700 text-slate-400'">
+                                            {{ idx + 1 }}
+                                        </div>
+                                        
+                                        <h4 class="text-sm font-medium text-slate-300 group-hover:text-blue-400 line-clamp-2 mb-1 pl-2">
+                                            {{ paper.title }}
+                                        </h4>
+                                        
+                                        <div class="flex items-center gap-3 text-xs text-slate-500 pl-2">
+                                            <span v-if="paper.citations" class="flex items-center gap-1 text-yellow-600/80">
+                                                <i class="fa-solid fa-quote-left text-[10px]"></i> {{ paper.citations }}
+                                            </span>
+                                            <span v-if="paper.year">{{ paper.year }}</span>
+                                            <span v-if="paper.venue" class="truncate max-w-[100px]">{{ paper.venue }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div v-if="communityData.length === 0" class="flex flex-col items-center justify-center h-64 text-slate-500">
+                            <i class="fa-solid fa-layer-group text-4xl mb-4 opacity-20"></i>
+                            <p>暂无社区数据，请先在图谱探索中加载数据</p>
+                            <button @click="activeTab = 'graph'; loadGraph()" class="mt-4 px-4 py-2 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/30 transition-colors text-sm">
+                                去加载数据
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Logs Terminal -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl shadow-sm overflow-hidden">
+                        <div class="px-4 py-2 border-b border-slate-800 bg-slate-950 flex justify-between items-center">
+                            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-terminal"></i> 系统日志
+                            </h3>
+                            <button @click="logs = []" class="text-xs text-slate-600 hover:text-slate-400 transition-colors">清空</button>
+                        </div>
+                        <div class="log-terminal p-4" ref="logTerminal">
+                            <div v-for="(log, i) in logs" :key="i" class="text-xs font-mono mb-1 hover:bg-slate-800/50 px-1 rounded transition-colors">
+                                <span class="text-slate-600 mr-2">{{ log.split(']')[0] + ']' }}</span>
+                                <span :class="getLogClass(log)">{{ log.split(']').slice(1).join(']') }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Node Details Drawer (Global) -->
+            <transition name="slide">
+            <div v-if="selectedNode" :key="selectedNode.id" class="absolute top-0 right-0 h-full w-96 bg-slate-900/95 backdrop-blur-md border-l border-slate-700 shadow-2xl p-6 overflow-y-auto z-40 flex flex-col">
+                <div class="flex justify-between items-start mb-6">
+                    <h3 class="text-lg font-bold text-slate-100 leading-tight">{{ selectedNode.full_label || selectedNode.label }}</h3>
+                    <button @click="selectedNode = null" class="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 transition-colors">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                
+                <div class="space-y-6 flex-1">
+                        <!-- Basic Info -->
+                        <div class="space-y-3">
+                            <div v-if="selectedNode.type === 'paper'" class="flex flex-wrap gap-2">
+                                <span class="px-2 py-1 rounded text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">Paper</span>
+                                <span v-if="selectedNode.year" class="px-2 py-1 rounded text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">{{ selectedNode.year }}</span>
+                                <span v-if="selectedNode.citations" class="px-2 py-1 rounded text-xs font-medium bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
+                                    <i class="fa-solid fa-quote-left mr-1"></i>{{ selectedNode.citations }}
+                                </span>
+                            </div>
+                            <div v-else class="flex gap-2">
+                                <span class="px-2 py-1 rounded text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30">Entity</span>
+                            </div>
+                            
+                            <div v-if="selectedNode.venue" class="text-xs text-slate-400 flex items-center gap-2">
+                                <i class="fa-solid fa-building-columns"></i> {{ selectedNode.venue }}
+                            </div>
+                            
+                            <div v-if="selectedNode.authors" class="text-xs text-slate-400 flex items-start gap-2">
+                                <i class="fa-solid fa-user-group mt-0.5"></i>
+                                <span class="line-clamp-2">{{ Array.isArray(selectedNode.authors) ? selectedNode.authors.join(', ') : selectedNode.authors }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div v-if="selectedNode.pdf_url" class="flex gap-2">
+                            <a :href="selectedNode.pdf_url" target="_blank" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
+                                <i class="fa-regular fa-file-pdf"></i> 阅读 PDF
+                            </a>
+                        </div>
+
+                        <!-- Innovations -->
+                        <div v-if="selectedNode.innovations && selectedNode.innovations.length">
+                            <h4 class="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-lightbulb"></i> 创新点
+                            </h4>
+                            <ul class="list-disc list-outside ml-4 space-y-1">
+                                <li v-for="(item, idx) in selectedNode.innovations" :key="idx" class="text-sm text-slate-300">
+                                    {{ item }}
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Method Info -->
+                        <div v-if="selectedNode.method_info && (selectedNode.method_info.name || selectedNode.method_info.description)">
+                            <h4 class="text-xs font-bold text-blue-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-microchip"></i> 方法
+                            </h4>
+                            <div class="bg-slate-800/50 rounded p-3 border border-slate-700/50">
+                                <div v-if="selectedNode.method_info.name" class="font-bold text-sm text-slate-200 mb-1">{{ selectedNode.method_info.name }}</div>
+                                <div v-if="selectedNode.method_info.description" class="text-xs text-slate-400">{{ selectedNode.method_info.description }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Limitations -->
+                        <div v-if="selectedNode.limitations && selectedNode.limitations.length">
+                            <h4 class="text-xs font-bold text-red-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-circle-exclamation"></i> 局限性
+                            </h4>
+                            <ul class="list-disc list-outside ml-4 space-y-1">
+                                <li v-for="(item, idx) in selectedNode.limitations" :key="idx" class="text-sm text-slate-300">
+                                    {{ item }}
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Abstract -->
+                        <div v-if="selectedNode.abstract">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">摘要</h4>
+                            <p class="text-sm text-slate-300 leading-relaxed text-justify h-auto max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                                {{ selectedNode.abstract }}
+                            </p>
+                        </div>
+
+                        <!-- Relations (Optional: Computed dynamically) -->
+                        <div v-if="nodeRelations.length > 0">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">相关连接 ({{ nodeRelations.length }})</h4>
+                            <div class="space-y-2">
+                                <div v-for="rel in nodeRelations" :key="rel.id" class="p-2 rounded bg-slate-800/50 border border-slate-700/50 text-xs flex justify-between items-center group cursor-pointer hover:bg-slate-800 transition-colors" @click="focusNode(rel.targetId)">
+                                    <div class="flex items-center gap-2 overflow-hidden">
+                                        <span class="px-1.5 py-0.5 rounded bg-slate-700 text-slate-300">{{ rel.type }}</span>
+                                        <span class="truncate text-slate-400 group-hover:text-blue-400 transition-colors">{{ rel.targetLabel }}</span>
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right text-slate-600 group-hover:text-slate-400"></i>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+            </transition>
+        </main>
+
+        <!-- AI Modal -->
+        <div v-if="showAiModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div class="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-md p-6 transform transition-all">
+                <h3 class="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-purple-500"></i> AI 主题生成器
+                </h3>
+                
+                <div class="mb-6">
+                    <label class="block text-xs font-medium text-slate-500 uppercase mb-2">生成数量</label>
+                    <div class="flex gap-3">
+                        <button v-for="n in [5, 10, 20]" :key="n"
+                            @click="generateCount = n"
+                            :class="['px-4 py-2 rounded-lg text-sm font-medium border transition-colors',
+                                     generateCount === n ? 'bg-purple-600/20 border-purple-500 text-purple-400' : 'bg-slate-950 border-slate-700 text-slate-400 hover:border-slate-600']">
+                            {{ n }} 个主题
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-3">
+                        AI 将自动分析当前图谱中的热门趋势，为您推荐 {{ generateCount }} 个相关的高价值研究主题，并直接填充到输入框中。
+                    </p>
+                </div>
+
+                <div v-if="generating" class="flex justify-center py-8">
+                    <div class="flex flex-col items-center gap-3">
+                        <span class="loading loading-dots loading-lg text-purple-500"></span>
+                        <span class="animate-pulse text-purple-500 text-sm">正在分析趋势并生成主题...</span>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6">
+                    <button @click="showAiModal = false" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 transition-colors">取消</button>
+                    <button @click="generateTopics" :disabled="generating"
+                        class="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> 立即生成
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clear DB Modal -->
+        <div v-if="showClearConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div class="bg-slate-900 border border-red-900/50 rounded-xl shadow-2xl w-full max-w-sm p-6">
+                <div class="flex items-center gap-3 text-red-500 mb-4">
+                    <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                    <h3 class="text-lg font-semibold">警告</h3>
+                </div>
+                <p class="text-slate-400 text-sm mb-6">确定要清空所有数据库数据吗？此操作不可恢复。</p>
+                <div class="flex justify-end gap-3">
+                    <button @click="showClearConfirm = false" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 transition-colors">取消</button>
+                    <button @click="executeClearDb" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors">
+                        确认清空
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, watch, nextTick } = Vue;
+
+        createApp({
+            setup() {
+                const activeTab = ref('build');
+                const wsStatus = ref('disconnected');
+                const stats = ref({ papers: 0, topics: 0, relations: 0, communities: 0 });
+                const topicInput = ref('');
+                const building = ref(false);
+                const logs = ref([]);
+                const activeTasks = ref({});
+                const currentProgress = ref(null);
+                const topics = ref([]);
+                const selectedTopic = ref('');
+                const searchQuery = ref('');
+                const nodeLimit = ref(200);
+                const communityData = ref([]);
+                const logTerminal = ref(null);
+                const selectedNode = ref(null);
+                const nodeRelations = ref([]);
+                
+                // Custom Tooltip
+                const hoveredNode = ref(null);
+                const tooltipPos = ref({ x: 0, y: 0 });
+                const nodeDataMap = ref({}); // 全局节点数据映射
+                
+                // AI Modal
+                const showAiModal = ref(false);
+                const generateCount = ref(5);
+                const generating = ref(false);
+
+                // Clear DB Modal
+                const showClearConfirm = ref(false);
+
+                // RAG 搜索相关状态
+                const ragQuery = ref('');
+                const ragSearchType = ref('hybrid');
+                const ragSearching = ref(false);
+                const ragResults = ref(null);
+                const ragSuggestions = ref([]);
+                const showRagHelp = ref(false);
+                const showRagFilters = ref(false);
+                const ragFilters = ref({
+                    yearFrom: null,
+                    yearTo: null,
+                    minCitations: null,
+                    maxResults: 100,
+                    expandHops: 2,
+                    communityAware: true,
+                    relationTypes: [],  // 选中的关系类型
+                    topicFilter: [],    // 选中的主题
+                    communityFilter: [] // 选中的社区ID
+                });
+                
+                // 可用的筛选选项
+                const availableRelationTypes = ref({
+                    citation: ['cites', 'direct_use', 'extends', 'compares', 'task_related', 'background'],
+                    method: ['employs', 'evolved_from', 'is_applied_to', 'is_fine_tuned_with', 'is_a_type_of'],
+                    shared: ['shares_task', 'shares_dataset', 'shares_method', 'shares_baseline']
+                });
+                const availableTopics = ref([]);
+                const availableCommunities = ref({});
+                
+                // 计算属性：是否有激活的筛选
+                const hasActiveFilters = Vue.computed(() => {
+                    return ragFilters.value.relationTypes.length > 0 ||
+                           ragFilters.value.topicFilter.length > 0 ||
+                           ragFilters.value.communityFilter.length > 0;
+                });
+
+                let network = null;
+
+                // API URL
+                const API_BASE = 'http://localhost:8000';
+                const WS_URL = 'ws://localhost:8000/ws';
+
+                // WebSocket 连接
+                const connectWS = () => {
+                    const ws = new WebSocket(WS_URL);
+                    
+                    ws.onopen = () => wsStatus.value = 'connected';
+                    ws.onclose = () => {
+                        wsStatus.value = 'disconnected';
+                        setTimeout(connectWS, 3000);
+                    };
+                    
+                    ws.onmessage = (event) => {
+                        const msg = JSON.parse(event.data);
+                        
+                        if (msg.type === 'init') {
+                            activeTasks.value = msg.data.active_tasks;
+                            logs.value = msg.data.logs;
+                        } else if (msg.type === 'log') {
+                            logs.value.push(msg.data);
+                            if (logs.value.length > 500) logs.value.shift();
+                            nextTick(() => {
+                                if (logTerminal.value) {
+                                    logTerminal.value.scrollTop = logTerminal.value.scrollHeight;
+                                }
+                            });
+                        } else if (msg.type === 'progress') {
+                            currentProgress.value = msg.data;
+                        } else if (msg.type === 'task_complete') {
+                            building.value = false;
+                            currentProgress.value = null;
+                            loadStats();
+                        }
+                    };
+                };
+
+                const loadStats = async () => {
+                    try {
+                        const res = await fetch(`${API_BASE}/stats`);
+                        stats.value = await res.json();
+                    } catch (e) { console.error(e); }
+                };
+
+                const startBuild = async () => {
+                    if (!topicInput.value) return;
+                    building.value = true;
+                    
+                    try {
+                        const topicsList = topicInput.value.split('\n').filter(t => t.trim());
+                        await fetch(`${API_BASE}/build`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ topics: topicsList })
+                        });
+                    } catch (e) {
+                        building.value = false;
+                        alert('启动失败: ' + e);
+                    }
+                };
+
+                const generateTopics = async () => {
+                    generating.value = true;
+                    
+                    try {
+                        const payload = { count: generateCount.value };
+                        
+                        const res = await fetch(`${API_BASE}/generate_topics`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(payload)
+                        });
+                        const data = await res.json();
+                        
+                        if (data.topics) {
+                            // 直接填充到输入框
+                            const newTopics = data.topics.join('\n');
+                            const current = topicInput.value ? topicInput.value.trim() + '\n' : '';
+                            topicInput.value = current + newTopics;
+                            
+                            // 关闭弹窗并提示
+                            showAiModal.value = false;
+                            // 可以加一个简单的 toast 提示，这里先用 alert 或者直接关闭
+                        } else {
+                            alert('生成失败: ' + (data.error || '未知错误'));
+                        }
+                    } catch (e) {
+                        alert('请求失败: ' + e);
+                    } finally {
+                        generating.value = false;
+                    }
+                };
+
+                const addTopic = (topic) => {
+                    const current = topicInput.value ? topicInput.value + '\n' : '';
+                    topicInput.value = current + topic;
+                };
+
+                const confirmClearDb = () => {
+                    showClearConfirm.value = true;
+                };
+
+                const executeClearDb = async () => {
+                    try {
+                        const res = await fetch(`${API_BASE}/clear_db`, { method: 'POST' });
+                        const data = await res.json();
+                        if (data.message) {
+                            alert('数据库已清空');
+                            loadStats();
+                            logs.value = [];
+                        } else {
+                            alert('清空失败: ' + data.error);
+                        }
+                    } catch (e) {
+                        alert('请求失败: ' + e);
+                    } finally {
+                        showClearConfirm.value = false;
+                    }
+                };
+
+                // 社区颜色调色板
+                const COMMUNITY_COLORS = [
+                    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+                    '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+                    '#F8B500', '#00CED1', '#FF69B4', '#32CD32', '#FF7F50'
+                ];
+                
+                // 凸包算法：计算点集的凸包
+                const getConvexHull = (points) => {
+                    points.sort((a, b) => a.x != b.x ? a.x - b.x : a.y - b.y);
+                    const n = points.length;
+                    if (n <= 2) return points;
+                    
+                    const cross = (a, b, o) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+                    
+                    const lower = [];
+                    for (let i = 0; i < n; i++) {
+                        while (lower.length >= 2 && cross(lower[lower.length - 1], lower[lower.length - 2], points[i]) <= 0) {
+                            lower.pop();
+                        }
+                        lower.push(points[i]);
+                    }
+                    
+                    const upper = [];
+                    for (let i = n - 1; i >= 0; i--) {
+                        while (upper.length >= 2 && cross(upper[upper.length - 1], upper[upper.length - 2], points[i]) <= 0) {
+                            upper.pop();
+                        }
+                        upper.push(points[i]);
+                    }
+                    
+                    upper.pop();
+                    lower.pop();
+                    return lower.concat(upper);
+                };
+
+                // 关系类型颜色 - 根据MEKG V2关系类型体系
+                const RELATION_COLORS = {
+                    // 结构关系 (蓝色系)
+                    'CITES': '#00d2ff',
+                    'cites': '#00d2ff',
+                    'cited_by': '#00b4d8',
+                    'co_citation': '#0096c7',
+                    'bibliographic_coupling': '#0077b6',
+                    
+                    // 语义关系 (红/橙色系)
+                    'SEMANTIC_RELATION': '#ff6b6b',
+                    'extends': '#ff6b6b',
+                    'improves': '#ff8c42',
+                    'applies': '#ff9f1c',
+                    'compares': '#ffbf69',
+                    'combines': '#ff7f50',
+                    'reproduces': '#e76f51',
+                    'refutes': '#d62828',
+                    'supports': '#f77f00',
+                    'direct_use': '#ff6b6b',
+                    'task_related': '#ffbf69',
+                    'background': '#adb5bd',
+                    
+                    // 概念关系 (绿色系)
+                    'is_variant_of': '#2a9d8f',
+                    'is_instance_of': '#40916c',
+                    'shares_methodology': '#52b788',
+                    'shares_task': '#74c69d',
+                    'shares_dataset': '#95d5b2',
+                    'shares_baseline': '#b7e4c7',
+                    'shares_architecture': '#d8f3dc',
+                    'shares_method': '#52b788',
+                    
+                    // 方法演进关系 (紫色系)
+                    'employs': '#9d4edd',
+                    'evolved_from': '#7b2cbf',
+                    'is_applied_to': '#5a189a',
+                    'is_fine_tuned_with': '#3c096c',
+                    'is_a_type_of': '#240046',
+                    
+                    // 时序关系 (黄色系)
+                    'precedes': '#ffd60a',
+                    'succeeds': '#ffc300',
+                    'concurrent': '#ffaa00',
+                    
+                    // 作者关系 (灰色系)
+                    'same_author': '#6c757d',
+                    'same_group': '#495057',
+                    
+                    // 其他
+                    'BELONGS_TO': '#4ecdc4',
+                    'default': '#666666'
+                };
+
+                const loadGraph = async () => {
+                    const url = selectedTopic.value
+                        ? `${API_BASE}/graph/visualize?topic=${encodeURIComponent(selectedTopic.value)}&limit=${nodeLimit.value}`
+                        : `${API_BASE}/graph/visualize?limit=${nodeLimit.value}`;
+                        
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    
+                    if (data.error) {
+                        console.error('Graph load error:', data.error);
+                        return;
+                    }
+
+                    // 处理社区视图数据
+                    const communitiesMap = data.communities || {};
+                    const commGroups = {};
+                    
+                    // 预处理：按社区分组
+                    data.nodes.forEach(n => {
+                        if (n.type === 'paper' && n.community !== undefined) {
+                            if (!commGroups[n.community]) {
+                                commGroups[n.community] = {
+                                    id: n.community,
+                                    name: communitiesMap[n.community] || `社区 #${n.community}`,
+                                    color: COMMUNITY_COLORS[n.community % COMMUNITY_COLORS.length],
+                                    papers: []
+                                };
+                            }
+                            commGroups[n.community].papers.push({
+                                id: n.id,
+                                title: n.full_label || n.label,
+                                citations: n.citations || 0,
+                                year: n.year,
+                                venue: n.venue,
+                                abstract: n.abstract,
+                                pdf_url: n.pdf_url,
+                                innovations: n.innovations,
+                                limitations: n.limitations,
+                                method_info: n.method_info
+                            });
+                        }
+                    });
+                    
+                    // 排序：社区按论文数降序，论文按引用降序
+                    communityData.value = Object.values(commGroups)
+                        .sort((a, b) => b.papers.length - a.papers.length)
+                        .map(c => {
+                            c.papers.sort((a, b) => (b.citations || 0) - (a.citations || 0));
+                            return c;
+                        });
+                    
+                    const container = document.getElementById('network');
+                    if (!container) return; // 切换Tab可能导致元素不存在
+                    
+                    // 收集社区节点数据 (用于凸包)
+                    const communityNodes = {};
+                    // 重置数据映射
+                    nodeDataMap.value = {};
+                    
+                    const options = {
+                        nodes: {
+                            shape: 'dot',
+                            font: {
+                                color: '#e2e8f0',
+                                face: 'Inter',
+                                size: 12,
+                                strokeWidth: 2,
+                                strokeColor: '#0f172a'
+                            },
+                            borderWidth: 2,
+                            shadow: {
+                                enabled: true,
+                                color: 'rgba(0,0,0,0.3)',
+                                size: 5
+                            }
+                        },
+                        interaction: {
+                            hover: true, // 启用 hover 事件
+                            tooltipDelay: 100,
+                            navigationButtons: true,
+                            keyboard: true
+                        },
+                        edges: {
+                            color: {
+                                color: '#475569',
+                                highlight: '#3b82f6',
+                                hover: '#60a5fa'
+                            },
+                            arrows: { to: { enabled: true, scaleFactor: 0.5 } },
+                            smooth: { type: 'curvedCW', roundness: 0.2 },
+                            width: 1.5,
+                            font: {
+                                color: '#94a3b8',
+                                size: 10,
+                                strokeWidth: 2,
+                                strokeColor: '#0f172a'
+                            }
+                        },
+                        physics: {
+                            forceAtlas2Based: {
+                                gravitationalConstant: -100,
+                                centralGravity: 0.015, // 稍微增加引力，让其聚拢更快
+                                springLength: 80,
+                                springConstant: 0.15, // 增加弹簧系数
+                                damping: 0.95 // 大幅增加阻尼，防止震荡
+                            },
+                            maxVelocity: 25,
+                            minVelocity: 0.5, // 提高停止阈值，避免微小抖动
+                            solver: 'forceAtlas2Based',
+                            stabilization: {
+                                enabled: true,
+                                iterations: 500, // 增加稳定迭代次数
+                                updateInterval: 50,
+                                onlyDynamicEdges: false,
+                                fit: true
+                            }
+                        },
+                        interaction: {
+                            hover: true,
+                            tooltipDelay: 100,
+                            navigationButtons: true,
+                            keyboard: true
+                        }
+                    };
+                    
+                    // 处理节点 - 根据社区分配颜色
+                    const nodes = new vis.DataSet(data.nodes.map(n => {
+                        let color = '#3b82f6'; // 默认蓝色
+                        let size = 20;
+                        
+                        if (n.type === 'paper') {
+                            // 根据社区分配颜色
+                            if (n.community !== undefined && n.community !== null) {
+                                color = COMMUNITY_COLORS[n.community % COMMUNITY_COLORS.length];
+                                
+                                // 收集社区信息
+                                if (!communityNodes[n.community]) {
+                                    communityNodes[n.community] = [];
+                                }
+                                communityNodes[n.community].push(n.id);
+                            }
+                            // 根据引用数调整大小
+                            size = 15 + Math.min((n.citations || 0) / 10, 25);
+                        } else {
+                            color = '#f43f5e'; // 实体用红色
+                            size = 12;
+                        }
+                        
+                        // 存储完整数据到 Map
+                        nodeDataMap.value[n.id] = n;
+
+                        return {
+                            id: n.id,
+                            label: n.label || n.id.slice(0, 15) + '...',
+                            // 移除 title，使用自定义 tooltip
+                            title: undefined,
+                            color: {
+                                background: color,
+                                border: color,
+                                highlight: { background: '#ffffff', border: color },
+                                hover: { background: color, border: '#ffffff' }
+                            },
+                            size: size
+                        };
+                    }));
+                    
+                    // 处理边 - 注意后端返回的是 source/target，vis.js 需要 from/to
+                    const edges = new vis.DataSet(data.edges.map(e => {
+                        const relType = e.type || 'RELATION';
+                        const edgeColor = RELATION_COLORS[relType] || RELATION_COLORS['default'];
+                        
+                        return {
+                            from: e.source,  // 后端返回 source
+                            to: e.target,    // 后端返回 target
+                            label: relType,
+                            title: `${relType}`,
+                            color: {
+                                color: edgeColor,
+                                highlight: '#ffffff',
+                                hover: '#ffeaa7'
+                            },
+                            width: relType === 'CITES' ? 1 : 2
+                        };
+                    }));
+                    
+                    if (network) network.destroy();
+                    network = new vis.Network(container, { nodes, edges }, options);
+                    
+                    // 绘制社区边界
+                    network.on("afterDrawing", function (ctx) {
+                        const nodePositions = network.getPositions();
+                        
+                        Object.keys(communityNodes).forEach(commId => {
+                            const nodeIds = communityNodes[commId];
+                            if (nodeIds.length < 3) return; // 忽略太小的社区
+                            
+                            // 获取该社区所有节点的坐标
+                            const points = nodeIds
+                                .filter(id => nodePositions[id]) // 确保节点存在
+                                .map(id => nodePositions[id]);
+                                
+                            if (points.length < 3) return;
+                            
+                            // 计算凸包
+                            const hull = getConvexHull(points);
+                            if (hull.length < 3) return;
+                            
+                            // 绘制
+                            const color = COMMUNITY_COLORS[commId % COMMUNITY_COLORS.length];
+                            
+                            ctx.beginPath();
+                            ctx.strokeStyle = color;
+                            ctx.lineWidth = 2;
+                            ctx.setLineDash([5, 10]); // 虚线
+                            ctx.lineJoin = 'round';
+                            
+                            // 绘制路径
+                            ctx.moveTo(hull[0].x, hull[0].y);
+                            for (let i = 1; i < hull.length; i++) {
+                                ctx.lineTo(hull[i].x, hull[i].y);
+                            }
+                            ctx.closePath();
+                            ctx.stroke();
+                            
+                            // 填充淡淡的背景色
+                            ctx.fillStyle = color + '1A'; // 10% 透明度 (Hex + Alpha)
+                            ctx.fill();
+                            
+                            // 绘制社区名称
+                            const commName = communitiesMap[commId] || `Community #${commId}`;
+                            
+                            // 计算中心点
+                            let cx = 0, cy = 0;
+                            points.forEach(p => { cx += p.x; cy += p.y; });
+                            cx /= points.length;
+                            cy /= points.length;
+                            
+                            // 绘制文字背景
+                            ctx.font = "bold 16px Inter";
+                            const textWidth = ctx.measureText(commName).width;
+                            const padding = 8;
+                            
+                            ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
+                            ctx.strokeStyle = color;
+                            ctx.lineWidth = 1;
+                            
+                            // 圆角矩形背景
+                            const bgX = cx - textWidth/2 - padding;
+                            const bgY = cy - 24;
+                            const bgW = textWidth + padding * 2;
+                            const bgH = 32;
+                            
+                            ctx.beginPath();
+                            ctx.roundRect(bgX, bgY, bgW, bgH, 6);
+                            ctx.fill();
+                            ctx.stroke();
+                            
+                            // 绘制文字
+                            ctx.fillStyle = "#ffffff"; // 白色文字更清晰
+                            ctx.textAlign = "center";
+                            ctx.textBaseline = "middle";
+                            ctx.fillText(commName, cx, cy - 8);
+                            
+                            // 重置
+                            ctx.setLineDash([]);
+                        });
+                    });
+                    
+                    // 添加点击事件 - 显示节点详情
+                    network.on('click', function(params) {
+                        if (params.nodes.length > 0) {
+                            const nodeId = params.nodes[0];
+                            // 从全局 Map 获取完整数据
+                            const fullNodeData = nodeDataMap.value[nodeId];
+                            
+                            if (fullNodeData) {
+                                console.log("Selected Node:", fullNodeData);
+                                
+                                // 使用 setTimeout 将更新推迟到下一个宏任务，避免与当前事件循环冲突
+                                setTimeout(() => {
+                                    selectedNode.value = null; // 先置空，强制销毁旧组件
+                                    
+                                    // 再次延迟，确保销毁完成
+                                    setTimeout(() => {
+                                        selectedNode.value = fullNodeData;
+                                        
+                                        // 查找相关边
+                                        const relatedEdges = edges.get({
+                                            filter: function(item) {
+                                                return item.from === nodeId || item.to === nodeId;
+                                            }
+                                        });
+                                        
+                                        // 格式化相关连接数据
+                                        nodeRelations.value = relatedEdges.map(edge => {
+                                            const isSource = edge.from === nodeId;
+                                            const targetId = isSource ? edge.to : edge.from;
+                                            const targetNode = nodes.get(targetId);
+                                            return {
+                                                id: edge.id,
+                                                type: edge.label,
+                                                targetId: targetId,
+                                                targetLabel: targetNode ? (targetNode.label || targetNode.id) : targetId,
+                                                direction: isSource ? 'out' : 'in'
+                                            };
+                                        });
+                                    }, 0);
+                                }, 0);
+                            }
+                        } else {
+                            setTimeout(() => {
+                                selectedNode.value = null;
+                            }, 0);
+                        }
+                    });
+
+                    // 自定义 Tooltip 事件 (使用 requestAnimationFrame 节流)
+                    let rafId = null;
+                    
+                    const updateTooltip = (nodeId) => {
+                        if (rafId) cancelAnimationFrame(rafId);
+                        rafId = requestAnimationFrame(() => {
+                            const nodeData = nodeDataMap.value[nodeId];
+                            if (nodeData) {
+                                hoveredNode.value = nodeData;
+                                const pos = network.getPositions([nodeId])[nodeId];
+                                if (pos) {
+                                    const domPos = network.canvasToDOM(pos);
+                                    tooltipPos.value = { x: domPos.x, y: domPos.y };
+                                }
+                            }
+                        });
+                    };
+
+                    network.on("hoverNode", function (params) {
+                        updateTooltip(params.node);
+                    });
+
+                    network.on("blurNode", function (params) {
+                        if (rafId) cancelAnimationFrame(rafId);
+                        hoveredNode.value = null;
+                    });
+                    
+                    // 监听拖拽以更新 tooltip 位置
+                    network.on("dragging", function (params) {
+                        if (hoveredNode.value && params.nodes.length > 0) {
+                            const nodeId = params.nodes[0];
+                            if (nodeId === hoveredNode.value.id) {
+                                updateTooltip(nodeId);
+                            }
+                        }
+                    });
+                    
+                    // 双击聚焦
+                    network.on('doubleClick', function(params) {
+                        if (params.nodes.length > 0) {
+                            network.focus(params.nodes[0], {
+                                scale: 1.5,
+                                animation: { duration: 500, easingFunction: 'easeInOutQuad' }
+                            });
+                        }
+                    });
+                };
+                
+                const fitGraph = () => {
+                    if (network) network.fit({ animation: true });
+                };
+
+                const focusNode = (nodeId) => {
+                    if (network) {
+                        network.focus(nodeId, {
+                            scale: 1.2,
+                            animation: { duration: 500, easingFunction: 'easeInOutQuad' }
+                        });
+                        network.selectNodes([nodeId]);
+                        // Trigger click logic manually to update side panel
+                        const node = network.body.data.nodes.get(nodeId);
+                        if (node) {
+                            // Re-use logic from click event (simplified)
+                            selectedNode.value = node.data;
+                            // Update relations... (ideally refactor this into a function)
+                            // For now just update node info
+                        }
+                    }
+                };
+
+                const getLogClass = (log) => {
+                    if (log.includes('ERROR') || log.includes('❌')) return 'text-red-400';
+                    if (log.includes('WARNING') || log.includes('⚠️')) return 'text-yellow-400';
+                    if (log.includes('SUCCESS') || log.includes('✅')) return 'text-emerald-400';
+                    return 'text-slate-400';
+                };
+
+                const analyzeTopics = () => {
+                    alert("功能开发中...");
+                };
+
+                const performSearch = () => {
+                    if (!network || !searchQuery.value) return;
+                    
+                    const query = searchQuery.value.toLowerCase();
+                    const allNodes = network.body.data.nodes.get();
+                    
+                    // 查找匹配的节点
+                    const matchedNodes = allNodes.filter(n => {
+                        return (n.full_label || n.label || '').toLowerCase().includes(query) ||
+                               (n.id || '').toLowerCase().includes(query);
+                    });
+                    
+                    if (matchedNodes.length > 0) {
+                        // 高亮第一个匹配的节点
+                        const targetId = matchedNodes[0].id;
+                        focusNode(targetId);
+                    } else {
+                        alert('未找到匹配的节点');
+                    }
+                };
+                
+                const showPaperDetail = (paper) => {
+                    // 构建适合侧边栏显示的数据结构
+                    selectedNode.value = {
+                        id: paper.id,
+                        full_label: paper.title,
+                        label: paper.title,
+                        type: 'paper',
+                        citations: paper.citations,
+                        year: paper.year,
+                        venue: paper.venue,
+                        authors: paper.authors || null,
+                        abstract: paper.abstract,
+                        pdf_url: paper.pdf_url,
+                        innovations: paper.innovations,
+                        limitations: paper.limitations,
+                        method_info: paper.method_info
+                    };
+                    
+                    // 如果在图谱模式，尝试聚焦
+                    if (activeTab.value === 'graph' && network) {
+                        focusNode(paper.id);
+                    }
+                };
+
+                // ==================== RAG 搜索方法 ====================
+                
+                // 执行 RAG 搜索
+                const executeRagSearch = async () => {
+                    if (!ragQuery.value || ragSearching.value) return;
+                    
+                    ragSearching.value = true;
+                    ragSuggestions.value = [];
+                    
+                    try {
+                        const params = new URLSearchParams({
+                            query: ragQuery.value,
+                            max_results: ragFilters.value.maxResults,
+                            search_type: ragSearchType.value
+                        });
+                        
+                        if (ragFilters.value.yearFrom) {
+                            params.append('year_from', ragFilters.value.yearFrom);
+                        }
+                        if (ragFilters.value.yearTo) {
+                            params.append('year_to', ragFilters.value.yearTo);
+                        }
+                        if (ragFilters.value.minCitations) {
+                            params.append('min_citations', ragFilters.value.minCitations);
+                        }
+                        
+                        const res = await fetch(`${API_BASE}/rag/search?${params}`);
+                        const data = await res.json();
+                        
+                        if (data.success) {
+                            ragResults.value = data;
+                            console.log('RAG Search Results:', data);
+                        } else {
+                            alert('搜索失败: ' + (data.error || '未知错误'));
+                        }
+                    } catch (e) {
+                        console.error('RAG search error:', e);
+                        alert('搜索请求失败: ' + e.message);
+                    } finally {
+                        ragSearching.value = false;
+                    }
+                };
+                
+                // 筛选相关方法
+                const toggleRelationType = (rt) => {
+                    const idx = ragFilters.value.relationTypes.indexOf(rt);
+                    if (idx === -1) {
+                        ragFilters.value.relationTypes.push(rt);
+                    } else {
+                        ragFilters.value.relationTypes.splice(idx, 1);
+                    }
+                };
+                
+                const toggleTopicFilter = (topic) => {
+                    const idx = ragFilters.value.topicFilter.indexOf(topic);
+                    if (idx === -1) {
+                        ragFilters.value.topicFilter.push(topic);
+                    } else {
+                        ragFilters.value.topicFilter.splice(idx, 1);
+                    }
+                };
+                
+                const toggleCommunityFilter = (commId) => {
+                    const idx = ragFilters.value.communityFilter.indexOf(commId);
+                    if (idx === -1) {
+                        ragFilters.value.communityFilter.push(commId);
+                    } else {
+                        ragFilters.value.communityFilter.splice(idx, 1);
+                    }
+                };
+                
+                const selectAllRelationTypes = () => {
+                    const allTypes = [
+                        ...availableRelationTypes.value.citation,
+                        ...availableRelationTypes.value.method,
+                        ...availableRelationTypes.value.shared
+                    ];
+                    ragFilters.value.relationTypes = [...allTypes];
+                };
+                
+                const clearRelationTypes = () => {
+                    ragFilters.value.relationTypes = [];
+                };
+                
+                const clearAllFilters = () => {
+                    ragFilters.value.relationTypes = [];
+                    ragFilters.value.topicFilter = [];
+                    ragFilters.value.communityFilter = [];
+                };
+                
+                // 加载可用的筛选选项
+                const loadFilterOptions = async () => {
+                    try {
+                        // 加载关系类型
+                        const rtRes = await fetch(`${API_BASE}/rag/relation_types`);
+                        const rtData = await rtRes.json();
+                        if (rtData.success && rtData.relation_types) {
+                            availableRelationTypes.value = rtData.relation_types;
+                        }
+                        
+                        // 加载主题
+                        const topicRes = await fetch(`${API_BASE}/rag/topics`);
+                        const topicData = await topicRes.json();
+                        if (topicData.success && topicData.topics) {
+                            availableTopics.value = topicData.topics;
+                        }
+                        
+                        // 加载社区
+                        const commRes = await fetch(`${API_BASE}/rag/communities`);
+                        const commData = await commRes.json();
+                        if (commData.success && commData.communities) {
+                            availableCommunities.value = commData.communities;
+                        }
+                    } catch (e) {
+                        console.error('Failed to load filter options:', e);
+                    }
+                };
+                
+                // 提取子图
+                const extractSubgraph = async () => {
+                    if (!ragQuery.value || ragSearching.value) return;
+                    
+                    ragSearching.value = true;
+                    
+                    try {
+                        // 构建请求体
+                        const requestBody = {
+                            query: ragQuery.value,
+                            max_papers: ragFilters.value.maxResults,
+                            expand_hops: ragFilters.value.expandHops,
+                            community_aware: ragFilters.value.communityAware
+                        };
+                        
+                        // 添加筛选参数
+                        if (ragFilters.value.relationTypes.length > 0) {
+                            requestBody.relation_types = ragFilters.value.relationTypes;
+                        }
+                        if (ragFilters.value.topicFilter.length > 0) {
+                            requestBody.topic_filter = ragFilters.value.topicFilter;
+                        }
+                        if (ragFilters.value.communityFilter.length > 0) {
+                            requestBody.community_filter = ragFilters.value.communityFilter;
+                        }
+                        
+                        const res = await fetch(`${API_BASE}/rag/subgraph`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(requestBody)
+                        });
+                        const data = await res.json();
+                        
+                        if (data.success) {
+                            // 将子图结果转换为可视化格式并显示
+                            ragResults.value = {
+                                papers: data.papers,
+                                returned: data.paper_count,
+                                total_found: data.node_count,
+                                search_time: 0,
+                                search_strategy: `子图提取 (${data.expand_hops || ragFilters.value.expandHops}跳)`,
+                                communities: data.community_names || {},
+                                center_papers: data.center_papers || []
+                            };
+                            
+                            // 自动可视化子图
+                            await visualizeSubgraph(data);
+                            
+                            console.log('Subgraph extracted:', data);
+                        } else {
+                            alert('子图提取失败: ' + (data.error || '未知错误'));
+                        }
+                    } catch (e) {
+                        console.error('Subgraph extraction error:', e);
+                        alert('子图提取请求失败: ' + e.message);
+                    } finally {
+                        ragSearching.value = false;
+                    }
+                };
+                
+                // 可视化 RAG 搜索结果
+                const visualizeRagResults = async () => {
+                    if (!ragResults.value || !ragResults.value.papers) return;
+                    
+                    const papers = ragResults.value.papers;
+                    const paperIds = papers.map(p => p.id || p.paper_id).filter(Boolean);
+                    
+                    if (paperIds.length === 0) {
+                        alert('没有可视化的论文');
+                        return;
+                    }
+                    
+                    // 构建节点和边数据
+                    const nodes = [];
+                    const edges = [];
+                    const seenNodes = new Set();
+                    
+                    papers.forEach((paper, idx) => {
+                        const pid = paper.id || paper.paper_id;
+                        if (!pid || seenNodes.has(pid)) return;
+                        
+                        seenNodes.add(pid);
+                        const commId = paper.community_id;
+                        const color = commId !== undefined ? COMMUNITY_COLORS[commId % COMMUNITY_COLORS.length] : '#3b82f6';
+                        
+                        nodes.push({
+                            id: pid,
+                            label: (paper.title || pid).slice(0, 20) + '...',
+                            color: {
+                                background: color,
+                                border: color,
+                                highlight: { background: '#ffffff', border: color },
+                                hover: { background: color, border: '#ffffff' }
+                            },
+                            size: 15 + Math.min((paper.citations || 0) / 10, 25)
+                        });
+                        
+                        // 存储完整数据
+                        nodeDataMap.value[pid] = {
+                            ...paper,
+                            full_label: paper.title,
+                            type: 'paper'
+                        };
+                    });
+                    
+                    // 如果有关系数据，添加边
+                    if (ragResults.value.relations) {
+                        ragResults.value.relations.forEach(rel => {
+                            if (seenNodes.has(rel.source) && seenNodes.has(rel.target)) {
+                                const edgeColor = RELATION_COLORS[rel.type] || RELATION_COLORS['default'];
+                                edges.push({
+                                    from: rel.source,
+                                    to: rel.target,
+                                    label: rel.type,
+                                    color: { color: edgeColor, highlight: '#ffffff', hover: '#ffeaa7' },
+                                    width: 1.5
+                                });
+                            }
+                        });
+                    }
+                    
+                    // 更新图谱
+                    const container = document.getElementById('network');
+                    if (!container) return;
+                    
+                    const options = {
+                        nodes: {
+                            shape: 'dot',
+                            font: { color: '#e2e8f0', face: 'Inter', size: 12, strokeWidth: 2, strokeColor: '#0f172a' },
+                            borderWidth: 2,
+                            shadow: { enabled: true, color: 'rgba(0,0,0,0.3)', size: 5 }
+                        },
+                        edges: {
+                            color: { color: '#475569', highlight: '#3b82f6', hover: '#60a5fa' },
+                            arrows: { to: { enabled: true, scaleFactor: 0.5 } },
+                            smooth: { type: 'curvedCW', roundness: 0.2 },
+                            width: 1.5
+                        },
+                        physics: {
+                            forceAtlas2Based: { gravitationalConstant: -80, centralGravity: 0.02, springLength: 100, springConstant: 0.1, damping: 0.9 },
+                            solver: 'forceAtlas2Based',
+                            stabilization: { enabled: true, iterations: 300, fit: true }
+                        },
+                        interaction: { hover: true, tooltipDelay: 100, navigationButtons: true, keyboard: true }
+                    };
+                    
+                    if (network) network.destroy();
+                    network = new vis.Network(container, {
+                        nodes: new vis.DataSet(nodes),
+                        edges: new vis.DataSet(edges)
+                    }, options);
+                    
+                    // 添加点击事件
+                    network.on('click', function(params) {
+                        if (params.nodes.length > 0) {
+                            const nodeId = params.nodes[0];
+                            const fullNodeData = nodeDataMap.value[nodeId];
+                            if (fullNodeData) {
+                                setTimeout(() => {
+                                    selectedNode.value = fullNodeData;
+                                }, 0);
+                            }
+                        } else {
+                            setTimeout(() => { selectedNode.value = null; }, 0);
+                        }
+                    });
+                    
+                    // 双击聚焦
+                    network.on('doubleClick', function(params) {
+                        if (params.nodes.length > 0) {
+                            network.focus(params.nodes[0], { scale: 1.5, animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+                        }
+                    });
+                };
+                
+                // 可视化子图
+                const visualizeSubgraph = async (subgraphData) => {
+                    if (!subgraphData || !subgraphData.papers) return;
+                    
+                    const nodes = [];
+                    const edges = [];
+                    const seenNodes = new Set();
+                    
+                    // 处理节点
+                    subgraphData.papers.forEach(paper => {
+                        const pid = paper.id || paper.paper_id;
+                        if (!pid || seenNodes.has(pid)) return;
+                        
+                        seenNodes.add(pid);
+                        const commId = paper.community_id;
+                        const isCenter = (subgraphData.center_papers || []).includes(pid);
+                        const color = commId !== undefined ? COMMUNITY_COLORS[commId % COMMUNITY_COLORS.length] : '#3b82f6';
+                        
+                        nodes.push({
+                            id: pid,
+                            label: (paper.title || pid).slice(0, 20) + '...',
+                            color: {
+                                background: color,
+                                border: isCenter ? '#ffd700' : color,
+                                highlight: { background: '#ffffff', border: color },
+                                hover: { background: color, border: '#ffffff' }
+                            },
+                            size: isCenter ? 30 : (15 + Math.min((paper.citations || 0) / 10, 20)),
+                            borderWidth: isCenter ? 4 : 2
+                        });
+                        
+                        nodeDataMap.value[pid] = { ...paper, full_label: paper.title, type: 'paper' };
+                    });
+                    
+                    // 处理边
+                    if (subgraphData.edges) {
+                        subgraphData.edges.forEach(edge => {
+                            const src = edge.source || edge[0];
+                            const tgt = edge.target || edge[1];
+                            const relType = edge.type || edge[2] || 'RELATION';
+                            
+                            if (seenNodes.has(src) && seenNodes.has(tgt)) {
+                                const edgeColor = RELATION_COLORS[relType] || RELATION_COLORS['default'];
+                                edges.push({
+                                    from: src,
+                                    to: tgt,
+                                    label: relType,
+                                    color: { color: edgeColor, highlight: '#ffffff', hover: '#ffeaa7' },
+                                    width: 1.5
+                                });
+                            }
+                        });
+                    }
+                    
+                    // 更新图谱
+                    const container = document.getElementById('network');
+                    if (!container) return;
+                    
+                    const options = {
+                        nodes: {
+                            shape: 'dot',
+                            font: { color: '#e2e8f0', face: 'Inter', size: 12, strokeWidth: 2, strokeColor: '#0f172a' },
+                            borderWidth: 2,
+                            shadow: { enabled: true, color: 'rgba(0,0,0,0.3)', size: 5 }
+                        },
+                        edges: {
+                            color: { color: '#475569', highlight: '#3b82f6', hover: '#60a5fa' },
+                            arrows: { to: { enabled: true, scaleFactor: 0.5 } },
+                            smooth: { type: 'curvedCW', roundness: 0.2 },
+                            width: 1.5
+                        },
+                        physics: {
+                            forceAtlas2Based: { gravitationalConstant: -80, centralGravity: 0.02, springLength: 100, springConstant: 0.1, damping: 0.9 },
+                            solver: 'forceAtlas2Based',
+                            stabilization: { enabled: true, iterations: 300, fit: true }
+                        },
+                        interaction: { hover: true, tooltipDelay: 100, navigationButtons: true, keyboard: true }
+                    };
+                    
+                    if (network) network.destroy();
+                    network = new vis.Network(container, {
+                        nodes: new vis.DataSet(nodes),
+                        edges: new vis.DataSet(edges)
+                    }, options);
+                    
+                    // 添加事件
+                    network.on('click', function(params) {
+                        if (params.nodes.length > 0) {
+                            const nodeId = params.nodes[0];
+                            const fullNodeData = nodeDataMap.value[nodeId];
+                            if (fullNodeData) {
+                                setTimeout(() => { selectedNode.value = fullNodeData; }, 0);
+                            }
+                        } else {
+                            setTimeout(() => { selectedNode.value = null; }, 0);
+                        }
+                    });
+                    
+                    network.on('doubleClick', function(params) {
+                        if (params.nodes.length > 0) {
+                            network.focus(params.nodes[0], { scale: 1.5, animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+                        }
+                    });
+                };
+                
+                // 获取搜索建议 (防抖)
+                let suggestTimeout = null;
+                const fetchRagSuggestions = async () => {
+                    if (!ragQuery.value || ragQuery.value.length < 2) {
+                        ragSuggestions.value = [];
+                        return;
+                    }
+                    
+                    if (suggestTimeout) clearTimeout(suggestTimeout);
+                    
+                    suggestTimeout = setTimeout(async () => {
+                        try {
+                            const res = await fetch(`${API_BASE}/rag/suggest?query=${encodeURIComponent(ragQuery.value)}&count=5`);
+                            const data = await res.json();
+                            if (data.success && data.suggestions) {
+                                ragSuggestions.value = data.suggestions;
+                            }
+                        } catch (e) {
+                            console.error('Suggest error:', e);
+                        }
+                    }, 300);
+                };
+                
+                // 监听 ragQuery 变化，获取建议
+                watch(ragQuery, () => {
+                    fetchRagSuggestions();
+                });
+
+                // 监听 Tab 切换，如果在图谱页则刷新布局
+                watch(activeTab, (newTab) => {
+                    if (newTab === 'graph' && network) {
+                        nextTick(() => {
+                            fitGraph();
+                        });
+                    }
+                });
+
+                onMounted(() => {
+                    connectWS();
+                    loadStats();
+                    loadFilterOptions();  // 加载筛选选项
+                });
+
+                return {
+                    activeTab, wsStatus, stats, topicInput, building,
+                    logs, activeTasks, currentProgress, logTerminal,
+                    topics, selectedTopic, searchQuery, nodeLimit, communityData,
+                    hoveredNode, tooltipPos, selectedNode, nodeRelations,
+                    performSearch, showPaperDetail, startBuild, analyzeTopics, loadGraph, fitGraph,
+                    showAiModal, generateCount, generating, generateTopics, addTopic,
+                    showClearConfirm, confirmClearDb, executeClearDb, getLogClass,
+                    // RAG 搜索相关
+                    ragQuery, ragSearchType, ragSearching, ragResults, ragSuggestions,
+                    showRagHelp, showRagFilters, ragFilters,
+                    executeRagSearch, extractSubgraph, visualizeRagResults,
+                    // 筛选相关
+                    availableRelationTypes, availableTopics, availableCommunities, hasActiveFilters,
+                    toggleRelationType, toggleTopicFilter, toggleCommunityFilter,
+                    selectAllRelationTypes, clearRelationTypes, clearAllFilters, loadFilterOptions
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

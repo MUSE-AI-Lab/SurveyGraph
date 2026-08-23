@@ -1,0 +1,26 @@
+You will be provided with a passage describing a method or theory. Your task is to extract specific attributes of the method or theory based on the provided criteria. Carefully read the text and ensure your extraction is accurate and concise.  
+
+The required attributes and their descriptions are as follows:  
+{Info}  
+
+**Instructions:**  
+1. Extract each attribute based on the content of the text.  
+2. The extracted content must be specific, avoiding vague or ambiguous expressions.  
+3. Limit the extracted content for each attribute to no more than **three words**.  
+4. Do not output content such as 'Not applicable', 'factually incorrect outputs' or 'Not provided'. 
+
+Your response should be enclosed within `<Answer>` and `</Answer>` tags.
+The "Attribute Name" in the output must remain consistent with the provided "Attribute Name." For example, if the provided "Attribute Name" is "Architecture," the output must also use "Architecture."
+
+Example Output:
+<Answer>
+{{
+  "Attribute Name1": "Extracted content",
+  "Attribute Name2": "Extracted content",
+  ...
+}}
+</Answer>
+
+Here is the content of the paper:
+
+{Content}

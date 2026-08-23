@@ -1,0 +1,67 @@
+
+% ============================================
+% 现代化树形图模板
+% 专业学术风格 - 通用树形结构
+% ============================================
+% Note: Colors (tree-*) are defined in the main document preamble (survey.ini.tex)
+
+\begin{figure}[h]
+   \centering
+   \begin{adjustbox}{max width=\textwidth, center}
+   \begin{tikzpicture}[
+      node distance=6mm,
+      % 基础节点样式
+      node/.style={
+         rectangle,
+         draw=tree-border,
+         fill=tree-bg,
+         inner sep=2mm,
+         minimum height=9mm,
+         text width=22mm,
+         align=center,
+         font=\scriptsize\sffamily\linespread{.85}\selectfont,
+         rounded corners=4pt,
+         line width=0.8pt,
+         text=tree-text,
+      },
+      % 次级节点样式
+      nodeB/.style={
+         node,
+         text width=18mm,
+         fill=white,
+         minimum height=8mm,
+      },
+      % 根节点样式
+      nodeRoot/.style={
+         node,
+         fill=tree-primary!15,
+         draw=tree-primary!70,
+         font=\scriptsize\sffamily\bfseries,
+         text width=28mm,
+         minimum height=10mm,
+         line width=1pt,
+      },
+      % 强调节点样式
+      nodeAccent/.style={
+         node,
+         fill=tree-accent!12,
+         draw=tree-accent!60,
+      },
+      % 连接线样式
+      edge/.style={
+         draw=tree-border,
+         line width=1pt,
+         ->,
+         >=stealth,
+      },
+   ]
+   
+<tree_code>
+
+\end{tikzpicture}
+\end{adjustbox}
+
+\caption{<caption>}
+\label{fig:<label>}
+
+\end{figure}

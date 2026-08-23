@@ -1,0 +1,17 @@
+% Comparison Table Template
+% Usage: Replace <caption>, <label>, <headers>, and <rows> placeholders
+
+\begin{table}[H]
+\centering
+\caption{<caption>}
+\label{tab:<label>}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{<column_spec>}
+\toprule
+<headers>
+\midrule
+<rows>
+\bottomrule
+\end{tabular}%
+}
+\end{table}

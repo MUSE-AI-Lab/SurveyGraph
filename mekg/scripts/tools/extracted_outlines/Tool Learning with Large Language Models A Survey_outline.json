@@ -1,0 +1,245 @@
+{
+  "paper_title": "Tool Learning with Large Language Models: A Survey",
+  "paper_topic": "Tool Learning with Large Language Models (LLMs)",
+  "total_sections": 7,
+  "outline_pattern": "The survey follows a logical 'Why-How-Resources-Future' progression. It starts with the motivation ('Why'), moves to a detailed technical taxonomy based on a four-stage workflow ('How'), reviews experimental resources ('Benchmarks/Evaluation'), and concludes with open problems ('Challenges').",
+  "sections": [
+    {
+      "number": "1",
+      "title": "Introduction",
+      "description": "Introduces the limitations of standard LLMs (hallucinations, outdated knowledge) and presents 'tool learning' as a solution. It outlines the survey's scope, focusing on why tool learning is beneficial and how it is implemented, and presents the paper's structural roadmap.",
+      "subsections": []
+    },
+    {
+      "number": "2",
+      "title": "Background",
+      "description": "Defines foundational concepts and terminology. It clarifies the definition of a 'Tool' (ranging from APIs to external programs) and 'Tool Learning' (the process of LLMs interacting with tools to solve complex tasks).",
+      "subsections": []
+    },
+    {
+      "number": "3",
+      "title": "Why Tool Learning?",
+      "description": "Analyzes the necessity of tool learning from two perspectives: the functional benefits of tool integration and the inherent benefits of the tool learning paradigm itself.",
+      "subsections": [
+        {
+          "number": "3.1",
+          "title": "Knowledge Acquisition",
+          "description": "Discusses how tools like search engines and databases allow LLMs to access up-to-date and structured external knowledge, mitigating hallucinations caused by parametric memory limitations.",
+          "subsections": []
+        },
+        {
+          "number": "3.2",
+          "title": "Expertise Enhancement",
+          "description": "Explains how specialized tools (calculators, Python interpreters, domain-specific models) bridge the gap in LLMs' specialized capabilities in math, coding, and sciences.",
+          "subsections": []
+        },
+        {
+          "number": "3.3",
+          "title": "Automation and Efficiency",
+          "description": "Describes how LLMs act as agents to execute actions in the real world, such as scheduling, email filtering, and shopping, thereby automating repetitive tasks.",
+          "subsections": []
+        },
+        {
+          "number": "3.4",
+          "title": "Interaction Enhancement",
+          "description": "Covers how tools extend LLM perception through multi-modal inputs (image/audio) and translation, improving intent understanding and user interaction.",
+          "subsections": []
+        },
+        {
+          "number": "3.5",
+          "title": "Enhanced Interpretability and User Trust",
+          "description": "Argues that tool usage makes the decision-making process transparent (showing steps and sources), reducing the 'black-box' nature of LLMs.",
+          "subsections": []
+        },
+        {
+          "number": "3.6",
+          "title": "Improved Robustness and Adaptability",
+          "description": "Suggests that relying on standardized tool interfaces makes LLMs less sensitive to prompt variations and more adaptable to new environments.",
+          "subsections": []
+        }
+      ]
+    },
+    {
+      "number": "4",
+      "title": "How Tool Learning?",
+      "description": "The core technical section reviewing advancements across the tool learning workflow. It structures the review around four distinct stages: task planning, tool selection, tool calling, and response generation.",
+      "subsections": [
+        {
+          "number": "4.1",
+          "title": "Overall Paradigm of Tool Learning",
+          "description": "Outlines the four-stage workflow and distinguishes between two operational paradigms: 'One-step Task Solving' (planning without feedback) and 'Iterative Task Solving' (planning with feedback).",
+          "subsections": []
+        },
+        {
+          "number": "4.2",
+          "title": "Task Planning",
+          "description": "Reviews methods for decomposing user queries into sub-tasks and determining dependencies. Includes examples of GPT-4 planning.",
+          "subsections": [
+            {
+              "number": "4.2.1",
+              "title": "Tuning-free Methods",
+              "description": "Discusses prompt-based approaches like CoT, ReACT, and HuggingGPT that leverage innate LLM capabilities without weight updates.",
+              "subsections": []
+            },
+            {
+              "number": "4.2.2",
+              "title": "Tuning-based Methods",
+              "description": "Reviews methods that fine-tune LLMs (e.g., Toolformer, TaskMatrix.AI) to improve planning and API awareness.",
+              "subsections": []
+            }
+          ]
+        },
+        {
+          "number": "4.3",
+          "title": "Tool Selection",
+          "description": "Analyzes how models choose appropriate tools from a library. Differentiates between retrieval-based and LLM-reasoning-based selection.",
+          "subsections": [
+            {
+              "number": "4.3.1",
+              "title": "Retriever-based Tool Selection",
+              "description": "Covers dense and sparse retrieval methods (TF-IDF, Sentence-Bert) used when the tool space is too large for the context window.",
+              "subsections": []
+            },
+            {
+              "number": "4.3.2",
+              "title": "LLM-based Tool Selection",
+              "description": "Reviews methods where the LLM selects tools from a provided list based on reasoning, categorized into tuning-free and tuning-based approaches.",
+              "subsections": []
+            }
+          ]
+        },
+        {
+          "number": "4.4",
+          "title": "Tool Calling",
+          "description": "Examines how LLMs generate specific API calls and extract parameters from user queries, ensuring format compliance.",
+          "subsections": [
+            {
+              "number": "4.4.1",
+              "title": "Tuning-free Methods",
+              "description": "Methods using few-shot prompting or rule-based schemas to guide parameter extraction.",
+              "subsections": []
+            },
+            {
+              "number": "4.4.2",
+              "title": "Tuning-based Methods",
+              "description": "Methods like Gorilla and ToolkenGPT that fine-tune models to understand specific API documentation and token generation.",
+              "subsections": []
+            }
+          ]
+        },
+        {
+          "number": "4.5",
+          "title": "Response Generation",
+          "description": "Discusses how tool outputs are synthesized into a final user response.",
+          "subsections": [
+            {
+              "number": "4.5.1",
+              "title": "Direct Insertion Methods",
+              "description": "Simple approaches where tool outputs directly replace placeholders in the generated text.",
+              "subsections": []
+            },
+            {
+              "number": "4.5.2",
+              "title": "Information Integration Methods",
+              "description": "Advanced methods where tool outputs are fed back into the context, allowing the LLM to synthesize and reason over the data.",
+              "subsections": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": "5",
+      "title": "Benchmarks, Toolkits, and Evaluation",
+      "description": "Summarizes the ecosystem for validating tool learning, including datasets, software frameworks, and evaluation metrics.",
+      "subsections": [
+        {
+          "number": "5.1",
+          "title": "Benchmarks",
+          "description": "Categorizes benchmarks into 'General' (e.g., ToolBench, API-Bank) covering multiple stages, and 'Other' (specific to safety, robustness, or multi-modal tasks).",
+          "subsections": []
+        },
+        {
+          "number": "5.2",
+          "title": "Toolkits",
+          "description": "Lists open-source frameworks like LangChain, Auto-GPT, and BMTools that facilitate the development of tool-augmented LLMs.",
+          "subsections": []
+        },
+        {
+          "number": "5.3",
+          "title": "Evaluation",
+          "description": "Details specific metrics for each stage: Task Planning (pass rate), Tool Selection (Recall, NDCG), Tool Calling (parameter consistency), and Response Generation (BLEU, ROUGE).",
+          "subsections": []
+        }
+      ]
+    },
+    {
+      "number": "6",
+      "title": "Challenges and Future Directions",
+      "description": "Identifies critical bottlenecks in the field and proposes research directions.",
+      "subsections": [
+        {
+          "number": "6.1",
+          "title": "High Latency in Tool Learning",
+          "description": "Discusses the performance trade-offs and the need for lower latency in real-time interactions.",
+          "subsections": []
+        },
+        {
+          "number": "6.2",
+          "title": "Rigorous and Comprehensive Evaluation",
+          "description": "Highlights the lack of standardized, cost-effective evaluation metrics beyond simple pass rates.",
+          "subsections": []
+        },
+        {
+          "number": "6.3",
+          "title": "Comprehensive and Accessible Tools",
+          "description": "Notes the limitation of current toolsets (often scraped or limited APIs) and the need for higher quality, diverse tool libraries.",
+          "subsections": []
+        },
+        {
+          "number": "6.4",
+          "title": "Safe and Robust Tool Learning",
+          "description": "Addresses security risks, including injection attacks and the robustness of models against noisy inputs.",
+          "subsections": []
+        },
+        {
+          "number": "6.5",
+          "title": "Unified Tool Learning Framework",
+          "description": "Calls for a standardized framework that integrates all four stages (planning, selection, calling, generation) rather than fragmented solutions.",
+          "subsections": []
+        },
+        {
+          "number": "6.6",
+          "title": "Real-Word Benchmark for Tool Learning",
+          "description": "Criticizes current benchmarks for relying on LLM-generated queries and calls for datasets based on real user behavior.",
+          "subsections": []
+        },
+        {
+          "number": "6.7",
+          "title": "Tool Learning with Multi-Modal",
+          "description": "Suggests expanding beyond text-based tools to include visual, audio, and video processing capabilities.",
+          "subsections": []
+        }
+      ]
+    },
+    {
+      "number": "7",
+      "title": "Conclusion",
+      "description": "Summarizes the key findings of the survey. (Note: The specific content of this section is truncated in the provided PDF text, but the section is explicitly listed in the Introduction's roadmap).",
+      "subsections": []
+    }
+  ],
+  "structural_insights": {
+    "organization_logic": "The paper uses a 'Process-Oriented' taxonomy. Instead of grouping papers by model architecture or date, it groups them by the stage of the tool-use workflow (Planning -> Selection -> Calling -> Generation). This is highly effective for engineering implementation.",
+    "transition_strategy": "The paper transitions from the abstract 'Why' to the concrete 'How'. Within the 'How' section, it follows the chronological execution path of an agent. It then moves from methods to evaluation (Benchmarks), and finally to open problems.",
+    "depth_analysis": "The 'How Tool Learning' section (Section 4) is the deepest, containing multiple layers of nesting (Stage -> Paradigm -> Method Type). This indicates the paper is technically focused on methodology. The 'Why' section is also surprisingly detailed, providing a strong theoretical grounding.",
+    "key_strengths": [
+      "Clear taxonomy based on the execution workflow (4 stages) makes it easy for developers to map components.",
+      "Consistent distinction between 'Tuning-free' (prompting) and 'Tuning-based' (fine-tuning) methods across all stages.",
+      "Comprehensive categorization of benchmarks by their focus (specific stages vs. general).",
+      "Inclusion of concrete GPT-4 examples for each stage helps visualize the abstract concepts."
+    ]
+  },
+  "source_file": "Tool Learning with Large Language Models A Survey.pdf",
+  "extraction_time": "2025-12-23T11:35:08.371717"
+}

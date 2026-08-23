@@ -1,0 +1,1112 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SurveyGraph - AI 驱动的学术综述自动生成平台</title>
+    <meta name="description" content="SurveyGraph 利用大语言模型和知识图谱技术，自动生成高质量、结构化的学术综述论文，助您快速掌握领域前沿。">
+    
+    <!-- 预加载关键资源 -->
+    <link rel="preconnect" href="https://cdn.bootcdn.net" crossorigin>
+    <link rel="preload" href="https://cdn.bootcdn.net/font-awesome/6.5.1/css/all.min.css" as="style">
+    <link rel="preload" href="https://cdn.bootcdn.net/font-awesome/6.5.1/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.bootcdn.net/font-awesome/6.5.1/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin>
+
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" type="image/webp" href="/static/images/icon.webp">
+    <style>
+        /* 官网专属样式 */
+        .landing-page {
+            min-height: 100vh;
+            background: #ffffff;
+        }
+        
+        /* 顶部导航 */
+        .landing-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        
+        .landing-nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .landing-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #1d1d1f;
+        }
+        
+        .landing-logo-icon {
+            width: 36px;
+            height: 36px;
+            background: #1d1d1f;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        
+        .landing-logo-text {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+        
+        .landing-nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+        
+        .landing-nav-link {
+            font-size: 14px;
+            font-weight: 500;
+            color: #424245;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .landing-nav-link:hover {
+            color: #1d1d1f;
+        }
+        
+        .landing-nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .btn-nav {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 20px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-nav-secondary {
+            color: #1d1d1f;
+        }
+        
+        .btn-nav-secondary:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .btn-nav-primary {
+            background: #1d1d1f;
+            color: white;
+        }
+        
+        .btn-nav-primary:hover {
+            background: #000;
+        }
+        
+        /* Hero 区域 */
+        .hero {
+            padding: 160px 24px 100px;
+            text-align: center;
+            background: linear-gradient(180deg, #f5f5f7 0%, #ffffff 100%);
+        }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(0, 102, 204, 0.1);
+            color: #0066cc;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .hero-badge i {
+            font-size: 12px;
+        }
+        
+        .hero-title {
+            font-size: 64px;
+            font-weight: 700;
+            color: #1d1d1f;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 24px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .hero-title-gradient {
+            background: linear-gradient(135deg, #0066cc 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-subtitle {
+            font-size: 20px;
+            color: #86868b;
+            line-height: 1.6;
+            max-width: 640px;
+            margin: 0 auto 48px;
+        }
+        
+        .hero-actions {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 80px;
+        }
+        
+        .btn-hero {
+            padding: 16px 32px;
+            font-size: 17px;
+            font-weight: 600;
+            border-radius: 30px;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-hero-primary {
+            background: #1d1d1f;
+            color: white;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        }
+        
+        .btn-hero-primary:hover {
+            background: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn-hero-secondary {
+            background: white;
+            color: #1d1d1f;
+            border: 1px solid #d2d2d7;
+        }
+        
+        .btn-hero-secondary:hover {
+            background: #f5f5f7;
+            border-color: #86868b;
+        }
+        
+        /* 统计数据 */
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 80px;
+            padding-top: 40px;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .hero-stat {
+            text-align: center;
+        }
+        
+        .hero-stat-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: #1d1d1f;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+        
+        .hero-stat-label {
+            font-size: 14px;
+            color: #86868b;
+        }
+        
+        /* 特性区域 */
+        .features {
+            padding: 120px 24px;
+            background: #ffffff;
+        }
+        
+        .features-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+        
+        .section-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0066cc;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 16px;
+        }
+        
+        .section-title {
+            font-size: 48px;
+            font-weight: 700;
+            color: #1d1d1f;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+        }
+        
+        .section-subtitle {
+            font-size: 18px;
+            color: #86868b;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+        
+        .feature-card {
+            background: #f5f5f7;
+            border-radius: 24px;
+            padding: 40px;
+            transition: all 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #0066cc 0%, #8b5cf6 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        
+        .feature-icon i {
+            font-size: 28px;
+            color: white;
+        }
+        
+        .feature-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 12px;
+        }
+        
+        .feature-desc {
+            font-size: 15px;
+            color: #86868b;
+            line-height: 1.6;
+        }
+        
+        /* 工作流程 */
+        .workflow {
+            padding: 120px 24px;
+            background: #f5f5f7;
+        }
+        
+        .workflow-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .workflow-steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-top: 60px;
+        }
+        
+        .workflow-step {
+            text-align: center;
+            position: relative;
+        }
+        
+        .workflow-step::after {
+            content: '';
+            position: absolute;
+            top: 40px;
+            right: -12px;
+            width: 24px;
+            height: 2px;
+            background: #d2d2d7;
+        }
+        
+        .workflow-step:last-child::after {
+            display: none;
+        }
+        
+        .workflow-step-number {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #0066cc;
+            margin: 0 auto 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .workflow-step-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 8px;
+        }
+        
+        .workflow-step-desc {
+            font-size: 14px;
+            color: #86868b;
+            line-height: 1.5;
+        }
+        
+        /* 技术栈 */
+        .tech {
+            padding: 120px 24px;
+            background: #1d1d1f;
+            color: white;
+        }
+        
+        .tech-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .tech .section-label {
+            color: #8b5cf6;
+        }
+        
+        .tech .section-title {
+            color: white;
+        }
+        
+        .tech .section-subtitle {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 60px;
+        }
+        
+        .tech-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .tech-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-4px);
+        }
+        
+        .tech-item i {
+            font-size: 40px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #0066cc 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .tech-item-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .tech-item-desc {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* CTA 区域 */
+        .cta {
+            padding: 120px 24px;
+            background: linear-gradient(135deg, #0066cc 0%, #8b5cf6 100%);
+            text-align: center;
+        }
+        
+        .cta-title {
+            font-size: 48px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+        
+        .cta-subtitle {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 40px;
+        }
+        
+        .btn-cta {
+            padding: 18px 40px;
+            font-size: 17px;
+            font-weight: 600;
+            background: white;
+            color: #0066cc;
+            border-radius: 30px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 页脚 */
+        .landing-footer {
+            padding: 60px 24px;
+            background: #f5f5f7;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #1d1d1f;
+            text-decoration: none;
+        }
+        
+        .footer-logo-icon {
+            width: 32px;
+            height: 32px;
+            background: #1d1d1f;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 12px;
+        }
+        
+        .footer-logo-text {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 32px;
+        }
+        
+        .footer-link {
+            font-size: 14px;
+            color: #86868b;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .footer-link:hover {
+            color: #1d1d1f;
+        }
+        
+        .footer-copyright {
+            font-size: 13px;
+            color: #86868b;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 1024px) {
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .workflow-steps {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .workflow-step::after {
+                display: none;
+            }
+            
+            .tech-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .landing-nav-links {
+                display: none;
+            }
+            
+            .landing-nav-actions {
+                gap: 8px;
+            }
+            
+            .btn-nav {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+            
+            .hero {
+                padding: 100px 16px 60px;
+            }
+            
+            .hero-badge {
+                font-size: 12px;
+                padding: 5px 12px;
+            }
+            
+            .hero-title {
+                font-size: 32px;
+                margin-bottom: 16px;
+            }
+            
+            .hero-subtitle {
+                font-size: 15px;
+                margin-bottom: 32px;
+            }
+            
+            .hero-actions {
+                flex-direction: column;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 48px;
+            }
+            
+            .btn-hero {
+                padding: 14px 28px;
+                font-size: 15px;
+                width: 100%;
+                max-width: 280px;
+                justify-content: center;
+            }
+            
+            .hero-stats {
+                flex-direction: column;
+                gap: 24px;
+                padding-top: 32px;
+            }
+            
+            .hero-stat-value {
+                font-size: 36px;
+            }
+            
+            .hero-stat-label {
+                font-size: 13px;
+            }
+            
+            .features,
+            .workflow,
+            .tech,
+            .cta {
+                padding: 80px 16px;
+            }
+            
+            .section-header {
+                margin-bottom: 48px;
+            }
+            
+            .section-label {
+                font-size: 12px;
+                margin-bottom: 12px;
+            }
+            
+            .section-title {
+                font-size: 28px;
+                margin-bottom: 12px;
+            }
+            
+            .section-subtitle {
+                font-size: 15px;
+            }
+            
+            .features-grid,
+            .workflow-steps,
+            .tech-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .feature-card {
+                padding: 28px;
+                border-radius: 20px;
+            }
+            
+            .feature-icon {
+                width: 52px;
+                height: 52px;
+                border-radius: 14px;
+                margin-bottom: 20px;
+            }
+            
+            .feature-icon i {
+                font-size: 24px;
+            }
+            
+            .feature-title {
+                font-size: 18px;
+                margin-bottom: 8px;
+            }
+            
+            .feature-desc {
+                font-size: 14px;
+            }
+            
+            .workflow-step {
+                padding: 20px;
+                background: white;
+                border-radius: 16px;
+            }
+            
+            .workflow-step-number {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+                margin-bottom: 16px;
+            }
+            
+            .workflow-step-title {
+                font-size: 16px;
+            }
+            
+            .workflow-step-desc {
+                font-size: 13px;
+            }
+            
+            .tech-item {
+                padding: 24px;
+                border-radius: 14px;
+            }
+            
+            .tech-item i {
+                font-size: 32px;
+                margin-bottom: 12px;
+            }
+            
+            .tech-item-title {
+                font-size: 14px;
+                margin-bottom: 6px;
+            }
+            
+            .tech-item-desc {
+                font-size: 12px;
+            }
+            
+            .cta-title {
+                font-size: 26px;
+                margin-bottom: 12px;
+            }
+            
+            .cta-subtitle {
+                font-size: 15px;
+                margin-bottom: 32px;
+            }
+            
+            .btn-cta {
+                padding: 14px 32px;
+                font-size: 15px;
+            }
+            
+            .landing-footer {
+                padding: 40px 16px;
+            }
+            
+            .footer-container {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .footer-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 16px;
+            }
+            
+            .footer-link {
+                font-size: 13px;
+            }
+            
+            .footer-copyright {
+                font-size: 12px;
+            }
+        }
+        
+        /* 超小屏幕适配 */
+        @media (max-width: 375px) {
+            .hero-title {
+                font-size: 28px;
+            }
+            
+            .section-title {
+                font-size: 24px;
+            }
+            
+            .cta-title {
+                font-size: 22px;
+            }
+            
+            .btn-hero,
+            .btn-cta {
+                padding: 12px 24px;
+                font-size: 14px;
+            }
+        }
+        
+        /* 移动端汉堡菜单 */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #1d1d1f;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body class="landing-page">
+    <!-- 导航栏 -->
+    <nav class="landing-nav">
+        <div class="landing-nav-container">
+            <a href="/" class="landing-logo">
+                <div class="landing-logo-icon"><img src="/static/images/icon.webp" alt="SurveyGraph" style="width: 100%; height: 100%; object-fit: contain;"></div>
+                <span class="landing-logo-text">SurveyGraph</span>
+            </a>
+            <div class="landing-nav-links">
+                <a href="#features" class="landing-nav-link">功能特性</a>
+                <a href="#workflow" class="landing-nav-link">工作流程</a>
+                <a href="#tech" class="landing-nav-link">技术架构</a>
+                <a href="https://github.com/your-repo/SurveyGraph" target="_blank" class="landing-nav-link">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+            <div class="landing-nav-actions">
+                <a href="/login" class="btn-nav btn-nav-secondary">登录</a>
+                <a href="/register" class="btn-nav btn-nav-primary">免费注册</a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Hero 区域 -->
+    <section class="hero">
+        <div class="hero-badge">
+            <i class="fas fa-sparkles"></i>
+            AI 驱动 · 自动化生成
+        </div>
+        <h1 class="hero-title">
+            让 AI 为您撰写<br>
+            <span class="hero-title-gradient">高质量学术综述</span>
+        </h1>
+        <p class="hero-subtitle">
+            SurveyGraph 利用 Gemini 3 等全球顶级大语言模型、Nano Banana 2 生图模型和 MEKG 知识图谱技术，自动检索文献、构建知识体系、生成结构化综述论文，助您快速掌握领域前沿。
+        </p>
+        <div class="hero-actions">
+            <a href="/register" class="btn-hero btn-hero-primary">
+                <i class="fas fa-rocket"></i>
+                立即开始
+            </a>
+            <a href="#features" class="btn-hero btn-hero-secondary">
+                <i class="fas fa-play-circle"></i>
+                了解更多
+            </a>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <div class="hero-stat-value">10+</div>
+                <div class="hero-stat-label">已生成综述</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value">2000+</div>
+                <div class="hero-stat-label">处理论文</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value">98%</div>
+                <div class="hero-stat-label">用户满意度</div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 功能特性 -->
+    <section class="features" id="features">
+        <div class="features-container">
+            <div class="section-header">
+                <div class="section-label">功能特性</div>
+                <h2 class="section-title">全流程自动化综述生成</h2>
+                <p class="section-subtitle">从文献检索到论文输出，一站式解决学术综述撰写难题</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3 class="feature-title">多源智能文献检索</h3>
+                    <p class="feature-desc">集成 arXiv、Semantic Scholar、OpenAlex、Tavily 等多个学术数据库与搜索引擎，基于语义理解自动检索高相关性文献，支持自定义筛选条件。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-project-diagram"></i>
+                    </div>
+                    <h3 class="feature-title">MEKG 知识图谱</h3>
+                    <p class="feature-desc">基于 MEKG (Methods-Entity Knowledge Graph) 方法实体知识图谱，自动提取7种语义实体与21种关系类型，可视化展示研究脉络与演化趋势。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3 class="feature-title">多模型协同分析</h3>
+                    <p class="feature-desc">采用 Gemini 3.0 Flash/Pro 作为核心推理引擎，Kimi K2 Thinking 作为辅助开源模型，多模型协同深度理解论文内容。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-sitemap"></i>
+                    </div>
+                    <h3 class="feature-title">智能大纲生成</h3>
+                    <p class="feature-desc">基于知识图谱自动规划综述结构，生成逻辑严密的章节大纲，支持人工调整优化。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3 class="feature-title">高质量内容生成</h3>
+                    <p class="feature-desc">分章节生成学术风格的综述正文，自动引用文献，确保内容准确、表述专业。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <h3 class="feature-title">多格式导出</h3>
+                    <p class="feature-desc">支持导出 PDF、LaTeX、Markdown 等多种格式，兼容主流学术期刊模板。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 工作流程 -->
+    <section class="workflow" id="workflow">
+        <div class="workflow-container">
+            <div class="section-header">
+                <div class="section-label">工作流程</div>
+                <h2 class="section-title">四步完成综述生成</h2>
+                <p class="section-subtitle">简单高效的操作流程，让综述撰写变得轻松</p>
+            </div>
+            <div class="workflow-steps">
+                <div class="workflow-step">
+                    <div class="workflow-step-number">1</div>
+                    <h3 class="workflow-step-title">输入研究主题</h3>
+                    <p class="workflow-step-desc">描述您的研究方向和关键词，系统将理解您的需求</p>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-step-number">2</div>
+                    <h3 class="workflow-step-title">自动检索分析</h3>
+                    <p class="workflow-step-desc">AI 自动检索相关文献，构建知识图谱，分析研究现状</p>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-step-number">3</div>
+                    <h3 class="workflow-step-title">生成综述大纲</h3>
+                    <p class="workflow-step-desc">智能规划综述结构，您可以预览并调整章节安排</p>
+                </div>
+                <div class="workflow-step">
+                    <div class="workflow-step-number">4</div>
+                    <h3 class="workflow-step-title">输出完整论文</h3>
+                    <p class="workflow-step-desc">生成高质量综述论文，支持多种格式下载</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 技术架构 -->
+    <section class="tech" id="tech">
+        <div class="tech-container">
+            <div class="section-header">
+                <div class="section-label">技术架构</div>
+                <h2 class="section-title">前沿技术驱动</h2>
+                <p class="section-subtitle">融合多项 AI 技术，打造专业级综述生成引擎</p>
+            </div>
+            <div class="tech-grid">
+                <div class="tech-item">
+                    <i class="fas fa-brain"></i>
+                    <h4 class="tech-item-title">Gemini 3.0 Flash/Pro</h4>
+                    <p class="tech-item-desc">核心推理引擎</p>
+                </div>
+                <div class="tech-item">
+                    <i class="fas fa-lightbulb"></i>
+                    <h4 class="tech-item-title">Kimi K2 Thinking</h4>
+                    <p class="tech-item-desc">辅助开源模型</p>
+                </div>
+                <div class="tech-item">
+                    <i class="fas fa-image"></i>
+                    <h4 class="tech-item-title">Nano Banana 2</h4>
+                    <p class="tech-item-desc">AI 图表生成</p>
+                </div>
+                <div class="tech-item">
+                    <i class="fas fa-network-wired"></i>
+                    <h4 class="tech-item-title">MEKG 知识图谱</h4>
+                    <p class="tech-item-desc">方法实体知识图谱</p>
+                </div>
+                <div class="tech-item">
+                    <i class="fas fa-bolt"></i>
+                    <h4 class="tech-item-title">Memgraph</h4>
+                    <p class="tech-item-desc">高性能图数据库</p>
+                </div>
+                <div class="tech-item">
+                    <i class="fas fa-search"></i>
+                    <h4 class="tech-item-title">多源学术搜索</h4>
+                    <p class="tech-item-desc">arXiv · Semantic Scholar · OpenAlex · Tavily</p>
+                </div>
+                <div class="tech-item">
+                    <i class="fas fa-vector-square"></i>
+                    <h4 class="tech-item-title">向量检索</h4>
+                    <p class="tech-item-desc">语义相似度匹配</p>
+                </div>
+                <div class="tech-item">
+                    <i class="fas fa-code"></i>
+                    <h4 class="tech-item-title">FastAPI</h4>
+                    <p class="tech-item-desc">高性能后端框架</p>
+                </div>
+                <div class="tech-item">
+                    <i class="fas fa-cogs"></i>
+                    <h4 class="tech-item-title">异步任务</h4>
+                    <p class="tech-item-desc">Celery 分布式处理</p>
+                </div>
+                <div class="tech-item">
+                    <i class="fas fa-file-code"></i>
+                    <h4 class="tech-item-title">LaTeX 引擎</h4>
+                    <p class="tech-item-desc">专业排版输出</p>
+                </div>
+                <div class="tech-item">
+                    <i class="fas fa-chart-line"></i>
+                    <h4 class="tech-item-title">ECharts</h4>
+                    <p class="tech-item-desc">可视化图表</p>
+                </div>
+                <div class="tech-item">
+                    <i class="fas fa-database"></i>
+                    <h4 class="tech-item-title">MySQL + Redis</h4>
+                    <p class="tech-item-desc">数据存储与缓存</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CTA -->
+    <section class="cta">
+        <h2 class="cta-title">准备好开始了吗？</h2>
+        <p class="cta-subtitle">免费注册，立即体验 AI 驱动的学术综述生成</p>
+        <a href="/register" class="btn-cta">
+            <i class="fas fa-arrow-right"></i>
+            免费开始使用
+        </a>
+    </section>
+    
+    <!-- 页脚 -->
+    <footer class="landing-footer">
+        <div class="footer-container">
+            <a href="/" class="footer-logo">
+                <div class="footer-logo-icon"><img src="/static/images/icon.webp" alt="SurveyGraph" style="width: 100%; height: 100%; object-fit: contain;"></div>
+                <span class="footer-logo-text">SurveyGraph</span>
+            </a>
+            <div class="footer-links">
+                <a href="#features" class="footer-link">功能特性</a>
+                <a href="#workflow" class="footer-link">工作流程</a>
+                <a href="#tech" class="footer-link">技术架构</a>
+                <a href="https://github.com/your-repo/SurveyGraph" target="_blank" class="footer-link">GitHub</a>
+                <a href="/login" class="footer-link">登录</a>
+                <a href="/register" class="footer-link">注册</a>
+            </div>
+            <div class="footer-copyright">
+                © <span id="currentYear">2024</span> SurveyGraph. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // 设置当前年份
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // 导航栏滚动效果
+        let lastScroll = 0;
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('.landing-nav');
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll > 100) {
+                nav.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
+            } else {
+                nav.style.boxShadow = 'none';
+            }
+            
+            lastScroll = currentScroll;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+% ============================================
+% Conceptual Comparison Figure Template
+% Based on Figure 2: Comparison of AgentMemory with LLMMemory, RAG, and ContextEngineering
+% Features: Overlapping circles (Venn-like) with callouts and distinct regions
+% ============================================
+
+\begin{figure*}[!t]
+    \centering
+    \resizebox{0.95\textwidth}{!}{
+    \begin{tikzpicture}[
+        font=\sffamily,
+        node distance=1cm,
+        every node/.style={align=center},
+        % Define styles for different regions
+        region/.style={circle, draw=none, fill opacity=0.15, minimum size=4.5cm},
+        center-region/.style={circle, draw=black, dashed, line width=0.8pt, fill=orange!15, fill opacity=0.8, minimum size=4.8cm},
+        % Style for labels
+        label-text/.style={font=\bfseries\large},
+        % Style for callouts/annotations
+        annotation/.style={
+            rectangle,
+            draw=none,
+            fill=gray!10,
+            text width=4.5cm,
+            inner sep=6pt,
+            rounded corners=2pt,
+            font=\footnotesize,
+            align=left
+        },
+        % Style for connecting lines - arrows point to outer edge
+        conn-line/.style={->, >=stealth, draw=gray!60, line width=1pt}
+    ]
+
+    % Define circle radius for calculations
+    \def\circleradius{2.25cm}
+    \def\centerradius{2.4cm}
+
+    % 1. Central Node (Agent Memory)
+    \node[center-region] (center) at (0,0) {};
+    \node[label-text] at (0,0) {<center_label>};
+
+    % 2. Surrounding Nodes (LLM Memory, RAG, Context Engineering)
+    % Positioned at 30, 150, 270 degrees
+    
+    % Right Node (at 30 degrees)
+    \node[region, fill=green!40, dashed, draw=black] (right) at (30:3.2cm) {};
+    \node[label-text] at (30:3.2cm) {<right_label>};
+    
+    % Bottom Node (at 270 degrees)
+    \node[region, fill=red!40, dashed, draw=black] (bottom) at (270:3.2cm) {};
+    \node[label-text] at (270:3.2cm) {<bottom_label>};
+    
+    % Left Node (at 150 degrees)
+    \node[region, fill=blue!40, dashed, draw=black] (left) at (150:3.2cm) {};
+    \node[label-text] at (150:3.2cm) {<left_label>};
+
+    % 3. Intersections (Visual only, text placed manually)
+    % Text positioned in the overlap regions between center and each outer circle
+    
+    % Center-Right Intersection (between center and right circle)
+    \node[font=\scriptsize, text width=2.2cm, align=center] at (30:1.5cm) {<center_right_text>};
+    
+    % Center-Bottom Intersection (between center and bottom circle)
+    \node[font=\scriptsize, text width=2.2cm, align=center] at (270:1.5cm) {<center_bottom_text>};
+    
+    % Center-Left Intersection (between center and left circle)
+    \node[font=\scriptsize, text width=2.2cm, align=center] at (150:1.5cm) {<center_left_text>};
+
+    % 4. Annotations (Callouts) - positioned outside circles with arrows pointing to outer edge
+    
+    % Top-Left Annotation (for Left Node at 150 degrees)
+    \node[annotation, anchor=east] (note-left) at (-6, 2.5) {
+        \textbf{<left_annotation_title>}\\
+        <left_annotation_items>
+    };
+    % Arrow points to outer edge of left circle (150 + 45 = 195 degrees from circle center)
+    \draw[conn-line, bend right=15] (note-left.east) to ($(150:3.2cm) + (135:\circleradius)$);
+
+    % Top-Right Annotation (for Right Node at 30 degrees)
+    \node[annotation, anchor=west] (note-right) at (6, 2.5) {
+        \textbf{<right_annotation_title>}\\
+        <right_annotation_items>
+    };
+    % Arrow points to outer edge of right circle (30 + 45 = 75 degrees from circle center)
+    \draw[conn-line, bend left=15] (note-right.west) to ($(30:3.2cm) + (45:\circleradius)$);
+
+    % Bottom-Right Annotation (for Bottom Node at 270 degrees)
+    \node[annotation, anchor=west] (note-bottom) at (5, -5) {
+        \textbf{<bottom_annotation_title>}\\
+        <bottom_annotation_items>
+    };
+    % Arrow points to outer edge of bottom circle (270 + 45 = 315 degrees from circle center)
+    \draw[conn-line, bend left=15] (note-bottom.west) to ($(270:3.2cm) + (-45:\circleradius)$);
+    
+    % Top-Center Annotation (for Center Node)
+    \node[annotation, anchor=south, text width=5.5cm] (note-center) at (0, 4.5) {
+        \textbf{<center_annotation_title>}\\
+        <center_annotation_items>
+    };
+    % Arrow points to outer edge of center circle (top)
+    \draw[conn-line] (note-center.south) -- (0, \centerradius);
+
+    \end{tikzpicture}
+    }
+    \caption{<caption>}
+    \label{fig:<label>}
+\end{figure*}

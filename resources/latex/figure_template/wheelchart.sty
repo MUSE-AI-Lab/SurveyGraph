@@ -1,0 +1,3226 @@
+%% wheelchart.sty
+%% Copyright 2022-2024 Matthias Floré
+%
+% This work may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either version 1.3c
+% of this license or (at your option) any later version.
+% The latest version of this license is in
+%   http://www.latex-project.org/lppl.txt
+% and version 1.3c or later is part of all distributions of LaTeX
+% version 2005/12/01 or later.
+%
+% This work has the LPPL maintenance status `maintained'.
+% 
+% The Current Maintainer of this work is Matthias Floré.
+%
+% This work consists of the files wheelchart.pdf, wheelchart.sty,
+% wheelchart.tex and README.md.
+\NeedsTeXFormat{LaTeX2e}
+\RequirePackage{tikz}
+\usetikzlibrary{calc}
+\ProvidesExplPackage{wheelchart}{2024/07/28}{4.0}{Diagrams with circular or other shapes using TikZ and LaTeX3}
+
+%%> \subsection{Variables}
+
+\newcounter { g__wheelchart_WCcount_counter }
+
+\bool_new:N \l__wheelchart_arc_bool
+\bool_new:N \l__wheelchart_contour_bool
+\bool_new:N \g__wheelchart_def_angle_radius_shift_bool
+\bool_new:N \l__wheelchart_discrete_bool
+\bool_new:N \l__wheelchart_etoc_use_name_bool
+\bool_new:N \l__wheelchart_legend_only_bool
+\bool_new:N \l__wheelchart_legend_row_bool
+\bool_new:N \l__wheelchart_lines_ext_dir_bool
+\bool_new:N \l__wheelchart_middle_fill_bool
+\bool_new:N \l__wheelchart_pie_bool
+\bool_new:N \l__wheelchart_plot_bool
+\bool_new:N \l__wheelchart_slices_bool
+\bool_new:N \l__wheelchart_wheel_lines_bool
+
+\box_new:N \l__wheelchart_arc_data_box
+\box_new:N \g__wheelchart_if_text_box
+
+\clist_new:N \l__wheelchart_header_clist
+\clist_new:N \g__wheelchart_slice_range_for_loop_clist
+\clist_new:N \l__wheelchart_slice_range_local_clist
+
+\fp_new:N \l__wheelchart_abs_half_angle_minus_new_angle_minus_gap_polar_fp
+\fp_new:N \l__wheelchart_anchor_xsep_fp
+\fp_new:N \l__wheelchart_anchor_ysep_fp
+\fp_new:N \g__wheelchart_angle_fp
+\fp_new:N \l__wheelchart_arc_around_line_fp
+\fp_new:N \l__wheelchart_arc_data_angle_pos_fp
+\fp_new:N \l__wheelchart_arc_data_angle_shift_fp
+\fp_new:N \g__wheelchart_arc_data_aux_i_fp
+\fp_new:N \g__wheelchart_arc_data_aux_ii_fp
+\fp_new:N \l__wheelchart_arc_data_dir_fp
+\fp_const:Nn \c__wheelchart_arc_data_end_factor_center_fp { 0.5 }
+\fp_const:Nn \c__wheelchart_arc_data_end_factor_left_fp { 1 }
+\fp_const:Nn \c__wheelchart_arc_data_end_factor_right_fp { 0 }
+\fp_new:N \l__wheelchart_arc_data_line_sep_factor_fp
+\fp_new:N \l__wheelchart_arc_data_lines_pos_fp
+\fp_new:N \l__wheelchart_arc_data_lines_shift_fp
+\fp_new:N \l__wheelchart_arc_data_pos_fp
+\fp_new:N \l__wheelchart_arc_data_radius_plot_false_fp
+\fp_new:N \l__wheelchart_arc_data_sep_fp
+\fp_new:N \g__wheelchart_arc_data_slice_length_fp
+\fp_new:N \l__wheelchart_arc_data_start_angle_plot_false_fp
+\fp_const:Nn \c__wheelchart_arc_data_start_factor_center_fp { -0.5 }
+\fp_const:Nn \c__wheelchart_arc_data_start_factor_left_fp { 0 }
+\fp_const:Nn \c__wheelchart_arc_data_start_factor_right_fp { -1 }
+\fp_new:N \l__wheelchart_arc_data_text_pos_fp
+\fp_new:N \l__wheelchart_arc_data_total_angle_plot_false_fp
+\fp_new:N \l__wheelchart_arc_pos_fp
+\fp_new:N \l__wheelchart_arc_radius_fp
+\fp_new:N \l__wheelchart_arc_sep_fp
+\fp_new:N \l__wheelchart_arc_start_angle_fp
+\fp_new:N \l__wheelchart_coord_determinant_fp
+\fp_new:N \g__wheelchart_coord_x_fp
+\fp_new:N \g__wheelchart_coord_y_fp
+\fp_new:N \l__wheelchart_counter_or_clockwise_fp
+\fp_new:N \g__wheelchart_def_angle_angle_fp
+\fp_new:N \l__wheelchart_discrete_end_length_fp
+\fp_new:N \l__wheelchart_discrete_factor_fp
+\fp_new:N \l__wheelchart_discrete_inner_length_fp
+\fp_new:N \l__wheelchart_discrete_level_fp
+\fp_new:N \l__wheelchart_discrete_level_end_length_fp
+\fp_new:N \l__wheelchart_discrete_level_start_length_fp
+\fp_new:N \l__wheelchart_discrete_levels_sum_fp
+\fp_new:N \l__wheelchart_discrete_outer_length_fp
+\fp_new:N \l__wheelchart_discrete_start_length_fp
+\fp_new:N \l__wheelchart_discrete_sublevel_end_length_fp
+\fp_new:N \l__wheelchart_discrete_sublevel_start_length_fp
+\fp_new:N \l__wheelchart_gap_fp
+\fp_new:N \l__wheelchart_gap_max_angle_fp
+\fp_new:N \l__wheelchart_gap_max_angle_def_fp
+\fp_new:N \l__wheelchart_gap_polar_fp
+\fp_new:N \l__wheelchart_gap_radius_fp
+\fp_new:N \g__wheelchart_half_ex_over_one_cm_fp
+\fp_new:N \l__wheelchart_inner_data_angle_pos_fp
+\fp_new:N \l__wheelchart_inner_data_angle_shift_fp
+\fp_new:N \l__wheelchart_inner_data_pos_fp
+\fp_new:N \l__wheelchart_inner_data_sep_fp
+\fp_new:c { g__wheelchart_inner~end_x_fp }
+\fp_new:c { g__wheelchart_inner~end_y_fp }
+\fp_new:N \l__wheelchart_inner_radius_fp
+\fp_new:c { g__wheelchart_inner~start_x_fp }
+\fp_new:c { g__wheelchart_inner~start_y_fp }
+\fp_new:N \l__wheelchart_lines_fp
+\fp_new:N \l__wheelchart_lines_angle_pos_fp
+\fp_new:N \l__wheelchart_lines_angle_shift_fp
+\fp_new:N \l__wheelchart_lines_ext_fp
+\fp_new:N \l__wheelchart_lines_ext_dirsep_fp
+\fp_new:N \l__wheelchart_lines_ext_fixed_left_fp
+\fp_new:N \l__wheelchart_lines_ext_fixed_right_fp
+\fp_new:N \l__wheelchart_lines_pos_fp
+\fp_new:N \l__wheelchart_lines_sep_fp
+\fp_new:N \g__wheelchart_new_angle_fp
+\fp_new:c { g__wheelchart_outer~end_x_fp }
+\fp_new:c { g__wheelchart_outer~end_y_fp }
+\fp_new:N \l__wheelchart_outer_radius_fp
+\fp_new:c { g__wheelchart_outer~start_x_fp }
+\fp_new:c { g__wheelchart_outer~start_y_fp }
+\fp_new:N \g__wheelchart_previous_coord_x_fp
+\fp_new:N \g__wheelchart_previous_coord_y_fp
+\fp_new:N \l__wheelchart_samples_fp
+\fp_new:N \l__wheelchart_slices_angle_fp
+\fp_new:N \l__wheelchart_slices_angle_pos_fp
+\fp_new:N \l__wheelchart_slices_angle_shift_fp
+\fp_new:N \l__wheelchart_slices_arc_A_fp
+\fp_new:N \l__wheelchart_slices_arc_A_abs_fp
+\fp_new:N \l__wheelchart_slices_arc_angle_fp
+\fp_new:N \l__wheelchart_slices_arc_B_fp
+\fp_new:N \l__wheelchart_slices_arc_coord_fp
+\fp_new:N \l__wheelchart_slices_arc_rotate_fp
+\fp_new:N \l__wheelchart_slices_arrow_A_fp
+\fp_new:N \l__wheelchart_slices_arrow_B_fp
+\fp_new:N \l__wheelchart_slices_arrow_coord_fp
+\fp_new:N \l__wheelchart_slices_inner_end_angle_shift_fp
+\fp_new:N \l__wheelchart_slices_inner_start_angle_shift_fp
+\fp_new:N \g__wheelchart_slices_orientation_fp
+\fp_new:N \l__wheelchart_slices_orientation_new_angle_fp
+\fp_new:N \l__wheelchart_slices_outer_end_angle_shift_fp
+\fp_new:N \l__wheelchart_slices_outer_start_angle_shift_fp
+\fp_new:N \l__wheelchart_slices_pos_fp
+\fp_new:N \l__wheelchart_slices_sep_fp
+\fp_new:N \l__wheelchart_start_angle_fp
+\fp_new:N \l__wheelchart_total_angle_fp
+\fp_new:N \l__wheelchart_total_count_fp
+\fp_new:N \l__wheelchart_wheel_data_angle_pos_fp
+\fp_new:N \l__wheelchart_wheel_data_angle_shift_fp
+\fp_new:N \l__wheelchart_wheel_data_pos_fp
+\fp_new:N \l__wheelchart_wheel_data_sep_fp
+
+\int_new:N \g__wheelchart_discrete_count_int
+\int_new:N \l__wheelchart_discrete_levels_int
+\int_new:N \l__wheelchart_discrete_partitioning_first_index_int
+\int_new:N \l__wheelchart_discrete_partitioning_second_index_int
+\int_new:N \l__wheelchart_discrete_sort_int
+\int_new:N \l__wheelchart_discrete_space_at_borders_int
+\int_set:Nn \l__wheelchart_discrete_space_at_borders_int { -1 }
+\int_new:N \l__wheelchart_discrete_sublevels_int
+\int_new:N \l__wheelchart_etoc_count_total_pages_int
+\int_new:N \l__wheelchart_legend_columns_int
+\int_new:N \l__wheelchart_legend_rows_int
+\int_new:N \l__wheelchart_lines_ext_bottom_dir_int
+\int_new:N \l__wheelchart_lines_ext_dir_int
+\int_const:Nn \c__wheelchart_lines_ext_dir_left_int { -1 }
+\int_const:Nn \c__wheelchart_lines_ext_dir_right_int { 1 }
+\int_new:N \l__wheelchart_lines_ext_top_dir_int
+\int_new:N \l__wheelchart_max_list_items_int
+
+\regex_const:Nn \c__wheelchart_braces_regex { \{(.+)\} }
+\regex_const:Nn \c__wheelchart_key_braces_regex { [\w\s]+\{(.+)\} }
+
+\seq_new:N \l__wheelchart_arc_data_seq
+\seq_new:N \l__wheelchart_discrete_coefficients_first_seq
+\seq_new:N \l__wheelchart_discrete_coefficients_second_seq
+\seq_new:N \l__wheelchart_discrete_points_seq
+\seq_new:N \l__wheelchart_list_seq
+\seq_new:N \l__wheelchart_list_items_seq
+
+\tl_new:N \WClegend
+\tl_const:Nn \c__wheelchart_arc_around_text_aux_tl
+  {
+    sign ( \l__wheelchart_arc_data_dir_fp ) *
+      (
+        \cs:w c__wheelchart_arc_data_start_factor_\l__wheelchart_arc_data_align_tl _fp \cs_end:
+        + \cs:w c__wheelchart_arc_data_end_factor_\l__wheelchart_arc_data_align_tl _fp \cs_end:
+      )
+  }
+\tl_new:N \l__wheelchart_arc_data_align_tl
+\tl_new:N \l__wheelchart_data_anchor_tl
+\tl_new:N \l__wheelchart_etoc_level_tl
+\tl_new:N \l__wheelchart_etoc_name_tl
+\tl_new:N \l__wheelchart_expand_list_tl
+\tl_new:N \l__wheelchart_expand_list_items_tl
+\tl_new:N \l__wheelchart_inner_plot_variable_tl
+\tl_new:N \l__wheelchart_key_name_tl
+\tl_new:N \l__wheelchart_key_range_tl
+\tl_new:N \l__wheelchart_legend_row_tl
+\tl_new:N \g__wheelchart_name_tl
+\tl_new:N \l__wheelchart_outer_plot_variable_tl
+\tl_new:N \l__wheelchart_plot_variable_tl
+\tl_new:N \l__wheelchart_slice_range_index_tl
+\tl_new:N \l__wheelchart_slices_tl
+\tl_new:N \g__wheelchart_totalcount_tl
+\tl_new:N \l__wheelchart_type_tl
+\tl_set:Nn \l__wheelchart_type_tl { default }
+
+%%> \subsection{Functions}
+
+\cs_generate_variant:Nn \seq_set_split:Nnn { Nen , Neo , Nnf }
+\cs_generate_variant:Nn \tl_build_put_right:Nn { NV }
+
+\cs_new_protected:Npn \__wheelchart_arc_around_text_plot_false:nn #1#2
+  {
+    \fp_set:Nn \l__wheelchart_arc_start_angle_fp
+      {
+        \__wheelchart_def_angle_plot_false:nnnnn
+          { \WCcount }
+          { \l__wheelchart_arc_data_angle_pos_fp }
+          {
+            ( 0.5 * \c__wheelchart_arc_around_text_aux_tl + #2 - 0.5 ) * \g__wheelchart_arc_data_aux_ii_fp
+            + \l__wheelchart_arc_data_angle_shift_fp
+          }
+          { \l__wheelchart_arc_pos_fp }
+          { \l__wheelchart_arc_sep_fp + \g__wheelchart_half_ex_over_one_cm_fp }
+      }
+    \path
+      [ draw , / wheelchart / arc_style , / wheelchart / arc_#1_half ]
+      ( \fp_use:N \l__wheelchart_arc_start_angle_fp \c_colon_str \fp_use:N \l__wheelchart_arc_radius_fp )
+      arc
+        [
+          start~angle = \fp_use:N \l__wheelchart_arc_start_angle_fp ,
+          end~angle =
+            \__wheelchart_def_angle_plot_false:nnnnn
+              { \WCcount }
+              {#2}
+              { 0 }
+              { \l__wheelchart_arc_pos_fp }
+              { \l__wheelchart_arc_sep_fp + \g__wheelchart_half_ex_over_one_cm_fp } ,
+          radius = \fp_use:N \l__wheelchart_arc_radius_fp
+        ]
+      ;
+  }
+
+\cs_new_protected:Npn \__wheelchart_arc_around_text_plot_true:nnn #1#2#3
+  {
+    \__wheelchart_convex_comb_coord_plot:nnnnnnn
+      { draw , / wheelchart / arc_style , / wheelchart / arc_#1_half }
+      { 1 }
+      { 0 }
+      {
+        \l__wheelchart_plot_variable_tl *
+        \fp_eval:n
+          {
+            \l__wheelchart_arc_data_angle_pos_fp + 0.5 * \g__wheelchart_arc_data_aux_ii_fp *
+              ( \c__wheelchart_arc_around_text_aux_tl + #2 )
+          }
+        + (#3) * ( 1 - \l__wheelchart_plot_variable_tl )
+      }
+      { \l__wheelchart_plot_variable_tl * \l__wheelchart_arc_data_angle_shift_fp }
+      { \l__wheelchart_arc_pos_fp }
+      { \l__wheelchart_arc_sep_fp }
+  }
+
+\cs_new_protected:Npn \__wheelchart_caption_and_title:nnnnn #1#2#3#4#5
+  {
+    \__wheelchart_if_text:nnn {#1} { o }
+      {
+        \node [ anchor = #2 , align = #3 , / wheelchart / #1_style ]
+          at ( $ (#4) + ( 0 , { #5 * ( \pgfkeysvalueof { / wheelchart / #1~sep } ) } ) $ )
+          { \pgfkeysvalueof { / wheelchart / #1 } } ;
+      }
+  }
+
+\cs_new:Npn \__wheelchart_convex_comb_coord_aux:n #1 { (#1) }
+
+\cs_generate_variant:Nn \__wheelchart_convex_comb_coord_aux:n { o }
+
+\cs_new:Npn \__wheelchart_convex_comb_coord_def:nnnn #1#2#3#4
+  {
+    $
+      (
+        \__wheelchart_inner_plot:nn
+          {
+            \fp_eval:n
+              {
+                ( 1 - (#1) ) * \cs:w g__wheelchart_slice_inner_start_angle_\WCcount _fp \cs_end:
+                + (#1) * \cs:w g__wheelchart_slice_inner_end_angle_\WCcount _fp \cs_end:
+                + \l__wheelchart_counter_or_clockwise_fp * (#2)
+              }
+          }
+          { \fp_eval:n { \cs:w g__wheelchart_inner_radius_\WCcount _fp \cs_end: - (#4) } }
+      )
+      ! { \fp_eval:n {#3} } !
+      (
+        \__wheelchart_outer_plot:nn
+          {
+            \fp_eval:n
+              {
+                ( 1 - (#1) ) * \cs:w g__wheelchart_slice_outer_start_angle_\WCcount _fp \cs_end:
+                + (#1) * \cs:w g__wheelchart_slice_outer_end_angle_\WCcount _fp \cs_end:
+                + \l__wheelchart_counter_or_clockwise_fp * (#2)
+              }
+          }
+          { \fp_eval:n { \cs:w g__wheelchart_outer_radius_\WCcount _fp \cs_end: + (#4) } }
+      )
+    $%note the () around the #i's to keep these contents together
+  }
+
+\cs_new_protected:Npn \__wheelchart_convex_comb_coord_plot_aux:nnnn #1#2#3#4
+  {
+    \path [#1] plot
+      [
+        domain = {#2} \c_colon_str {#3} ,
+        samples = \fp_use:c { g__wheelchart_samples_\WCcount _fp } ,
+        variable = \l__wheelchart_plot_variable_tl
+      ]
+      ( {#4} ) ;
+  }
+
+\cs_generate_variant:Nn \__wheelchart_convex_comb_coord_plot_aux:nnnn { nnno }
+
+\cs_new_protected:Npn \__wheelchart_convex_comb_coord_plot:nnnnnnn #1#2#3#4#5#6#7
+  {
+    \__wheelchart_convex_comb_coord_plot_aux:nnno {#1} {#2} {#3}
+      { \__wheelchart_convex_comb_coord_def:nnnn {#4} {#5} {#6} { \g__wheelchart_half_ex_over_one_cm_fp + (#7) } }
+  }
+
+\cs_new_protected:Npn \__wheelchart_def_angle_aux:
+  {
+    \fp_gset:Nn \g__wheelchart_def_angle_angle_fp
+      {
+        atand
+          (
+            (
+              \pgf@xx * ( \y { l__wheelchart_def_angle_2 } - \y { l__wheelchart_def_angle_1 } )
+              - \pgf@xy * ( \x { l__wheelchart_def_angle_2 } - \x { l__wheelchart_def_angle_1 } )
+            )
+            / \l__wheelchart_coord_determinant_fp ,
+            (
+              \pgf@yy * ( \x { l__wheelchart_def_angle_2 } - \x { l__wheelchart_def_angle_1 } )
+              - \pgf@yx * ( \y { l__wheelchart_def_angle_2 } - \y { l__wheelchart_def_angle_1 } )
+            )
+            / \l__wheelchart_coord_determinant_fp
+          )
+      }%\pgf@xx and so on are necessary if an option such as [x={(-0.5,0)},y={(0,0.5)}] is given to the tikzpicture
+  }
+
+\cs_new_protected:Npn \__wheelchart_def_angle:nnnn #1#2#3#4
+  {
+    \bool_if:NTF \l__wheelchart_plot_bool
+      {
+        \path let
+          \p { l__wheelchart_def_angle_1 } = \__wheelchart_point_plot_true:nnnnn { \WCcount } {#1} {#2} { 0 } {#4} ,
+          \p { l__wheelchart_def_angle_2 } = \__wheelchart_point_plot_true:nnnnn { \WCcount } {#1} {#2} { 1 } {#4}
+          in
+            [
+              / utils / exec =
+                {
+                  \bool_gset:Nn \g__wheelchart_def_angle_radius_shift_bool
+                    {
+                      \fp_compare_p:n
+                        {
+                          \y { l__wheelchart_def_angle_2 } - \y { l__wheelchart_def_angle_1 } == 0
+                          &&
+                          \x { l__wheelchart_def_angle_2 } - \x { l__wheelchart_def_angle_1 } == 0
+                        }
+                    }
+                  \bool_if:NF \g__wheelchart_def_angle_radius_shift_bool
+                    { \__wheelchart_def_angle_aux: }
+                }
+            ]
+          ;
+        \bool_if:NT \g__wheelchart_def_angle_radius_shift_bool
+          {
+            \path let
+              \p { l__wheelchart_def_angle_1 } =
+                \__wheelchart_point_plot_true:nnnnn { \WCcount } {#1} {#2} { 0 }
+                  { \fp_eval:n { (#4) + 1 / \cs:w g__wheelchart_samples_\WCcount _fp \cs_end: } } ,
+              \p { l__wheelchart_def_angle_2 } =
+                \__wheelchart_point_plot_true:nnnnn { \WCcount } {#1} {#2} { 1 }
+                  { \fp_eval:n { (#4) + 1 / \cs:w g__wheelchart_samples_\WCcount _fp \cs_end: } }
+              in [ / utils / exec = { \__wheelchart_def_angle_aux: } ]
+              ;
+          }
+        \pgfmathparse { Mod ( \fp_use:N \g__wheelchart_def_angle_angle_fp , 360 ) }
+      }
+      {
+        \pgfmathparse { Mod ( \__wheelchart_def_angle_plot_false:nnnnn { \WCcount } {#1} {#2} {#3} {#4} , 360 ) }
+      }
+  }
+
+\cs_new:Npn \__wheelchart_def_angle_plot_false_aux_angle:nn #1#2
+  {
+    ( 1 - (#2) ) *
+      (
+        \cs:w g__wheelchart_slice_outer_start_angle_#1_fp \cs_end:
+        - \cs:w g__wheelchart_slice_inner_start_angle_#1_fp \cs_end:
+      )
+    + (#2) * ( \cs:w g__wheelchart_slice_outer_end_angle_#1_fp \cs_end: - \cs:w g__wheelchart_slice_inner_end_angle_#1_fp \cs_end: )
+  }
+
+\cs_new:Npn \__wheelchart_def_angle_plot_false:nnnnn #1#2#3#4#5
+  {
+    \fp_eval:n
+      {
+        \fp_compare:nNnTF { \__wheelchart_def_angle_plot_false_aux_angle:nn {#1} {#2} } = { 0 }
+          { 0 }
+          {
+            asind
+              (
+                (
+                  sqrt
+                    (
+                      ( \cs:w g__wheelchart_outer_radius_#1_fp \cs_end: + \cs:w g__wheelchart_inner_radius_#1_fp \cs_end: ) ^ 2
+                      - \cs:w g__wheelchart_outer_radius_#1_fp \cs_end: * \cs:w g__wheelchart_inner_radius_#1_fp \cs_end: *
+                        (
+                          2 + 2 * cosd ( \__wheelchart_def_angle_plot_false_aux_angle:nn {#1} {#2} )
+                          + \cs:w g__wheelchart_outer_radius_#1_fp \cs_end: * \cs:w g__wheelchart_inner_radius_#1_fp \cs_end:
+                            *
+                              (
+                                (
+                                  sind ( \__wheelchart_def_angle_plot_false_aux_angle:nn {#1} {#2} )
+                                  / \__wheelchart_def_radius:nnn {#1} {#4} {#5}
+                                )
+                                ^ 2
+                              )
+                        )
+                    )
+                  + \cs:w g__wheelchart_inner_radius_#1_fp \cs_end: *
+                    (
+                      \cs:w g__wheelchart_inner_radius_#1_fp \cs_end:
+                      - \cs:w g__wheelchart_outer_radius_#1_fp \cs_end:
+                        * cosd ( \__wheelchart_def_angle_plot_false_aux_angle:nn {#1} {#2} )
+                    )
+                    / \__wheelchart_def_radius:nnn {#1} {#4} {#5}
+                )
+                * \cs:w g__wheelchart_outer_radius_#1_fp \cs_end: * sind ( \__wheelchart_def_angle_plot_false_aux_angle:nn {#1} {#2} )
+                /
+                (
+                  ( \cs:w g__wheelchart_outer_radius_#1_fp \cs_end: + \cs:w g__wheelchart_inner_radius_#1_fp \cs_end: ) ^ 2
+                  - 2 * \cs:w g__wheelchart_outer_radius_#1_fp \cs_end: * \cs:w g__wheelchart_inner_radius_#1_fp \cs_end:
+                    * ( 1 + cosd ( \__wheelchart_def_angle_plot_false_aux_angle:nn {#1} {#2} ) )
+                )
+              )
+          }
+        + ( 1 - (#2) ) * ( \cs:w g__wheelchart_slice_inner_start_angle_#1_fp \cs_end: )
+        + (#2) * ( \cs:w g__wheelchart_slice_inner_end_angle_#1_fp \cs_end: )
+        + \l__wheelchart_counter_or_clockwise_fp * (#3)
+      }
+  }
+
+\cs_new_protected:Npn \__wheelchart_def_coord:nnnn #1#2#3#4
+  {
+    \path let \p { l__wheelchart_coord } =
+      ( \cs:w __wheelchart_#2_plot:nn \cs_end: {#4} { \fp_use:c { g__wheelchart_#2_radius_\WCcount _fp } } )
+      in
+        [
+          / utils / exec =
+            {
+              \fp_gset:cn { g__wheelchart_#1_x_fp }
+                {
+                  ( \pgf@yy * \x { l__wheelchart_coord } - \pgf@yx * \y { l__wheelchart_coord } ) / \l__wheelchart_coord_determinant_fp
+                }
+              \fp_gset:cn { g__wheelchart_#1_y_fp }
+                {
+                  ( \pgf@xx * \y { l__wheelchart_coord } - \pgf@xy * \x { l__wheelchart_coord } ) / \l__wheelchart_coord_determinant_fp
+                }
+            }
+        ]
+        coordinate ( g__wheelchart_slice_\WCcount _#2~#3_coordinate ) at ( \p { l__wheelchart_coord } )
+      ;
+  }
+
+\cs_new_protected:Npn \__wheelchart_def_fp:nn #1#2
+  {
+    \pgfmathparse { \pgfkeysvalueof { / wheelchart / #2 } }
+    \fp_set:cn { l__wheelchart_#1_fp } { \pgfmathresult }
+  }
+
+\cs_new_protected:Npn \__wheelchart_def_gap:nn #1#2
+  {
+    \fp_gset:cn { g__wheelchart_#1_gap_\WCcount _fp }
+      {
+        (#2) * sind ( min ( \l__wheelchart_abs_half_angle_minus_new_angle_minus_gap_polar_fp , \l__wheelchart_gap_max_angle_def_fp ) )
+        <
+        \l__wheelchart_gap_fp
+        ?
+        min ( \cs:w g__wheelchart_abs_half_angle_minus_new_angle_\WCcount _fp \cs_end: , \l__wheelchart_gap_max_angle_def_fp )
+        :
+        asind ( min ( \l__wheelchart_gap_fp / ( (#2) + 1 - sign (#2) ) , 1 ) ) + \l__wheelchart_gap_polar_fp
+        %note the min ( ... , 1 ) so that the asind is always defined
+        %also note the + 1 - sign (#2) so that the denominator is also nonzero if #2 = 0
+      }
+  }
+
+\cs_new_protected:Npn \__wheelchart_def_inner_radius:
+  {
+    \bool_if:NTF \l__wheelchart_pie_bool
+      { \fp_set:Nn \l__wheelchart_inner_radius_fp { 0 } }
+      {
+        \pgfmathparse { \pgfkeysvalueof { / wheelchart / inner~radius } }
+        \fp_set:Nn \l__wheelchart_inner_radius_fp { \pgfmathresult + \l__wheelchart_gap_radius_fp }
+      }
+  }
+
+\cs_new_protected:Npn \__wheelchart_def_orientation:
+  {%determine the orientation, this is necessary even if no plot is used, for example if
+  %inner radius > outer radius then \g__wheelchart_slices_orientation_fp is different from
+  %\l__wheelchart_counter_or_clockwise_fp
+    \fp_set:Nn \l__wheelchart_slices_orientation_new_angle_fp
+      {
+        \g__wheelchart_angle_fp +
+        (
+          \g__wheelchart_new_angle_fp == \g__wheelchart_angle_fp
+          ?
+          \l__wheelchart_counter_or_clockwise_fp * \l__wheelchart_total_angle_fp
+          :
+          \g__wheelchart_new_angle_fp - \g__wheelchart_angle_fp
+        )
+        / \cs:w g__wheelchart_samples_1_fp \cs_end:
+      }
+    \path let
+      \p { l__wheelchart_slices_orientation_1 } =
+        (
+          \__wheelchart_outer_plot:nn
+            { \fp_use:N \g__wheelchart_angle_fp }
+            { \fp_use:c { g__wheelchart_outer_radius_1_fp } }
+        ) ,
+      \p { l__wheelchart_slices_orientation_2 } =
+        (
+          \__wheelchart_outer_plot:nn
+            { \fp_use:N \l__wheelchart_slices_orientation_new_angle_fp }
+            { \fp_use:c { g__wheelchart_outer_radius_1_fp } }
+        ) ,
+      \p { l__wheelchart_slices_orientation_3 } =
+        (
+          \__wheelchart_inner_plot:nn
+            { \fp_use:N \l__wheelchart_slices_orientation_new_angle_fp }
+            { \fp_use:c { g__wheelchart_inner_radius_1_fp } }
+        ) ,
+      \p { l__wheelchart_slices_orientation_4 } =
+        (
+          \__wheelchart_inner_plot:nn
+            { \fp_use:N \g__wheelchart_angle_fp }
+            { \fp_use:c { g__wheelchart_inner_radius_1_fp } }
+        )
+      in
+        [
+          / utils / exec =
+            {
+              \fp_gset:Nn \g__wheelchart_slices_orientation_fp
+                {
+                  sign
+                    (
+                      0.1 * \y { l__wheelchart_slices_orientation_1 }
+                      * ( \x { l__wheelchart_slices_orientation_4 } - \x { l__wheelchart_slices_orientation_2 } )
+                      + 0.1 * \y { l__wheelchart_slices_orientation_2 }
+                      * ( \x { l__wheelchart_slices_orientation_1 } - \x { l__wheelchart_slices_orientation_3 } )
+                      + 0.1 * \y { l__wheelchart_slices_orientation_3 }
+                      * ( \x { l__wheelchart_slices_orientation_2 } - \x { l__wheelchart_slices_orientation_4 } )
+                      + 0.1 * \y { l__wheelchart_slices_orientation_4 }
+                      * ( \x { l__wheelchart_slices_orientation_3 } - \x { l__wheelchart_slices_orientation_1 } )
+                    )
+                  * sign ( \l__wheelchart_coord_determinant_fp )
+                }
+            }
+        ]
+    ;%the terms are multiplied with 0.1 to try to avoid an overflow
+    \fp_compare:nNnT { \g__wheelchart_slices_orientation_fp } = { 0 }
+      { \fp_gset_eq:NN \g__wheelchart_slices_orientation_fp \l__wheelchart_counter_or_clockwise_fp }
+  }
+
+\cs_new_protected:Npn \__wheelchart_def_outer_radius:
+  {
+    \pgfmathparse { \pgfkeysvalueof { / wheelchart / outer~radius } }
+    \fp_set:Nn \l__wheelchart_outer_radius_fp { \pgfmathresult - \l__wheelchart_gap_radius_fp }
+  }
+
+\cs_new:Npn \__wheelchart_def_radius:nnn #1#2#3
+  {
+    \fp_eval:n
+      {
+        ( 1 - (#2) ) * ( \cs:w g__wheelchart_inner_radius_#1_fp \cs_end: - (#3) )
+        + (#2) * ( \cs:w g__wheelchart_outer_radius_#1_fp \cs_end: + (#3) )
+      }
+  }
+
+\cs_new_protected:Npn \__wheelchart_def_slice_angle:nnnn #1#2#3#4
+  {
+    \fp_gzero_new:c { g__wheelchart_slice_#1_#2_angle_\WCcount _fp }
+    \bool_if:NTF \l__wheelchart_plot_bool
+      {
+        \fp_gset:cn { g__wheelchart_slice_#1_#2_angle_\WCcount _fp }
+          {
+            \cs:w g__wheelchart_#3angle_fp \cs_end: +
+              (
+                \l__wheelchart_counter_or_clockwise_fp *
+                  ( (#4) * \cs:w g__wheelchart_#1_gap_\WCcount _fp \cs_end: + \cs:w l__wheelchart_slices_#1_#2_angle_shift_fp \cs_end: )
+              )
+          }
+      }
+      {
+        \fp_gset:cn { g__wheelchart_slice_#1_#2_angle_\WCcount _fp }
+          {
+            \cs:w g__wheelchart_#3angle_fp \cs_end: +
+              (
+                \l__wheelchart_counter_or_clockwise_fp *
+                  (
+                    (#4) * \cs:w g__wheelchart_#1_gap_\WCcount _fp \cs_end: + \cs:w l__wheelchart_slices_#1_#2_angle_shift_fp \cs_end:
+                    - asind
+                      (
+                        \cs:w g__wheelchart_inner_radius_\WCcount _fp \cs_end:
+                        * sind ( \cs:w l__wheelchart_slices_#1_#2_angle_shift_fp \cs_end: )
+                        / \cs:w g__wheelchart_outer_radius_\WCcount _fp \cs_end:
+                      )
+                  )
+              )
+          }
+      }
+  }
+
+\cs_new_protected:Npn \__wheelchart_def_slice_keys:n #1
+  {
+    {%note the double braces {{...}} so that the contents is in a group
+    %and in particular, pgfkeys which are specific to the current slice are local for this slice
+      \clist_if_in:NVT \l__wheelchart_slice_range_local_clist \WCcount
+        {
+          \pgfkeys { / wheelchart , slice_final /. expanded = { \exp_not:v { l__wheelchart_slice_\WCcount _keys_clist } } }
+          \pgfkeys{ / wheelchart , slice_final_style }
+        }
+      #1
+    }
+  }
+
+\cs_new_protected:Npn \__wheelchart_def_WClegend:
+  {
+    \int_set:Nn \l__wheelchart_legend_columns_int
+      { \fp_eval:n { ceil ( \WCtotalcount / ceil ( \WCtotalcount / ( \pgfkeysvalueof { / wheelchart / legend~columns } ) ) ) } }
+    \tl_build_begin:N \WClegend
+      \int_compare:nNnTF { \l__wheelchart_legend_columns_int } = { 1 }
+        { \int_step_inline:nnn { 2 } { \WCtotalcount } { \__wheelchart_legend_append:nn {##1} { \\ } } }
+        {
+          \int_set:Nn \l__wheelchart_legend_rows_int
+            { \fp_eval:n { ceil ( \WCtotalcount / \l__wheelchart_legend_columns_int ) } }
+          \int_step_inline:nn { \l__wheelchart_legend_rows_int - 1 }
+            {
+              \int_step_inline:nn { \l__wheelchart_legend_columns_int - 2 }
+                { \__wheelchart_legend_append:nn { ##1 + \l__wheelchart_legend_rows_int * ####1 } { & } }
+              \int_compare:nNnF { ##1 + ( \l__wheelchart_legend_columns_int - 1 ) * \l__wheelchart_legend_rows_int } > { \WCtotalcount }
+                {
+                  \__wheelchart_legend_append:nn
+                    { ##1 + ( \l__wheelchart_legend_columns_int - 1 ) * \l__wheelchart_legend_rows_int }
+                    { & }
+                }
+              \__wheelchart_legend_append:nn { ##1 + 1 } { \\ }
+            }
+          \int_step_inline:nn { \l__wheelchart_legend_columns_int - 2 }
+            { \__wheelchart_legend_append:nn { \l__wheelchart_legend_rows_int * ( ##1 + 1 ) } { & } }
+          \int_compare:nNnF { \l__wheelchart_legend_columns_int * \l__wheelchart_legend_rows_int } > { \WCtotalcount }
+            { \__wheelchart_legend_append:nn { \l__wheelchart_legend_columns_int * \l__wheelchart_legend_rows_int } { & } }
+        }
+      \__wheelchart_legend_append:nn { 1 } { \\ }%at the moment it is unnecessary to set g__wheelchart_WCcount_counter to 1
+      %but this is done to be future-proof if the contents of \WClegend would be parsed in a way that prohibits the value for
+      %g__wheelchart_WCcount_counter to be larger than \WCtotalcount
+    \tl_build_end:N \WClegend
+    \cs_set:Npn \WCcount { \theg__wheelchart_WCcount_counter }
+    \cs_set:Npn \WCpercentage { \cs:w l__wheelchart_WCpercentage_\theg__wheelchart_WCcount_counter \cs_end: }
+    \cs_set:Npn \WCpercentagerounded { \cs:w l__wheelchart_WCpercentagerounded_\theg__wheelchart_WCcount_counter \cs_end: }
+    \str_if_eq:eeTF { \l__wheelchart_type_tl } { etoc }
+      {
+        \cs_set:Npn \WCetocthelinkedname
+          { \cs:w g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _the_linked_name_\theg__wheelchart_WCcount_counter \cs_end: }
+        \cs_set:Npn \WCetocthelinkednumber
+          { \cs:w g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _the_linked_number_\theg__wheelchart_WCcount_counter \cs_end: }
+        \cs_set:Npn \WCetocthelinkedpage
+          { \cs:w g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _the_linked_page_\theg__wheelchart_WCcount_counter \cs_end: }
+        \cs_set:Npn \WCetocthename
+          { \cs:w g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _the_name_\theg__wheelchart_WCcount_counter \cs_end: }
+        \cs_set:Npn \WCetocthenumber
+          { \cs:w g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _the_number_\theg__wheelchart_WCcount_counter \cs_end: }
+        \cs_set:Npn \WCetocthepage
+          { \cs:w g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _the_page_\theg__wheelchart_WCcount_counter \cs_end: }
+        \cs_set:Npn \WCetocthenumberofpages
+          { \cs:w g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _the_number_of_pages_\theg__wheelchart_WCcount_counter \cs_end: }
+      }
+      {
+        \clist_if_empty:NTF \l__wheelchart_header_clist
+          {
+            \int_step_inline:nn { \l__wheelchart_max_list_items_int }
+              {
+                \cs_set:cpn { WCvar\int_to_Alph:n {##1} }
+                  { \cs:w l__wheelchart_item_WCvar\int_to_Alph:n {##1}_\theg__wheelchart_WCcount_counter \cs_end: }
+              }
+          }
+          {
+            \int_step_inline:nn { \l__wheelchart_max_list_items_int }
+              {
+                \cs_set:cpn { \pgfkeysvalueof { / wheelchart / header~prefix } \clist_item:Nn \l__wheelchart_header_clist {##1} }
+                  {
+                    \cs:w
+                      l__wheelchart_item_\pgfkeysvalueof { / wheelchart / header~prefix }
+                      \clist_item:Nn \l__wheelchart_header_clist {##1}_\theg__wheelchart_WCcount_counter
+                    \cs_end:
+                  }
+              }
+          }
+      }
+    \setcounter { g__wheelchart_WCcount_counter } { 1 }
+  }
+
+\cs_new:Npn \__wheelchart_diff_atan:nnnn #1#2#3#4
+  {
+    Mod
+      (
+        \fp_eval:n
+          {
+            \g__wheelchart_slices_orientation_fp *
+              (
+                atand
+                  (
+                    \cs:w g__wheelchart_#3_y_fp \cs_end: - \cs:w g__wheelchart_#4_y_fp \cs_end: ,
+                    \cs:w g__wheelchart_#3_x_fp \cs_end: - \cs:w g__wheelchart_#4_x_fp \cs_end:
+                  )
+                - atand
+                  (
+                    \cs:w g__wheelchart_#1_y_fp \cs_end: - \cs:w g__wheelchart_#2_y_fp \cs_end: ,
+                    \cs:w g__wheelchart_#1_x_fp \cs_end: - \cs:w g__wheelchart_#2_x_fp \cs_end:
+                  )
+              )
+          }
+        ,
+        360
+      )%note the Mod 360 because for example cos(90/2)\neq cos(-270/2)
+  }
+
+\cs_new_protected:Npn \__wheelchart_discrete_algorithm:
+  {
+    \__wheelchart_def_fp:nn { discrete_factor } { discrete~factor }
+    \__wheelchart_def_fp:nn { gap_radius } { gap~radius }
+    \__wheelchart_def_outer_radius:
+    \__wheelchart_def_inner_radius:
+    \int_compare:nNnT { \l__wheelchart_discrete_space_at_borders_int } = { -1 }
+      {
+        \pgfkeys
+          {
+            / errors / boolean~expected /. expanded =
+              { discrete~space~at~borders }
+              { \pgfkeysvalueof { / wheelchart / discrete~space~at~borders } }
+          }
+      }
+    \seq_clear:N \l__wheelchart_discrete_points_seq
+    \bool_if:NTF \l__wheelchart_plot_bool
+      {
+        \__wheelchart_def_fp:nn { samples } { samples }
+        \fp_zero:N \l__wheelchart_discrete_outer_length_fp
+        \__wheelchart_discrete_def_coord:nn { outer } { 0 }
+        \int_step_inline:nn { \fp_use:N \l__wheelchart_samples_fp - 1 }
+          {
+            \__wheelchart_discrete_def_coord:nn { outer } {##1}
+            \fp_add:Nn \l__wheelchart_discrete_outer_length_fp
+              {
+                sqrt
+                  (
+                    ( \g__wheelchart_coord_x_fp - \g__wheelchart_previous_coord_x_fp ) ^ 2
+                    + ( \g__wheelchart_coord_y_fp - \g__wheelchart_previous_coord_y_fp ) ^ 2
+                  )
+              }
+          }
+        \__wheelchart_discrete_def_coord:nn { inner } { \l__wheelchart_samples_fp - 1 }
+        \fp_set:Nn \l__wheelchart_discrete_end_length_fp
+          {
+            sqrt
+              (
+                ( \g__wheelchart_coord_x_fp - \g__wheelchart_previous_coord_x_fp ) ^ 2
+                + ( \g__wheelchart_coord_y_fp - \g__wheelchart_previous_coord_y_fp ) ^ 2
+              )
+          }
+        \fp_zero:N \l__wheelchart_discrete_inner_length_fp
+        \int_step_inline:nnnn { \fp_use:N \l__wheelchart_samples_fp - 2 } { -1 } { 0 }
+          {
+            \__wheelchart_discrete_def_coord:nn { inner } {##1}
+            \fp_add:Nn \l__wheelchart_discrete_inner_length_fp
+              {
+                sqrt
+                  (
+                    ( \g__wheelchart_coord_x_fp - \g__wheelchart_previous_coord_x_fp ) ^ 2
+                    + ( \g__wheelchart_coord_y_fp - \g__wheelchart_previous_coord_y_fp ) ^ 2
+                  )
+              }
+          }
+        \__wheelchart_discrete_def_coord:nn { outer } { 0 }
+        \fp_set:Nn \l__wheelchart_discrete_start_length_fp
+          {
+            sqrt
+              (
+                ( \g__wheelchart_coord_x_fp - \g__wheelchart_previous_coord_x_fp ) ^ 2
+                + ( \g__wheelchart_coord_y_fp - \g__wheelchart_previous_coord_y_fp ) ^ 2
+              )
+          }
+      }
+      {
+        \fp_set:Nn \l__wheelchart_discrete_outer_length_fp
+          { abs ( \l__wheelchart_total_angle_fp * deg * \l__wheelchart_outer_radius_fp ) }
+        \fp_set:Nn \l__wheelchart_discrete_end_length_fp { abs ( \l__wheelchart_outer_radius_fp - \l__wheelchart_inner_radius_fp ) }
+        \fp_set:Nn \l__wheelchart_discrete_inner_length_fp
+          { abs ( \l__wheelchart_total_angle_fp * deg * \l__wheelchart_inner_radius_fp ) }
+        %note the abs ( ... ) because \l__wheelchart_total_angle_fp can be negative
+        %and \l__wheelchart_outer_radius_fp can be smaller than \l__wheelchart_inner_radius_fp
+        \fp_set_eq:NN \l__wheelchart_discrete_start_length_fp \l__wheelchart_discrete_end_length_fp
+      }
+    \str_case:enF { \pgfkeysvalueof { / wheelchart / discrete~partitioning } }
+      {
+        { radius }
+          {
+            \int_set:Nn \l__wheelchart_discrete_partitioning_first_index_int { 1 }
+            \int_set:Nn \l__wheelchart_discrete_partitioning_second_index_int { 2 }
+            \fp_set_eq:NN \l__wheelchart_discrete_level_start_length_fp \l__wheelchart_discrete_inner_length_fp
+            \fp_set_eq:NN \l__wheelchart_discrete_level_end_length_fp \l__wheelchart_discrete_outer_length_fp
+            \fp_set_eq:NN \l__wheelchart_discrete_sublevel_start_length_fp \l__wheelchart_discrete_start_length_fp
+            \fp_set_eq:NN \l__wheelchart_discrete_sublevel_end_length_fp \l__wheelchart_discrete_end_length_fp
+          }
+        { angle }
+          {
+            \int_set:Nn \l__wheelchart_discrete_partitioning_first_index_int { 2 }
+            \int_set:Nn \l__wheelchart_discrete_partitioning_second_index_int { 1 }
+            \fp_set_eq:NN \l__wheelchart_discrete_level_start_length_fp \l__wheelchart_discrete_start_length_fp
+            \fp_set_eq:NN \l__wheelchart_discrete_level_end_length_fp \l__wheelchart_discrete_end_length_fp
+            \fp_set_eq:NN \l__wheelchart_discrete_sublevel_start_length_fp \l__wheelchart_discrete_inner_length_fp
+            \fp_set_eq:NN \l__wheelchart_discrete_sublevel_end_length_fp \l__wheelchart_discrete_outer_length_fp
+            \int_set:Nn \l__wheelchart_discrete_sort_int { 3 - \l__wheelchart_discrete_sort_int }
+          }
+      }
+      {
+        \pgfkeys
+          {
+            / errors / unknown~choice~value /. expanded =
+              { discrete~partitioning }
+              { \pgfkeysvalueof { / wheelchart / discrete~partitioning } }
+          }
+      }
+    \int_set:Nn \l__wheelchart_discrete_levels_int
+      {
+        \fp_eval:n
+          {
+            max
+              (
+                round
+                  (
+                    sqrt
+                      (
+                        (
+                          ( \l__wheelchart_discrete_sublevel_start_length_fp + \l__wheelchart_discrete_sublevel_end_length_fp )
+                          * \l__wheelchart_discrete_factor_fp
+                          / ( \l__wheelchart_discrete_level_start_length_fp + \l__wheelchart_discrete_level_end_length_fp )
+                        )
+                        * \WCtotalnum
+                      )
+                  )
+                ,
+                1
+              )
+          }
+      }
+    \int_gzero:N \g__wheelchart_discrete_count_int
+    \fp_zero:N \l__wheelchart_discrete_levels_sum_fp
+    \int_step_inline:nn { \l__wheelchart_discrete_levels_int - 1 }
+      {
+        \fp_set:Nn \l__wheelchart_discrete_level_fp
+          {
+            ( ##1 - 0.5 * ( 1 + \l__wheelchart_discrete_space_at_borders_int ) )
+            / ( \l__wheelchart_discrete_levels_int - \l__wheelchart_discrete_space_at_borders_int )
+          }
+        \fp_add:Nn \l__wheelchart_discrete_levels_sum_fp { \l__wheelchart_discrete_level_fp }
+        \int_set:Nn \l__wheelchart_discrete_sublevels_int
+          {
+            \fp_eval:n
+              {
+                round
+                  (
+                    (
+                      (
+                        ( ##1 ) * \l__wheelchart_discrete_level_start_length_fp
+                        + \l__wheelchart_discrete_levels_sum_fp
+                        * ( \l__wheelchart_discrete_level_end_length_fp - \l__wheelchart_discrete_level_start_length_fp )
+                      )
+                      /
+                      (
+                        \l__wheelchart_discrete_levels_int * 0.5
+                        * ( \l__wheelchart_discrete_level_start_length_fp + \l__wheelchart_discrete_level_end_length_fp )
+                      )
+                    )
+                    * \WCtotalnum - \g__wheelchart_discrete_count_int
+                  )
+              }
+          }
+        \int_gadd:Nn \g__wheelchart_discrete_count_int { \l__wheelchart_discrete_sublevels_int }
+        \int_compare:nNnTF { \l__wheelchart_discrete_sublevels_int } = { 1 }
+          {
+            \seq_put_right:Ne \l__wheelchart_discrete_points_seq
+              {
+                0.5
+                /
+                \fp_use:N \l__wheelchart_discrete_level_fp
+              }
+          }
+          {
+            \int_step_inline:nn { \l__wheelchart_discrete_sublevels_int }
+              {
+                \seq_put_right:Ne \l__wheelchart_discrete_points_seq
+                  {
+                    \fp_eval:n
+                      {
+                        ( ####1 - 0.5 * ( 1 + \l__wheelchart_discrete_space_at_borders_int ) )
+                        / ( \l__wheelchart_discrete_sublevels_int - \l__wheelchart_discrete_space_at_borders_int )
+                      }
+                    %the denominator is 0 if \l__wheelchart_discrete_sublevels_int = \l__wheelchart_discrete_space_at_borders_int = 1
+                    %thus the case when \l__wheelchart_discrete_sublevels_int = 1 is treated separately above
+                    /
+                    \fp_use:N \l__wheelchart_discrete_level_fp
+                  }
+              }
+          }
+      }
+    \int_compare:nNnTF { \l__wheelchart_discrete_levels_int } = { 1 }
+      { \fp_set:Nn \l__wheelchart_discrete_level_fp { 0.5 } }
+      {
+        \fp_set:Nn \l__wheelchart_discrete_level_fp
+          {
+            1 - 0.5 * ( 1 - \l__wheelchart_discrete_space_at_borders_int )
+            / ( \l__wheelchart_discrete_levels_int - \l__wheelchart_discrete_space_at_borders_int )
+          }
+      }
+    \int_set:Nn \l__wheelchart_discrete_sublevels_int { \fp_eval:n { round ( \WCtotalnum - \g__wheelchart_discrete_count_int ) } }
+    \int_compare:nNnTF { \l__wheelchart_discrete_sublevels_int } = { 1 }
+      {
+        \seq_put_right:Ne \l__wheelchart_discrete_points_seq
+          {
+            0.5
+            /
+            \fp_use:N \l__wheelchart_discrete_level_fp
+          }
+      }
+      {
+        \int_step_inline:nn { \l__wheelchart_discrete_sublevels_int }
+          {
+            \seq_put_right:Ne \l__wheelchart_discrete_points_seq
+              {
+                \fp_eval:n
+                  {
+                    ( ##1 - 0.5 * ( 1 + \l__wheelchart_discrete_space_at_borders_int ) )
+                    / ( \l__wheelchart_discrete_sublevels_int - \l__wheelchart_discrete_space_at_borders_int )
+                  }
+                /
+                \fp_use:N \l__wheelchart_discrete_level_fp
+              }
+          }
+      }
+    \seq_sort:Nn \l__wheelchart_discrete_points_seq
+      {
+        \seq_set_split:Nnn \l__wheelchart_discrete_coefficients_first_seq { / } {##1}
+        \seq_set_split:Nnn \l__wheelchart_discrete_coefficients_second_seq { / } {##2}
+        \fp_compare:nNnTF
+          { \seq_item:Nn \l__wheelchart_discrete_coefficients_first_seq { \l__wheelchart_discrete_sort_int } }
+          >
+          { \seq_item:Nn \l__wheelchart_discrete_coefficients_second_seq { \l__wheelchart_discrete_sort_int } }
+          { \sort_return_swapped: }
+          { \sort_return_same: }
+      }
+    \int_gzero:N \g__wheelchart_discrete_count_int
+    \__wheelchart_for_loop:n
+      {
+        \pgfkeysvalueof { / wheelchart / before~slices }
+        \int_step_inline:nn { \fp_eval:n { round ( \cs:w g__wheelchart_value_\WCcount _fp \cs_end: ) } }
+        %note that \fp_eval:n { round ( ... ) } is necessary even when the value is an integer because pgfmath
+        %could have added .0 and then \int_step_inline:nn { \cs:w g__wheelchart_value_\WCcount _fp \cs_end: } would give the messages
+        %Missing character: There is no . in font nullfont! Missing character: There is no 0 in font nullfont!
+          {
+            \int_gincr:N \g__wheelchart_discrete_count_int
+            \cs_set:Npe \WCcountdiscrete { \int_use:N \g__wheelchart_discrete_count_int }
+            \seq_set_split:Nne \l__wheelchart_discrete_coefficients_first_seq { / }
+              { \seq_item:Nn \l__wheelchart_discrete_points_seq { \g__wheelchart_discrete_count_int } }
+            %Naturally, an error occurs if the sum of the rounded values of the key value is
+            %greater than the rounded value of \WCtotalnum.
+            %For example if there are 2 values 1.6 and 1.7 then these numbers are 4 and 3 and then there is no 4-th item in the list.
+            %However only positive integer values make practical sense for this diagram.
+            \bool_if:NTF \l__wheelchart_plot_bool
+              {
+                \coordinate ( g__wheelchart_slice_##1_####1_coordinate ) at
+                  (
+                    $
+                      (
+                        \__wheelchart_inner_plot:nn
+                          {
+                            \fp_eval:n
+                              {
+                                \l__wheelchart_start_angle_fp + \l__wheelchart_counter_or_clockwise_fp * \l__wheelchart_total_angle_fp *
+                                  (
+                                    \seq_item:Nn \l__wheelchart_discrete_coefficients_first_seq
+                                      { \l__wheelchart_discrete_partitioning_first_index_int }
+                                  )
+                              }
+                          }
+                          { \fp_use:N \l__wheelchart_inner_radius_fp }
+                      )
+                      !
+                        {
+                          \seq_item:Nn \l__wheelchart_discrete_coefficients_first_seq
+                            { \l__wheelchart_discrete_partitioning_second_index_int }
+                        }
+                      !
+                      (
+                        \__wheelchart_outer_plot:nn
+                          {
+                            \fp_eval:n
+                              {
+                                \l__wheelchart_start_angle_fp + \l__wheelchart_counter_or_clockwise_fp * \l__wheelchart_total_angle_fp *
+                                  (
+                                    \seq_item:Nn \l__wheelchart_discrete_coefficients_first_seq
+                                      { \l__wheelchart_discrete_partitioning_first_index_int }
+                                  )
+                              }
+                          }
+                          { \fp_use:N \l__wheelchart_outer_radius_fp }
+                      )
+                    $
+                  ) ;
+              }
+              {
+                \coordinate ( g__wheelchart_slice_##1_####1_coordinate ) at
+                  (
+                    \fp_eval:n
+                      {
+                        \l__wheelchart_start_angle_fp + \l__wheelchart_counter_or_clockwise_fp * \l__wheelchart_total_angle_fp *
+                          (
+                            \seq_item:Nn \l__wheelchart_discrete_coefficients_first_seq
+                              { \l__wheelchart_discrete_partitioning_first_index_int }
+                          )
+                      }
+                    \c_colon_str
+                    \fp_eval:n
+                      {
+                        \l__wheelchart_inner_radius_fp
+                        + \seq_item:Nn \l__wheelchart_discrete_coefficients_first_seq
+                          { \l__wheelchart_discrete_partitioning_second_index_int }
+                          * ( \l__wheelchart_outer_radius_fp - \l__wheelchart_inner_radius_fp )
+                      }
+                  ) ;
+              }
+            \pic [ / wheelchart / slices_style ] at ( g__wheelchart_slice_##1_####1_coordinate )
+              { code = { \pgfkeysvalueof { / wheelchart / discrete~pic } } } ;
+          }
+        \pgfkeysvalueof { / wheelchart / after~slices }
+      }
+  }
+
+\cs_new_protected:Npn \__wheelchart_discrete_def_coord:nn #1#2
+  {
+    \fp_gset_eq:NN \g__wheelchart_previous_coord_x_fp \g__wheelchart_coord_x_fp
+    \fp_gset_eq:NN \g__wheelchart_previous_coord_y_fp \g__wheelchart_coord_y_fp
+    \__wheelchart_def_coord:nnnn
+      { coord }
+      {#1}
+      {}
+      {
+        \fp_eval:n
+          {
+            \l__wheelchart_start_angle_fp + ( ( #2 ) / ( \l__wheelchart_samples_fp - 1 ) )
+            * \l__wheelchart_counter_or_clockwise_fp * \l__wheelchart_total_angle_fp
+          }
+      }
+  }
+
+\cs_new_protected:Npn \__wheelchart_for_loop:n #1
+  {
+    \__wheelchart_for_loop_initial:n
+      {
+        \__wheelchart_def_slice_keys:n
+          {
+            \cs_set_eq:Nc \WCpercentage { l__wheelchart_WCpercentage_\WCcount }
+            \cs_set_eq:Nc \WCpercentagerounded { l__wheelchart_WCpercentagerounded_\WCcount }
+            \cs_set:Npe \WCdataangle
+              { \fp_use:c { g__wheelchart_WCdataangle_\WCcount _fp } }
+            \cs_set:Npe \WCmidangle
+              { \fp_use:c { g__wheelchart_WCmidangle_\WCcount _fp } }
+            \pgfkeysvalueof { / wheelchart / for~loop~start }%this must be placed after the definition of macros such as \WCpercentage
+            %so that these macros can be used in the key for loop start
+            \begin { scope }
+              [
+                shift = { ( \WCmidangle \c_colon_str \fp_use:c { g__wheelchart_explode_\WCcount _fp } ) } ,
+                / wheelchart / slices_scope
+              ]
+              #1
+            \end { scope }
+            \pgfkeysvalueof { / wheelchart / for~loop~end }
+          }
+      }
+  }
+
+\cs_new_protected:Npn \__wheelchart_for_loop_initial:n #1
+  {
+    \str_case:en { \l__wheelchart_type_tl }
+      {
+        { default }
+          {
+            \clist_if_empty:NTF \l__wheelchart_header_clist
+              {
+                \int_step_inline:nn { \WCtotalcount }
+                  {
+                    \cs_set:Npe \WCcount {##1}
+                    \int_step_inline:nn { \l__wheelchart_max_list_items_int }
+                      { \cs_set_eq:cc { WCvar\int_to_Alph:n {####1} } { l__wheelchart_item_WCvar\int_to_Alph:n {####1}_##1 } }
+                    #1
+                  }
+              }
+              {
+                \int_step_inline:nn { \WCtotalcount }
+                  {
+                    \cs_set:Npe \WCcount {##1}
+                    \int_step_inline:nn { \l__wheelchart_max_list_items_int }
+                      {
+                        \cs_set_eq:cc
+                          { \pgfkeysvalueof { / wheelchart / header~prefix } \clist_item:Nn \l__wheelchart_header_clist {####1} }
+                          {
+                            l__wheelchart_item_\pgfkeysvalueof { / wheelchart / header~prefix }
+                            \clist_item:Nn \l__wheelchart_header_clist {####1}_##1
+                          }
+                      }
+                    #1
+                  }
+              }
+          }
+        { totalcount }
+          {
+            \int_step_inline:nn { \WCtotalcount }
+              {
+                \cs_set:Npe \WCcount {##1}
+                #1
+              }
+          }
+        { etoc }
+          {
+            \int_step_inline:nn { \WCtotalcount }
+              {
+                \cs_set:Npe \WCcount {##1}
+                \cs_set_eq:Nc \WCetocthelinkedname { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _the_linked_name_##1 }
+                \cs_set_eq:Nc \WCetocthelinkednumber { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _the_linked_number_##1 }
+                \cs_set_eq:Nc \WCetocthelinkedpage { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _the_linked_page_##1 }
+                \cs_set_eq:Nc \WCetocthename { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _the_name_##1 }
+                \cs_set_eq:Nc \WCetocthenumber { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _the_number_##1 }
+                \cs_set_eq:Nc \WCetocthepage { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _the_page_##1 }
+                \cs_set_eq:Nc \WCetocthenumberofpages { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _the_number_of_pages_##1 }
+                #1
+              }
+          }
+      }
+  }
+
+\cs_new_protected:Npn \__wheelchart_gdef_count_fp:nn #1#2
+  {
+    \fp_gzero_new:c { g__wheelchart_#1_\WCcount _fp }
+    \pgfmathparse { \pgfkeysvalueof { / wheelchart / #2 } }
+    \fp_gset:cn { g__wheelchart_#1_\WCcount _fp } { \pgfmathresult }
+  }
+
+\cs_new_protected:Npn \__wheelchart_if_text:nnn #1#2#3
+  {
+  %https://tex.stackexchange.com/questions/42280/expand-away-empty-macros-within-ifthenelse
+  %https://tex.stackexchange.com/questions/44919/proper-way-to-detect-empty-blank-text
+    \begin { pgfinterruptpicture }
+      \DeclareDocumentCommand \\ {#2} {}
+      %for arc data, \\ is used with seq_set_split so has no optional argument thus then #2 is empty
+      %otherwise, #2 is o
+      %no s because an optional star does not apply in a node
+      %no ! because a space between \\ and its optional argument is allowed in a node
+      %https://tex.stackexchange.com/questions/459853/savebox-within-tikzpicture-results-in-an-empty-savebox
+      \hbox_gset:Nn \g__wheelchart_if_text_box { \pgfkeysvalueof { / wheelchart / #1 } }
+    \end { pgfinterruptpicture }
+    \dim_compare:nNnT { \box_wd:N \g__wheelchart_if_text_box } > { 0 pt }
+      { {#3} }
+  }
+
+\cs_new_protected:Npn \__wheelchart_initial:n #1
+  {
+    \str_case:en { \l__wheelchart_type_tl }
+      {
+        { default }
+          {
+            \tl_if_empty:nTF {#1}
+              { \cs_set:Npn \WCtotalcount { 0 } }
+              {
+                \cs:w seq_set_split:Ne\l__wheelchart_expand_list_tl \cs_end:
+                  \l__wheelchart_list_seq
+                  { \pgfkeysvalueof { / wheelchart / separator~rows } }
+                  {#1}
+                \cs_set:Npe \WCtotalcount { \seq_count:N \l__wheelchart_list_seq }
+                \int_zero:N \l__wheelchart_max_list_items_int
+                \seq_map_indexed_inline:Nn \l__wheelchart_list_seq
+                  {
+                    \cs:w seq_set_split:Ne\l__wheelchart_expand_list_items_tl \cs_end:
+                      \l__wheelchart_list_items_seq
+                      { \pgfkeysvalueof { / wheelchart / separator~columns } }
+                      {##2}
+                    \int_compare:nNnT { \seq_count:N \l__wheelchart_list_items_seq } > { \l__wheelchart_max_list_items_int }
+                      { \int_set:Nn \l__wheelchart_max_list_items_int { \seq_count:N \l__wheelchart_list_items_seq } }
+                    %make sure that the namespace l__wheelchart_item_ below is unique
+                    \clist_if_empty:NTF \l__wheelchart_header_clist
+                      {
+                        \seq_map_indexed_inline:Nn \l__wheelchart_list_items_seq
+                          { \cs_set:cpn { l__wheelchart_item_WCvar\int_to_Alph:n {####1}_##1 } {####2} }
+                      }
+                      {
+                        \seq_map_indexed_inline:Nn \l__wheelchart_list_items_seq
+                          {
+                            \cs_set:cpn
+                              {
+                                l__wheelchart_item_\pgfkeysvalueof { / wheelchart / header~prefix }
+                                \clist_item:Nn \l__wheelchart_header_clist {####1}_##1
+                              }
+                              {####2}
+                          }
+                      }
+                  }
+              }
+          }
+        { totalcount }
+          {
+            \cs_set:Npe \WCtotalcount { \fp_use:N \l__wheelchart_total_count_fp }
+            \cs_set:Npn \WCvarA { 1 }
+            \cs_set:Npn \WCvarB {}
+            \cs_set:Npn \WCvarC {}
+          }
+        { etoc }
+          {
+            \bool_if:NTF \l__wheelchart_etoc_use_name_bool
+              {
+                \int_if_exist:cTF { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _count_int }
+                  { \cs_set:Npe \WCtotalcount { \int_use:c { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _count_int } } }
+                  { \cs_set:Npn \WCtotalcount { 0 } }
+              }
+              {
+                \IfPackageLoadedTF { etoc } {}
+                  { \PackageError { wheelchart } { The~package~etoc~must~be~loaded~to~use~the~key~etoc~level } {} }
+                \etocsetlevel { part } { 0 }
+                \etocsetlevel { chapter } { 0 }
+                \etocsetlevel { section } { 0 }
+                \etocsetlevel { subsection } { 0 }
+                \etocsetlevel { subsubsection } { 0 }
+                \etocsetlevel { paragraph } { 0 }
+                \etocsetlevel { subparagraph } { 0 }
+                \etocsetlevel { \l__wheelchart_etoc_level_tl } { -1 }%these level changes are local to the current group
+                \etocsetnexttocdepth { -1 }%only for the next toc
+                \etocsetstyle { \l__wheelchart_etoc_level_tl } {} {}
+                  {
+                    \int_compare:nNnT { \cs:w g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _count_int \cs_end: } > { 0 }
+                      {
+                        \cs_gset:cpe
+                          {
+                            g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl
+                            _the_number_of_pages_\int_use:c { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _count_int }
+                          }
+                          {
+                            \int_eval:n
+                              {
+                                \etocthepage -
+                                  \cs:w
+                                    g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl
+                                    _the_page_\int_use:c { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _count_int }
+                                  \cs_end:
+                              }
+                          }
+                      }
+                    \int_gincr:c { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _count_int }
+                    \cs_gset_eq:cN
+                      {
+                        g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl
+                        _the_linked_name_\int_use:c { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _count_int }
+                      }
+                      \etocthelinkedname
+                    \cs_gset_eq:cN
+                      {
+                        g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl
+                        _the_linked_number_\int_use:c { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _count_int }
+                      }
+                      \etocthelinkednumber
+                    \cs_gset_eq:cN
+                      {
+                        g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl
+                        _the_linked_page_\int_use:c { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _count_int }
+                      }
+                      \etocthelinkedpage
+                    \cs_gset_eq:cN
+                      {
+                        g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl
+                        _the_name_\int_use:c { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _count_int }
+                      }
+                      \etocthename
+                    \cs_gset_eq:cN
+                      {
+                        g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl
+                        _the_number_\int_use:c { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _count_int }
+                      }
+                      \etocthenumber
+                    \cs_gset_eq:cN
+                      {
+                        g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl
+                        _the_page_\int_use:c { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _count_int }
+                      }
+                      \etocthepage
+                  }
+                  {}
+                \int_gzero_new:c { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _count_int }
+                \pgfkeysvalueof { / wheelchart / etoc~code }
+                \int_compare:nNnT { \cs:w g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _count_int \cs_end: } > { 0 }
+                  {
+                    \cs_gset:cpe
+                      {
+                        g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl
+                        _the_number_of_pages_\int_use:c { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _count_int }
+                      }
+                      {
+                        \int_eval:n
+                          {
+                            \l__wheelchart_etoc_count_total_pages_int + 1 -
+                            \cs:w
+                              g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl
+                              _the_page_\int_use:c { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _count_int }
+                            \cs_end:
+                          }
+                      }
+                  }
+                \cs_set:Npe \WCtotalcount { \int_use:c { g__wheelchart_etoc_item_\l__wheelchart_etoc_name_tl _count_int } }
+              }
+          }
+      }
+    \cs_set:Npn \WCtotalnum { 0 }
+    \__wheelchart_for_loop_initial:n
+      {
+        \__wheelchart_def_slice_keys:n
+          { \__wheelchart_gdef_count_fp:nn { value } { value } }
+        \cs_set:Npe \WCtotalnum { \fp_eval:n { \WCtotalnum + \cs:w g__wheelchart_value_\WCcount _fp \cs_end: } }
+      }
+    \int_step_inline:nn { \WCtotalcount }
+      {
+        \cs_set:cpe { l__wheelchart_WCpercentage_##1 }
+          { \fp_eval:n { \cs:w g__wheelchart_value_##1_fp \cs_end: / ( \WCtotalnum / 100 ) } }
+        \cs_set:cpe { l__wheelchart_WCpercentagerounded_##1 }
+          { \fp_eval:n { round ( \cs:w l__wheelchart_WCpercentage_##1 \cs_end: , \pgfkeysvalueof { / wheelchart / perc~precision } ) } }
+      }
+  }
+
+\cs_new_protected:Npn \__wheelchart_inner_and_wheel_data:n #1
+  {
+    \__wheelchart_if_text:nnn { #1~data } { o }
+      {
+        \__wheelchart_def_fp:nn { #1_data_angle_pos } { #1~data~angle~pos }
+        \__wheelchart_def_fp:nn { #1_data_angle_shift } { #1~data~angle~shift }
+        \__wheelchart_def_fp:nn { #1_data_pos } { #1~data~pos }
+        \__wheelchart_def_fp:nn { #1_data_sep } { #1~data~sep }
+        \node [ align = left , / wheelchart / #1_data_style ] at
+          \cs:w __wheelchart_point_plot_\bool_to_str:N \l__wheelchart_plot_bool :nnnnn \cs_end:
+            { \WCcount }
+            { \cs:w l__wheelchart_#1_data_angle_pos_fp \cs_end: }
+            { \cs:w l__wheelchart_#1_data_angle_shift_fp \cs_end: }
+            { \cs:w l__wheelchart_#1_data_pos_fp \cs_end: }
+            { \cs:w l__wheelchart_#1_data_sep_fp \cs_end: }
+          { \pgfkeysvalueof { / wheelchart / #1~data } } ;
+      }
+  }
+
+\cs_new:Npn \__wheelchart_inner_plot:nn #1#2
+  { {#1} \c_colon_str {#2} }
+
+\cs_new_protected:Npn \__wheelchart_legend_append:nn #1#2
+  {
+    \tl_build_put_right:NV \WClegend \l__wheelchart_legend_row_tl%note the V specifier so that \WClegend can also be combined
+    %with an S column of the package siunitx and so that \WClegend can be used in a tblr environment of the package tabularray
+    %and then the option expand=\WClegend needs to be given to the tblr environment
+    \tl_build_put_right:Nn \WClegend { \protect \setcounter { g__wheelchart_WCcount_counter } }%note the \protect for in case that
+    %\WClegend would be parsed in a particular way
+    %note that the counter g__wheelchart_WCcount_counter is defined globally and at the end of the previous \l__wheelchart_legend_row_tl
+    %so that this value is defined and has the right value at the start of the next \l__wheelchart_legend_row_tl
+    %if \WClegend is used in a tblr environment of the package tabularray then \UseTblrLibrary{counter} is required
+    \tl_build_put_right:Ne \WClegend { { \int_eval:n {#1} } }
+    \tl_build_put_right:Nn \WClegend {#2}
+  }
+
+\cs_new:Npn \__wheelchart_mod:n #1
+  {
+    \int_eval:n
+      {
+        \int_mod:nn { (#1) - \int_compare:nNnTF {#1} > { 0 } { 1 } { 0 } } { \g__wheelchart_totalcount_tl }
+        + \int_compare:nNnTF {#1} > { 0 } { 1 } { \g__wheelchart_totalcount_tl }
+      }
+  }
+
+\cs_new:Npn \__wheelchart_outer_plot:nn #1#2
+  { {#1} \c_colon_str {#2} }
+
+\cs_new:Npn \__wheelchart_point_plot_false:nnnnn #1#2#3#4#5
+  { ( \__wheelchart_def_angle_plot_false:nnnnn {#1} {#2} {#3} {#4} {#5} \c_colon_str \__wheelchart_def_radius:nnn {#1} {#4} {#5} ) }
+
+\cs_new:Npn \__wheelchart_point_plot_true:nnnnn #1#2#3#4#5
+  { \__wheelchart_convex_comb_coord_aux:o { \__wheelchart_convex_comb_coord_def:nnnn {#2} {#3} {#4} {#5} } }
+
+\cs_new_protected:Npn \__wheelchart_slices_arc:nnnnnn #1#2#3#4#5#6
+  {
+    {
+      [
+        / utils / exec =
+          {
+            \pgfmathparse {#1}
+            \fp_set:Nn \l__wheelchart_slices_arc_A_fp { \pgfmathresult }
+            #6
+            \fp_set:Nn \l__wheelchart_slices_arc_A_abs_fp { abs ( \l__wheelchart_slices_arc_A_fp ) }
+            \fp_compare:nNnF { \l__wheelchart_slices_arc_A_abs_fp } < { 0.01 }
+              {
+                \pgfmathparse {#2}
+                \fp_set:Nn \l__wheelchart_slices_arc_B_fp { \pgfmathresult }
+                \fp_set:Nn \l__wheelchart_slices_arc_rotate_fp
+                  {
+                    atand
+                      (
+                        \cs:w g__wheelchart_#3_y_fp \cs_end: - \cs:w g__wheelchart_#4_y_fp \cs_end: ,
+                        \cs:w g__wheelchart_#3_x_fp \cs_end: - \cs:w g__wheelchart_#4_x_fp \cs_end:
+                      )
+                  }
+                \fp_set:Nn \l__wheelchart_slices_arc_coord_fp
+                  {
+                    \l__wheelchart_slices_arc_A_fp < 0 && \l__wheelchart_slices_arc_B_fp < 0
+                    ?
+                    0
+                    :
+                    \l__wheelchart_slices_arc_B_fp
+                  }
+                \fp_set:Nn \l__wheelchart_slices_arc_angle_fp
+                  {
+                    \l__wheelchart_slices_arc_A_fp < 0 && \l__wheelchart_slices_arc_B_fp < 0
+                    ?
+                    acosd
+                      (
+                        2 /
+                          (
+                            ( min ( \l__wheelchart_slices_arc_B_fp , 0 ) - 1 )
+                            * ( ( 1 / \l__wheelchart_slices_arc_A_fp ) + \l__wheelchart_slices_arc_A_fp )
+                          )
+                      )
+                    :
+                    atand ( ( \l__wheelchart_slices_arc_A_fp - ( 1 / \l__wheelchart_slices_arc_A_fp ) ) / 2 )
+                  }%note the min ( \l__wheelchart_slices_arc_B_fp , 0 ) so that the acosd is always defined
+              }
+          }
+      ]
+      \fp_compare:nNnTF { \l__wheelchart_slices_arc_A_abs_fp } < { 0.01 }
+        {#5}
+        {
+          \fp_compare:nNnT { \l__wheelchart_slices_arc_B_fp } < { 1 }
+            {
+              \fp_compare:nNnF { \l__wheelchart_slices_arc_coord_fp } = { 0 }
+                {
+                  --
+                    (
+                      $
+                        ( g__wheelchart_slice_\WCcount _#3_coordinate )
+                        ! { \fp_eval:n { \l__wheelchart_slices_arc_coord_fp / 2 } } !
+                        ( g__wheelchart_slice_\WCcount _#4_coordinate )
+                      $
+                    )
+                }
+              arc
+                [
+                  start~angle =
+                    {
+                      \fp_eval:n
+                        {
+                          \l__wheelchart_slices_arc_rotate_fp
+                          - \g__wheelchart_slices_orientation_fp * \l__wheelchart_slices_arc_angle_fp
+                        }
+                    } ,
+                  end~angle =
+                    {
+                      \fp_eval:n
+                        {
+                          \l__wheelchart_slices_arc_rotate_fp + \g__wheelchart_slices_orientation_fp *
+                          ( sign ( \l__wheelchart_slices_arc_A_fp ) * 180 + \l__wheelchart_slices_arc_angle_fp )
+                        }
+                    } ,
+                  radius =
+                    {
+                      \fp_eval:n
+                        {
+                          0.25 * ( 1 - \l__wheelchart_slices_arc_B_fp )
+                          * abs ( ( 1 / \l__wheelchart_slices_arc_A_fp ) + \l__wheelchart_slices_arc_A_fp )
+                          * sqrt
+                            (
+                              ( \cs:w g__wheelchart_#3_x_fp \cs_end: - \cs:w g__wheelchart_#4_x_fp \cs_end: ) ^ 2
+                              + ( \cs:w g__wheelchart_#3_y_fp \cs_end: - \cs:w g__wheelchart_#4_y_fp \cs_end: ) ^ 2
+                            )
+                        }
+                    }
+                ]
+            }
+          \fp_compare:nNnF { \l__wheelchart_slices_arc_coord_fp } = { 0 }
+            {#5}
+        }
+    }
+  }
+
+\cs_new_protected:Npn \__wheelchart_slices_arrow:nnnnn #1#2#3#4#5
+  {
+    {
+      [
+        / utils / exec =
+          {
+            \pgfmathparse {#1}
+            \fp_set:Nn \l__wheelchart_slices_arrow_A_fp { \pgfmathresult }
+            \fp_compare:nNnF { \l__wheelchart_slices_arrow_A_fp } = { 0 }
+              {
+                \pgfmathparse {#2}
+                \fp_set:Nn \l__wheelchart_slices_arrow_B_fp { \pgfmathresult }
+                \fp_set:Nn \l__wheelchart_slices_arrow_coord_fp
+                  {
+                    \l__wheelchart_slices_arrow_A_fp < 0 && \l__wheelchart_slices_arrow_B_fp < 0 ? 0 : \l__wheelchart_slices_arrow_B_fp
+                  }
+              }
+          }
+      ]
+      \fp_compare:nNnTF { \l__wheelchart_slices_arrow_A_fp } = { 0 }
+        {#5}
+        {
+          \fp_compare:nNnT { \l__wheelchart_slices_arrow_B_fp } < { 1 }
+            {
+              \fp_compare:nNnF { \l__wheelchart_slices_arrow_coord_fp } = { 0 }
+                {
+                  --
+                    (
+                      $
+                        ( g__wheelchart_slice_\WCcount _#3_coordinate )
+                        ! { \fp_eval:n { \l__wheelchart_slices_arrow_coord_fp / 2 } } !
+                        ( g__wheelchart_slice_\WCcount _#4_coordinate )
+                      $
+                    )
+                }
+              --
+                (
+                  \fp_eval:n
+                    {
+                      (
+                        \cs:w g__wheelchart_#3_x_fp \cs_end: + \cs:w g__wheelchart_#4_x_fp \cs_end: +
+                          (
+                            \g__wheelchart_slices_orientation_fp * ( \l__wheelchart_slices_arrow_coord_fp - 1 )
+                            * \l__wheelchart_slices_arrow_A_fp
+                            * ( \cs:w g__wheelchart_#3_y_fp \cs_end: - \cs:w g__wheelchart_#4_y_fp \cs_end: )
+                          )
+                      )
+                      / 2
+                    }
+                  ,
+                  \fp_eval:n
+                    {
+                      (
+                        \cs:w g__wheelchart_#3_y_fp \cs_end: + \cs:w g__wheelchart_#4_y_fp \cs_end: +
+                          (
+                            \g__wheelchart_slices_orientation_fp * ( \l__wheelchart_slices_arrow_coord_fp - 1 )
+                            * \l__wheelchart_slices_arrow_A_fp
+                            * ( \cs:w g__wheelchart_#4_x_fp \cs_end: - \cs:w g__wheelchart_#3_x_fp \cs_end: )
+                          )
+                      )
+                      / 2
+                    }
+                )
+              \fp_compare:nNnF { \l__wheelchart_slices_arrow_coord_fp } = { 0 }
+                {
+                  --
+                    (
+                      $
+                        ( g__wheelchart_slice_\WCcount _#4_coordinate )
+                        ! { \fp_eval:n { \l__wheelchart_slices_arrow_coord_fp / 2 } } !
+                        ( g__wheelchart_slice_\WCcount _#3_coordinate )
+                      $
+                    )
+                }
+            }
+          #5
+        }
+    }
+  }
+
+\cs_new:Npn \__wheelchart_slices_to:nn #1#2
+  {
+    to
+      [
+        out = { \fp_eval:n { - \g__wheelchart_slices_orientation_fp * sign ( \l__wheelchart_coord_determinant_fp ) * (#1) } } ,
+        in = { \fp_eval:n { \g__wheelchart_slices_orientation_fp * sign ( \l__wheelchart_coord_determinant_fp ) * ( (#2) - 180 ) } } ,
+        relative
+      ]
+  }
+
+\cs_new:Npn \__wheelchart_wheel_lines_aux:nn #1#2
+  {
+    \fp_eval:n
+      {
+        ( 1 - (#1) / max ( round ( \cs:w g__wheelchart_value_\WCcount _fp \cs_end: ) , 1 ) )
+          * \cs:w g__wheelchart_slice_#2_start_angle_\WCcount _fp \cs_end:
+        + (#1) * \cs:w g__wheelchart_slice_#2_end_angle_\WCcount _fp \cs_end:
+          / max ( round ( \cs:w g__wheelchart_value_\WCcount _fp \cs_end: ) , 1 )
+      }
+  }
+
+%%> \subsection{Pgfkeys}
+
+\pgfkeys
+  {
+    / wheelchart /. is~family ,
+    / wheelchart ,
+    after~slices /. initial = {} ,
+    anchor~xsep /. initial = 5 ,
+    anchor~ysep /. initial = 5 ,
+    arc /. style =
+      {
+        bool_set_true = \l__wheelchart_arc_bool ,
+        arc_style /. style = {#1}
+      } ,
+    arc_style /. style = {} ,
+    arc~around~line /. initial = 1 ,
+    arc~around~text /. default = true ,%this key is not set up with /.is choice or \bool_set:Nn
+    %so that for example \WCvarA can be used as value for this key
+    arc~around~text /. initial = false ,
+    arc~data /. initial = {} ,
+    arc~data~align /. code = { \tl_set:Nn \l__wheelchart_arc_data_align_tl {#1} } ,%this key is not set up with /.is choice
+    %so that for example \WCvarA can be used as value for this key
+    arc~data~align = center ,
+    arc~data~angle~pos /. initial = 0.5 ,
+    arc~data~angle~shift /. initial = 0 ,
+    arc~data~dir /. initial = 1 ,
+    arc~data~expand /. initial = n ,
+    arc~data~line~sep~factor /. initial = 1 ,
+    arc~data~lines~pos /. initial = 0.5 ,
+    arc~data~lines~shift /. initial = 0 ,
+    arc~data~pos /. initial = 1 ,
+    arc~data~sep /. initial = 1 ex / 1 cm ,
+    arc~data~style /. style = { arc_data_style /. style = {#1} } ,
+    arc_data_style /. style = {} ,
+    arc~first~half /. style = { arc_first_half /. style = {#1} } ,
+    arc_first_half /. style = {} ,
+    arc~pos /. initial = 1 ,
+    arc~second~half /. style = { arc_second_half /. style = {#1} } ,
+    arc_second_half /. style = {} ,
+    arc~sep /. initial = 1 ex / 1 cm ,
+    at /. initial = { ( 0 , 0 ) } ,
+    before~slices /. initial = {} ,
+    bool_set_true /. code = \bool_set_true:N #1 ,
+    caption /. initial = {} ,
+    caption~left /. initial = {} ,
+    caption~left~sep /. initial = 0.5 ,
+    caption~left~style /. style = { caption~left_style /. style = {#1} } ,
+    caption~left_style /. style = {} ,
+    caption~sep /. initial = 0.5 ,
+    caption~style /. style = { caption_style /. style = {#1} } ,
+    caption_style /. style = {} ,
+    contour /. style =
+      {
+        bool_set_true = \l__wheelchart_contour_bool ,
+        contour_style /. style = {#1}
+      } ,
+    contour_style /. style = {} ,
+    counterclockwise /. is~choice ,
+    counterclockwise / false /. code = { \fp_set:Nn \l__wheelchart_counter_or_clockwise_fp { -1 } } ,
+    counterclockwise / false /. value~forbidden ,
+    counterclockwise / true /. code = { \fp_set:Nn \l__wheelchart_counter_or_clockwise_fp { 1 } } ,
+    counterclockwise / true /. value~forbidden ,
+    counterclockwise /. default = true ,
+    counterclockwise = false ,
+    data /. initial = { \WCvarC } ,
+    data~angle~pos /. initial = 0.5 ,
+    data~angle~shift /. initial = 0 ,
+    data~pos /. initial = 1 ,
+    data~sep /. initial = 0.2 ,
+    data~style /. style = { data_style /. style = {#1} } ,
+    data_style /. style = {} ,
+    discrete /. is~choice ,
+    discrete / false /. code = \bool_set_false:N \l__wheelchart_discrete_bool ,
+    discrete / false /. value~forbidden ,
+    discrete / true /. code = \bool_set_true:N \l__wheelchart_discrete_bool ,
+    discrete / true /. value~forbidden ,
+    discrete /. default = true ,
+    discrete = false ,
+    discrete~factor /. initial = 1 ,
+    discrete~partitioning /. initial = radius ,
+    discrete~pic /. initial = {} ,
+    discrete~sort /. is~choice ,
+    discrete~sort / angle /. code = { \int_set:Nn \l__wheelchart_discrete_sort_int { 1 } } ,
+    discrete~sort / angle /. value~forbidden ,
+    discrete~sort / radius /. code = { \int_set:Nn \l__wheelchart_discrete_sort_int { 2 } } ,
+    discrete~sort / radius /. value~forbidden ,
+    discrete~sort = angle ,
+    discrete~space~at~borders /. is~choice ,%this key is not set up with /.is if because an initial value is unwanted for this key
+    discrete~space~at~borders / false /. code = { \int_set:Nn \l__wheelchart_discrete_space_at_borders_int { 1 } } ,
+    discrete~space~at~borders / false /. value~forbidden ,
+    discrete~space~at~borders / true /. code = { \int_set:Nn \l__wheelchart_discrete_space_at_borders_int { 0 } } ,
+    discrete~space~at~borders / true /. value~forbidden ,
+    discrete~space~at~borders /. default = true ,
+    domain /. style~args /. expanded = { ##1 \c_colon_str ##2 }
+      {
+        counterclockwise ,
+        start~angle = {##1} ,
+        total~angle = { (##2) - (##1) }
+      } ,
+    etoc~code /. initial = { \tableofcontents } ,
+    etoc~count~total~pages /. code = { \int_set:Nn \l__wheelchart_etoc_count_total_pages_int {#1} } ,
+    etoc~level /. code =
+      {
+        \tl_set:Nn \l__wheelchart_type_tl { etoc }
+        \tl_set:Nn \l__wheelchart_etoc_level_tl {#1}
+      } ,
+    etoc~name /. code = { \tl_set:Nn \l__wheelchart_etoc_name_tl {#1} } ,
+    etoc~name = {} ,
+    etoc~use~name /. code =
+      {
+        \tl_set:Nn \l__wheelchart_etoc_name_tl {#1}
+        \tl_set:Nn \l__wheelchart_type_tl { etoc }
+        \bool_set_true:N \l__wheelchart_etoc_use_name_bool
+      } ,
+    expand~list /. is~choice ,
+    expand~list / false /. code = { \tl_set:Nn \l__wheelchart_expand_list_tl { n } } ,
+    expand~list / false /. value~forbidden ,
+    expand~list / once /. code = { \tl_set:Nn \l__wheelchart_expand_list_tl { o } } ,
+    expand~list / once /. value~forbidden ,
+    expand~list / true /. code = { \tl_set:Nn \l__wheelchart_expand_list_tl { e } } ,
+    expand~list / true /. value~forbidden ,
+    expand~list = once ,
+    expand~list~items /. is~choice ,
+    expand~list~items / false /. code = { \tl_set:Nn \l__wheelchart_expand_list_items_tl { n } } ,
+    expand~list~items / false /. value~forbidden ,
+    expand~list~items / once /. code = { \tl_set:Nn \l__wheelchart_expand_list_items_tl { o } } ,
+    expand~list~items / once /. value~forbidden ,
+    expand~list~items / true /. code = { \tl_set:Nn \l__wheelchart_expand_list_items_tl { e } } ,
+    expand~list~items / true /. value~forbidden ,
+    expand~list~items = false ,
+    explode /. initial = 0 ,
+    explode /. default = 0.2 ,
+    for~loop~end /. initial = {} ,
+    for~loop~start /. initial = {} ,
+    gap /. initial = 0 ,
+    gap /. default = 0.05 ,
+    gap~max~angle /. initial = 180 ,
+    gap~polar /. initial = 0 ,
+    gap~polar /. default = 1 ,
+    gap~radius /. initial = 0 ,
+    gap~radius /. default = 0.05 ,%the same default value as for gap
+    header /. code = { \clist_set:Nn \l__wheelchart_header_clist {#1} } ,
+    header~prefix /. initial = WC ,
+    inner~data /. initial = {} ,
+    inner~data~angle~pos /. initial = 0.5 ,
+    inner~data~angle~shift /. initial = 0 ,
+    inner~data~pos /. initial = 0 ,
+    inner~data~sep /. initial = 0.2 ,
+    inner~data~style /. style = { inner_data_style /. style = {#1} } ,
+    inner_data_style /. style = {} ,
+    inner~plot /. style =
+      {
+        bool_set_true = \l__wheelchart_plot_bool ,
+        / utils / exec = { \cs_set:Npn \__wheelchart_inner_plot:nn ##1##2 {#1} } ,
+        slices~inner =
+          {
+            -- plot
+              [
+                domain =
+                  \fp_use:c { g__wheelchart_slice_inner_end_angle_\WCcount _fp }
+                  \c_colon_str
+                  \fp_use:c { g__wheelchart_slice_inner_start_angle_\WCcount _fp } ,
+                samples = \fp_use:c { g__wheelchart_samples_\WCcount _fp } ,
+                variable = \l__wheelchart_inner_plot_variable_tl ,
+                / wheelchart / inner_plot_style
+              ]
+              (
+                \__wheelchart_inner_plot:nn
+                  { \l__wheelchart_inner_plot_variable_tl }
+                  { \fp_use:c { g__wheelchart_inner_radius_\WCcount _fp } }
+              )
+          }
+      } ,
+    inner~plot~style /. style = { inner_plot_style /. style = {#1} } ,
+    inner_plot_style /. style = {} ,
+    inner~radius /. initial = 2 ,
+    legend /. initial = {} ,
+    legend~columns /. initial = 1 ,
+    legend~entry /. initial = {} ,
+    legend~only /. code = \bool_set:Nn \l__wheelchart_legend_only_bool { \cs:w c_#1_bool \cs_end: } ,
+    legend~only /. default = true ,
+    legend~only = false ,
+    legend~row /. code =
+      {
+        \bool_set_true:N \l__wheelchart_legend_row_bool
+        \tl_set:Nn \l__wheelchart_legend_row_tl {#1}
+      } ,
+    lines /. initial = 0 ,
+    lines /. default = 1 ,
+    lines~angle~pos /. initial = 0.5 ,
+    lines~angle~shift /. initial = 0 ,
+    lines~ext /. initial = 0 ,
+    lines~ext /. default = 0.5 ,
+    lines~ext~bottom~dir /. code = { \int_set_eq:Nc \l__wheelchart_lines_ext_bottom_dir_int { c__wheelchart_lines_ext_dir_#1_int } } ,
+    lines~ext~bottom~dir = right ,
+    lines~ext~dir /. code =
+      {
+        \bool_set_true:N \l__wheelchart_lines_ext_dir_bool
+        \int_set_eq:Nc \l__wheelchart_lines_ext_dir_int { c__wheelchart_lines_ext_dir_#1_int }
+      } ,
+    lines~ext~dirsep /. initial = 0 ,
+    lines~ext~fixed /. default = true ,%this key is not set up with /.is choice or \bool_set:Nn
+    %so that for example \WCvarA can be used as value for this key
+    lines~ext~fixed /. initial = false ,
+    lines~ext~fixed~left /. initial =
+      {
+        \fp_eval:n
+          {
+            \l__wheelchart_lines_ext_dir_int *
+            (
+              \cs:w g__wheelchart_outer_radius_\WCcount _fp \cs_end: + \l__wheelchart_lines_sep_fp
+              + \l__wheelchart_lines_fp + \l__wheelchart_lines_ext_fp
+            )
+          }
+      } ,
+    lines~ext~fixed~right /. initial =
+      {
+        \fp_eval:n
+          {
+            \l__wheelchart_lines_ext_dir_int *
+            (
+              \cs:w g__wheelchart_outer_radius_\WCcount _fp \cs_end: + \l__wheelchart_lines_sep_fp
+              + \l__wheelchart_lines_fp + \l__wheelchart_lines_ext_fp
+            )
+          }
+      } ,
+    lines~ext~left~anchor /. initial = mid~east ,
+    lines~ext~right~anchor /. initial = mid~west ,
+    lines~ext~top~dir /. code = { \int_set_eq:Nc \l__wheelchart_lines_ext_top_dir_int { c__wheelchart_lines_ext_dir_#1_int } } ,
+    lines~ext~top~dir = right ,
+    lines~pos /. initial = 1 ,
+    lines~sep /. initial = 0.2 ,
+    lines~style /. style = { lines_style /. style = {#1} } ,
+    lines_style /. style = {} ,
+    middle /. initial = {} ,
+    middle~fill /. style =
+      {
+        bool_set_true = \l__wheelchart_middle_fill_bool ,
+        middle_fill /. style = {#1}
+      } ,
+    middle_fill /. style = {} ,
+    middle~style /. style = { middle_style /. style = {#1} } ,
+    middle_style /. style = {} ,
+    name /. code = { \tl_gset:Ne \g__wheelchart_name_tl {#1} } ,
+    name = wheelchart@name ,
+    outer~plot /. style =
+      {
+        bool_set_true = \l__wheelchart_plot_bool ,
+        / utils / exec = { \cs_set:Npn \__wheelchart_outer_plot:nn ##1##2 {#1} } ,
+        slices~outer =
+          {
+            -- plot
+            [
+              domain =
+                \fp_use:c { g__wheelchart_slice_outer_start_angle_\WCcount _fp }
+                \c_colon_str
+                \fp_use:c { g__wheelchart_slice_outer_end_angle_\WCcount _fp } ,
+              samples = \fp_use:c { g__wheelchart_samples_\WCcount _fp } ,
+              variable = \l__wheelchart_outer_plot_variable_tl ,
+              / wheelchart / outer_plot_style
+            ]
+            (
+              \__wheelchart_outer_plot:nn
+                { \l__wheelchart_outer_plot_variable_tl }
+                { \fp_use:c { g__wheelchart_outer_radius_\WCcount _fp } }
+            )
+          }
+      } ,
+    outer~plot~style /. style = { outer_plot_style /. style = {#1} } ,
+    outer_plot_style /. style = {} ,
+    outer~radius /. initial = 3 ,
+    perc~precision /. initial = 0 ,
+    pie /. code = \bool_set:Nn \l__wheelchart_pie_bool { \cs:w c_#1_bool \cs_end: } ,
+    pie /. default = true ,
+    pie = false ,
+    plot /. style =
+      {
+        inner~plot = {#1} ,
+        outer~plot = {#1}
+      } ,
+    plot~style /. style =
+      {
+        inner~plot~style = {#1} ,
+        outer~plot~style = {#1}
+      } ,
+    radius /. style~2~args =
+      {
+        inner~radius = {#1} ,
+        outer~radius = {#2}
+      } ,
+    samples /. initial = 25 ,%the same number as /tikz/samples
+    separator~columns /. initial = / ,
+    separator~rows /. initial = { , } ,
+    slice_final /. style = { slice_final_style /. style = {#1} } ,
+    slice_final_style /. style = {} ,
+    slices /. code =
+      {
+        \bool_set_true:N \l__wheelchart_slices_bool
+        \tl_set:Nn \l__wheelchart_slices_tl {#1}
+      } ,
+    slices~angle~pos /. initial = 0.5 ,
+    slices~angle~shift /. initial = 0 ,
+    slices~arc /. style~2~args =
+      {
+        slices~start~arc = { - (#1) } {#2} ,
+        slices~end~arc = {#1} {#2}
+      } ,
+    slices~arc~inner~end /. is~choice ,
+    slices~arc~inner~end / false /. style = {} ,
+    slices~arc~inner~end / false /. value~forbidden ,
+    slices~arc~inner~end / true /. style =
+      { slices~arc~match = { inner } { 1 } { -1 } { 1 } { inner~end } { inner~start } { outer~end } } ,
+    slices~arc~inner~end / true /. value~forbidden ,
+    slices~arc~inner~end /. initial = false ,
+    slices~arc~inner~end /. default = true ,
+    slices~arc~inner~end~start /. is~choice ,
+    slices~arc~inner~end~start / false /. style = {} ,
+    slices~arc~inner~end~start / false /. value~forbidden ,
+    slices~arc~inner~end~start / true /. style =
+      { slices~arc~match = { inner } { 1 } { 1 } { 1 } { inner~end } { inner~start } { outer~end } } ,
+    slices~arc~inner~end~start / true /. value~forbidden ,
+    slices~arc~inner~end~start /. initial = false ,
+    slices~arc~inner~end~start /. default = true ,
+    slices~arc~inner~start /. is~choice ,
+    slices~arc~inner~start / false /. style = {} ,
+    slices~arc~inner~start / false /. value~forbidden ,
+    slices~arc~inner~start / true /. style =
+      { slices~arc~match = { inner } { 1 } { -1 } { -1 } { inner~start } { inner~end } { outer~start } } ,
+    slices~arc~inner~start / true /. value~forbidden ,
+    slices~arc~inner~start /. initial = false ,
+    slices~arc~inner~start /. default = true ,
+    slices~arc~inner~start~end /. is~choice ,
+    slices~arc~inner~start~end / false /. style = {} ,
+    slices~arc~inner~start~end / false /. value~forbidden ,
+    slices~arc~inner~start~end / true /. style =
+      { slices~arc~match = { inner } { -1 } { -1 } { -1 } { inner~start } { inner~end } { outer~start } } ,
+    slices~arc~inner~start~end / true /. value~forbidden ,
+    slices~arc~inner~start~end /. initial = false ,
+    slices~arc~inner~start~end /. default = true ,
+    slices~arc~match /. style~n~args = { 7 }
+      {
+        slices~end~arc = { (#2) * tan ( \__wheelchart_diff_atan:nnnn {#7} {#6} {#5} {#6} / 2 ) } { 0 } ,
+        slices~start~arc = { (#3) * tan ( \__wheelchart_diff_atan:nnnn {#7} {#6} {#5} {#6} / 2 ) } { 0 } ,
+        slices~#1~arc = { (#4) * tan ( \__wheelchart_diff_atan:nnnn {#5} {#7} {#6} {#7} / 2 ) } { 0 }
+      } ,
+    slices~arc~outer~end /. is~choice ,
+    slices~arc~outer~end / false /. style = {} ,
+    slices~arc~outer~end / false /. value~forbidden ,
+    slices~arc~outer~end / true /. style =
+      { slices~arc~match = { outer } { -1 } { 1 } { -1 } { outer~end } { outer~start } { inner~end } } ,
+    slices~arc~outer~end / true /. value~forbidden ,
+    slices~arc~outer~end /. initial = false ,
+    slices~arc~outer~end /. default = true ,
+    slices~arc~outer~end~start /. is~choice ,
+    slices~arc~outer~end~start / false /. style = {} ,
+    slices~arc~outer~end~start / false /. value~forbidden ,
+    slices~arc~outer~end~start / true /. style =
+      { slices~arc~match = { outer } { -1 } { -1 } { -1 } { outer~end } { outer~start } { inner~end } } ,
+    slices~arc~outer~end~start / true /. value~forbidden ,
+    slices~arc~outer~end~start /. initial = false ,
+    slices~arc~outer~end~start /. default = true ,
+    slices~arc~outer~start /. is~choice ,
+    slices~arc~outer~start / false /. style = {} ,
+    slices~arc~outer~start / false /. value~forbidden ,
+    slices~arc~outer~start / true /. style =
+      { slices~arc~match = { outer } { -1 } { 1 } { 1 } { outer~start } { outer~end } { inner~start } } ,
+    slices~arc~outer~start / true /. value~forbidden ,
+    slices~arc~outer~start /. initial = false ,
+    slices~arc~outer~start /. default = true ,
+    slices~arc~outer~start~end /. is~choice ,
+    slices~arc~outer~start~end / false /. style = {} ,
+    slices~arc~outer~start~end / false /. value~forbidden ,
+    slices~arc~outer~start~end / true /. style =
+      { slices~arc~match = { outer } { 1 } { 1 } { 1 } { outer~start } { outer~end } { inner~start } } ,
+    slices~arc~outer~start~end / true /. value~forbidden ,
+    slices~arc~outer~start~end /. initial = false ,
+    slices~arc~outer~start~end /. default = true ,
+    slices~Arrow /. style =
+      {
+        slices~end =
+          {
+            -- ( \WCpoint { 1 } {#1} { 0.5 } { 0 } )
+            -- ( \WCpoint { 1 } { 0 } { 0 } { 0 } )
+          } ,
+        slices~start =
+          {
+            -- ( \WCpoint { 0 } {#1} { 0.5 } { 0 } )
+            -- cycle
+          }
+      } ,
+    slices~arrow /. style~2~args =
+      {
+        slices~start~arrow = { - (#1) } {#2} ,
+        slices~end~arrow = {#1} {#2}
+      } ,
+    slices~end /. initial = { -- ( g__wheelchart_slice_\WCcount _inner~end_coordinate ) } ,
+    slices~end~arc /. style~2~args =
+      {
+        slices~end =
+          {
+            \__wheelchart_slices_arc:nnnnnn
+              {#1}
+              {#2}
+              { outer~end }
+              { inner~end }
+              { -- ( g__wheelchart_slice_\WCcount _inner~end_coordinate ) }
+              {}
+          }
+      } ,
+    slices~end~arrow /. style~2~args =
+      {
+        slices~end =
+          {
+            \__wheelchart_slices_arrow:nnnnn
+              {#1}
+              {#2}
+              { outer~end }
+              { inner~end }
+              { -- ( g__wheelchart_slice_\WCcount _inner~end_coordinate ) }
+          }
+      } ,
+    slices~end~to /. style~2~args =
+      {
+        slices~end =
+          {
+            \__wheelchart_slices_to:nn {#2} {#1}
+            ( g__wheelchart_slice_\WCcount _inner~end_coordinate )
+          }
+      } ,
+    slices~inner /. initial =
+      {
+        \fp_compare:nNnT { \cs:w g__wheelchart_inner_radius_\WCcount _fp \cs_end: } > { 0 }
+          {
+            \fp_compare:nNnT
+              { \cs:w g__wheelchart_inner_gap_\WCcount _fp \cs_end: }
+              <
+              { \cs:w g__wheelchart_abs_half_angle_minus_new_angle_\WCcount _fp \cs_end: }
+              {
+                arc
+                  [
+                    start~angle = \fp_use:c { g__wheelchart_slice_inner_end_angle_\WCcount _fp } ,
+                    end~angle = \fp_use:c { g__wheelchart_slice_inner_start_angle_\WCcount _fp } ,
+                    radius = \fp_use:c { g__wheelchart_inner_radius_\WCcount _fp }
+                  ]
+              }
+          }
+      } ,
+    slices~inner~angle~reduce /. style =
+      {
+        slices~inner~end~angle~shift = { - (#1) } ,
+        slices~inner~start~angle~shift = {#1}
+      } ,
+    slices~inner~angle~shift /. style =
+      {
+        slices~inner~end~angle~shift = {#1} ,
+        slices~inner~start~angle~shift = {#1}
+      } ,
+    slices~inner~arc /. style~2~args =
+      {
+        slices~inner =
+          {
+            \__wheelchart_slices_arc:nnnnnn
+              {#1}
+              {#2}
+              { inner~end }
+              { inner~start }
+              { -- ( g__wheelchart_slice_\WCcount _inner~start_coordinate ) }
+              {}
+          }
+      } ,
+    slices~inner~arc~tangent /. is~choice ,
+    slices~inner~arc~tangent / false /. code = {} ,
+    slices~inner~arc~tangent / false /. value~forbidden ,
+    slices~inner~arc~tangent / true /. style =
+      {
+        slices~inner =
+          {
+            \__wheelchart_slices_arc:nnnnnn
+              { \__wheelchart_diff_atan:nnnn { outer~start } { inner~start } { outer~end } { inner~end } }
+              { 0 }
+              { inner~end }
+              { inner~start }
+              { -- ( g__wheelchart_slice_\WCcount _inner~start_coordinate ) }
+              {
+                \fp_compare:nNnTF { \l__wheelchart_slices_arc_A_fp } > { 359.99 }
+                  { \fp_set:Nn \l__wheelchart_slices_arc_A_fp { 1 } }
+                  { \fp_set:Nn \l__wheelchart_slices_arc_A_fp { tand ( 45 - \l__wheelchart_slices_arc_A_fp / 4 ) } }
+              }
+          }
+      } ,
+    slices~inner~arc~tangent / true /. value~forbidden ,
+    slices~inner~arc~tangent /. initial = false ,
+    slices~inner~arc~tangent /. default = true ,
+    slices~inner~arrow /. style~2~args =
+      {
+        slices~inner =
+          {
+            \__wheelchart_slices_arrow:nnnnn
+            {#1}
+            {#2}
+            { inner~end }
+            { inner~start }
+            { -- ( g__wheelchart_slice_\WCcount _inner~start_coordinate ) }
+          }
+      } ,
+    slices~inner~end~angle~shift /. initial = 0 ,
+    slices~inner~start~angle~shift /. initial = 0 ,
+    slices~inner~to /. style~2~args =
+      {
+        slices~inner =
+          {
+            \__wheelchart_slices_to:nn {#2} {#1}
+            ( g__wheelchart_slice_\WCcount _inner~start_coordinate )
+          }
+      } ,
+    slices~outer /. initial =
+      {
+        arc
+          [
+            start~angle = \fp_use:c { g__wheelchart_slice_outer_start_angle_\WCcount _fp } ,
+            end~angle = \fp_use:c { g__wheelchart_slice_outer_end_angle_\WCcount _fp } ,
+            radius = \fp_use:c { g__wheelchart_outer_radius_\WCcount _fp }
+          ]
+      } ,
+    slices~outer~angle~reduce /. style =
+      {
+        slices~outer~end~angle~shift = { - (#1) } ,
+        slices~outer~start~angle~shift = {#1}
+      } ,
+    slices~outer~angle~shift /. style =
+      {
+        slices~outer~end~angle~shift = {#1} ,
+        slices~outer~start~angle~shift = {#1}
+      } ,
+    slices~outer~arc /. style~2~args =
+      {
+        slices~outer =
+          {
+            \__wheelchart_slices_arc:nnnnnn
+              {#1}
+              {#2}
+              { outer~start }
+              { outer~end }
+              { -- ( g__wheelchart_slice_\WCcount _outer~end_coordinate ) }
+              {}
+          }
+      } ,
+    slices~outer~arc~tangent /. is~choice ,
+    slices~outer~arc~tangent / false /. code = {} ,
+    slices~outer~arc~tangent / false /. value~forbidden ,
+    slices~outer~arc~tangent / true /. style =
+      {
+        slices~outer =
+          {
+            \__wheelchart_slices_arc:nnnnnn
+              { \__wheelchart_diff_atan:nnnn { outer~start } { inner~start } { outer~end } { inner~end } }
+              { 0 }
+              { outer~start }
+              { outer~end }
+              { -- ( g__wheelchart_slice_\WCcount _outer~end_coordinate ) }
+              {
+                \fp_compare:nNnTF { \l__wheelchart_slices_arc_A_fp } > { 359.99 }
+                  { \fp_set:Nn \l__wheelchart_slices_arc_A_fp { 1 } }
+                  {
+                    \fp_compare:nNnTF { \l__wheelchart_slices_arc_A_fp } = { 180 }
+                      { \fp_set:Nn \l__wheelchart_slices_arc_A_fp { 0 } }
+                      { \fp_set:Nn \l__wheelchart_slices_arc_A_fp { cotd ( 45 - \l__wheelchart_slices_arc_A_fp / 4 ) } }
+                  }
+              }
+          }
+      } ,
+    slices~outer~arc~tangent / true /. value~forbidden ,
+    slices~outer~arc~tangent /. initial = false ,
+    slices~outer~arc~tangent /. default = true ,
+    slices~outer~arrow /. style~2~args =
+      {
+        slices~outer =
+          {
+            \__wheelchart_slices_arrow:nnnnn
+              {#1}
+              {#2}
+              { outer~start }
+              { outer~end }
+              { -- ( g__wheelchart_slice_\WCcount _outer~end_coordinate ) }
+          }
+      } ,
+    slices~outer~end~angle~shift /. initial = 0 ,
+    slices~outer~start~angle~shift /. initial = 0 ,
+    slices~outer~to /. style~2~args =
+      {
+        slices~outer =
+          {
+            \__wheelchart_slices_to:nn {#1} {#2}
+            ( g__wheelchart_slice_\WCcount _outer~end_coordinate )
+          }
+      } ,
+    slices~pos /. initial = 0.5 ,
+    slices~scope /. style = { slices_scope /. style = {#1} } ,
+    slices_scope /. style = {} ,
+    slices~sep /. initial = 0 ,
+    slices~start /. initial = { -- cycle } ,
+    slices~start~arc /. style~2~args =
+      {
+        slices~start =
+          {
+            \__wheelchart_slices_arc:nnnnnn
+              {#1}
+              {#2}
+              { inner~start }
+              { outer~start }
+              { -- cycle }
+              {}
+          }
+      } ,
+    slices~start~arrow /. style~2~args =
+      {
+        slices~start =
+          {
+            \__wheelchart_slices_arrow:nnnnn
+              {#1}
+              {#2}
+              { inner~start }
+              { outer~start }
+              { -- cycle }
+          }
+      } ,
+    slices~start~to /. style~2~args = { slices~start = { \__wheelchart_slices_to:nn {#1} {#2} cycle } } ,
+    slices~style /. style = { slices_style /. style = {#1} } ,
+    slices_style /. style = {} ,
+    slices~style = { \WCvarB } ,
+    slices~to /. style~2~args =
+      {
+        slices~end~to = {#1} {#2} ,
+        slices~start~to = { - (#1) } { - (#2) }
+      } ,
+    start~angle /. initial = 90 ,
+    start~half /. style =
+      {
+        start~angle =
+          {
+            (#1) -
+            \fp_eval:n
+              {
+                \l__wheelchart_counter_or_clockwise_fp * \cs:w g__wheelchart_value_1_fp \cs_end: * 0.5
+                * ( \l__wheelchart_total_angle_fp / \WCtotalnum )
+              }
+          }
+      } ,
+    start~half /. default = 90 ,
+    title /. initial = {} ,
+    title~left /. initial = {} ,
+    title~left~sep /. initial = 0.5 ,
+    title~left~style /. style = { title~left_style /. style = {#1} } ,
+    title~left_style /. style = {} ,
+    title~sep /. initial = 0.5 ,
+    title~style /. style = { title_style /. style = {#1} } ,
+    title_style /. style = {} ,
+    total~angle /. initial = 360 ,
+    total~count /. code =
+      {
+        \tl_set:Nn \l__wheelchart_type_tl { totalcount }
+        \pgfmathparse {#1}
+        \fp_set:Nn \l__wheelchart_total_count_fp { \pgfmathresult }
+      } ,
+    triangle~proportional~area /. style~2~args =
+      {
+        domain /. expanded = 0 \c_colon_str 1 ,
+        plot = { { (##2) * sqrt ( 1 - (##1) ) * (#1) / 2 } , { - sqrt ( 1 - (##1) ) * (#2) } } ,
+        radius = { -1 } { 1 } ,
+        samples = 2 ,
+        wheel~data~pos = 0.5
+      } ,
+    triangle~proportional~height /. style~2~args =
+      {
+        domain /. expanded = 0 \c_colon_str 1 ,
+        plot = { { (##2) * ( 1 - (##1) ) * (#1) / 2 } , { ( (##1) - 1 ) * (#2) } } ,
+        radius = { -1 } { 1 } ,
+        samples = 2 ,
+        wheel~data~pos = 0.5
+      } ,
+    value /. initial = { \WCvarA } ,
+    WC_list /. code~2~args =
+      {
+        \cs_set:cpn {#1}
+          { \use:e { \clist_item:nn {#2} { \int_mod:nn { \WCcount - 1 } { \clist_count:n {#2} } + 1 } } }
+          %note the \use:e so that \WClist<name> also works when given as an argument to pgfmath
+          %if the list contains a macro, for example
+          %\begin{tikzpicture}
+          %\def\n{1}
+          %\wheelchart[
+          %  value=\WClistA,
+          %  WClistA=\n
+          %]{\exampleforthismanual}
+          %\end{tikzpicture}
+          %https://tex.stackexchange.com/questions/671298/clist-item-and-pgfmathsetmacro-causing-an-error
+      } ,
+    wheel~data /. initial = {} ,
+    wheel~data~angle~pos /. initial = 0.5 ,
+    wheel~data~angle~shift /. initial = 0 ,
+    wheel~data~pos /. initial = 0.66 ,
+    wheel~data~sep /. initial = 0 ,
+    wheel~data~style /. style = { wheel_data_style /. style = {#1} } ,
+    wheel_data_style /. style = {} ,
+    wheel~lines /. style =
+      {
+        bool_set_true = \l__wheelchart_wheel_lines_bool ,
+        wheel_lines /. style = {#1}
+      } ,
+    wheel_lines /. style = {} ,
+    xbar /. style~2~args =
+      {
+        domain /. expanded = 0 \c_colon_str {#1} ,
+        plot = { {##1} , {##2} } ,
+        radius = { 0 } {#2} ,
+        samples = 2 ,
+        wheel~data~pos = 0.5
+      } ,
+    ybar /. style~2~args =
+      {
+        domain /. expanded = 0 \c_colon_str {#2} ,
+        plot = { {##2} , {##1} } ,
+        radius = { 0 } {#1} ,
+        samples = 2 ,
+        wheel~data~pos = 0.5
+      } ,
+  }
+
+\pgfkeys
+  {
+    / wheelchart /. unknown /. code =
+      {
+        \tl_set:Ne \l__wheelchart_key_name_tl { \pgfkeyscurrentname }%it is necessary to define \l__wheelchart_key_name_tl
+        %because \pgfkeyscurrentname will be overwritten by / errors / unknown~key /. expanded
+        \regex_match:NVTF \c__wheelchart_braces_regex \l__wheelchart_key_name_tl
+          {
+            \tl_set:Ne \l__wheelchart_key_range_tl { \pgfkeyscurrentname }
+            \regex_replace_all:NnN \c__wheelchart_braces_regex {} \l__wheelchart_key_name_tl
+            \regex_replace_all:NnN \c__wheelchart_key_braces_regex { \1 } \l__wheelchart_key_range_tl
+            \str_if_eq:eeTF { \l__wheelchart_key_range_tl } { list }
+              {
+                \pgfkeys { / wheelchart , WC_list = { l__wheelchart_list_\l__wheelchart_key_name_tl } {#1} }
+                \pgfkeys
+                  {
+                    / wheelchart ,
+                    \l__wheelchart_key_name_tl /. expand~once = { \cs:w l__wheelchart_list_\l__wheelchart_key_name_tl \cs_end: }
+                  }
+              }
+              {
+                \clist_gclear:N \g__wheelchart_slice_range_for_loop_clist
+                \foreach \l__wheelchart_slice_range_index_tl [ parse = true ] in \l__wheelchart_key_range_tl
+                  {
+                    \clist_gput_right:Ne \g__wheelchart_slice_range_for_loop_clist
+                      { \fp_eval:n { \l__wheelchart_slice_range_index_tl } }
+                  }
+                \clist_map_inline:Nn \g__wheelchart_slice_range_for_loop_clist
+                  {
+                    \clist_if_in:NnF \l__wheelchart_slice_range_local_clist {##1}
+                      { \clist_put_right:Nn \l__wheelchart_slice_range_local_clist {##1} }
+                    \clist_if_exist:cF { l__wheelchart_slice_##1_keys_clist }
+                      { \clist_new:c { l__wheelchart_slice_##1_keys_clist } }
+                    \str_if_eq:eeTF { \l__wheelchart_key_name_tl } { slice }
+                      { \clist_put_right:cn { l__wheelchart_slice_##1_keys_clist } {#1} }
+                      {
+                        \clist_put_right:ce { l__wheelchart_slice_##1_keys_clist }
+                          { \exp_not:V \l__wheelchart_key_name_tl \exp_not:n { = {#1} } }
+                      }
+                  }
+              }
+          }
+          {
+            \str_if_eq:eeTF { \str_range:Nnn \l__wheelchart_key_name_tl { 1 } { 6 } } { WClist }
+              { \pgfkeys { / wheelchart , WC_list = { \l__wheelchart_key_name_tl } {#1} } }
+              { \pgfkeys { / errors / unknown~key /. expanded = { \l__wheelchart_key_name_tl } {#1} } }
+          }
+      }
+  }%this gives an error message if a key of the form <unknown key for wheelchart>{<range>} is given
+
+%%> \subsection{Additional commands}
+
+\NewExpandableDocumentCommand \WCangle { O { \WCcount } m m m m }
+  { \__wheelchart_def_angle_plot_false:nnnnn { \__wheelchart_mod:n {#1} } {#2} {#3} {#4} {#5} }
+
+\NewExpandableDocumentCommand \WCcoordinate { O { \WCcount } m }
+  { g__wheelchart_slice_\__wheelchart_mod:n {#1}_#2_coordinate }
+
+\NewExpandableDocumentCommand \WCpoint { O { \WCcount } m m m m }
+  { \WCangle [#1] {#2} {#3} {#4} {#5} \c_colon_str \WCradius [#1] {#4} {#5} }
+
+\NewExpandableDocumentCommand \WCradius { O { \WCcount } m m }
+  { \__wheelchart_def_radius:nnn { \__wheelchart_mod:n {#1} } {#2} {#3} }
+
+%%> \subsection{The command \textbackslash wheelchart}
+
+\NewDocumentCommand \wheelchart { O {} m }
+  {
+    {%note the double braces {{...}} so that the contents is in a group and so that & can be used in pgfmath in a tabular
+      \pgfkeys { / wheelchart , #1 }
+      \IfPackageLoadedTF { siunitx }
+        { \cs_set:Npn \WCperc { \qty { \WCpercentagerounded } { \percent } } }
+        { \cs_set:Npn \WCperc { \WCpercentagerounded \, \% } }%the definition of \WCperc is placed inside the command \wheelchart
+        %so that \WCperc is not defined outside this command
+      \bool_if:NTF \l__wheelchart_legend_only_bool
+        {
+          \__wheelchart_initial:n {#2}
+          \bool_if:NT \l__wheelchart_legend_row_bool
+            { \__wheelchart_def_WClegend: }
+          \pgfkeysvalueof { / wheelchart / legend }
+        }
+        {
+          \fp_set:Nn \l__wheelchart_coord_determinant_fp { \pgf@yy * \pgf@xx - \pgf@yx * \pgf@xy }
+          \__wheelchart_def_fp:nn { total_angle } { total~angle }
+          \__wheelchart_initial:n {#2}
+          \tl_gset:Ne \g__wheelchart_totalcount_tl { \WCtotalcount }%\WCtotalcount is local and \g__wheelchart_totalcount_tl is global
+          %because it is used in commands such as \WCangle thus must be available after the command \wheelchart
+          \__wheelchart_def_fp:nn { start_angle } { start~angle }
+          \fp_gset_eq:NN \g__wheelchart_angle_fp \l__wheelchart_start_angle_fp
+          \__wheelchart_for_loop_initial:n
+            {
+              \__wheelchart_def_slice_keys:n
+                {
+                  \cs_set_eq:Nc \WCpercentage { l__wheelchart_WCpercentage_\WCcount }
+                  \cs_set_eq:Nc \WCpercentagerounded { l__wheelchart_WCpercentagerounded_\WCcount }
+                  \fp_compare:nNnTF { \WCcount } = { \WCtotalcount }
+                    {
+                      \fp_gset:Nn \g__wheelchart_new_angle_fp
+                        { \l__wheelchart_start_angle_fp + \l__wheelchart_counter_or_clockwise_fp * \l__wheelchart_total_angle_fp }
+                    }
+                    {
+                      \fp_gset:Nn \g__wheelchart_new_angle_fp
+                        {
+                          \g__wheelchart_angle_fp +
+                            (
+                              \l__wheelchart_counter_or_clockwise_fp * \cs:w g__wheelchart_value_\WCcount _fp \cs_end:
+                              * ( \l__wheelchart_total_angle_fp / \WCtotalnum )
+                            )
+                        }
+                    }
+                  \__wheelchart_gdef_count_fp:nn { data_angle_pos } { data~angle~pos }
+                  \__wheelchart_def_fp:nn { gap } { gap }
+                  \__wheelchart_def_fp:nn { gap_max_angle } { gap~max~angle }
+                  \__wheelchart_def_fp:nn { gap_polar } { gap~polar }
+                  \__wheelchart_def_fp:nn { gap_radius } { gap~radius }
+                  \__wheelchart_gdef_count_fp:nn { samples } { samples }
+                  \__wheelchart_def_fp:nn { slices_inner_start_angle_shift } { slices~inner~start~angle~shift }
+                  \__wheelchart_def_fp:nn { slices_inner_end_angle_shift } { slices~inner~end~angle~shift }
+                  \__wheelchart_def_fp:nn { slices_outer_end_angle_shift } { slices~outer~end~angle~shift }
+                  \__wheelchart_def_fp:nn { slices_outer_start_angle_shift } { slices~outer~start~angle~shift }
+                  \__wheelchart_def_outer_radius:
+                  \__wheelchart_def_inner_radius:
+                  \fp_gzero_new:c { g__wheelchart_inner_radius_\WCcount _fp }
+                  \fp_gset_eq:cN { g__wheelchart_inner_radius_\WCcount _fp } \l__wheelchart_inner_radius_fp
+                  \fp_gzero_new:c { g__wheelchart_outer_radius_\WCcount _fp }
+                  \fp_gset_eq:cN { g__wheelchart_outer_radius_\WCcount _fp } \l__wheelchart_outer_radius_fp
+                  \fp_gzero_new:c { g__wheelchart_abs_half_angle_minus_new_angle_\WCcount _fp }
+                  \fp_gset:cn { g__wheelchart_abs_half_angle_minus_new_angle_\WCcount _fp }
+                    { abs ( \g__wheelchart_angle_fp - \g__wheelchart_new_angle_fp ) / 2 }
+                  \fp_set:Nn \l__wheelchart_abs_half_angle_minus_new_angle_minus_gap_polar_fp
+                    { \cs:w g__wheelchart_abs_half_angle_minus_new_angle_\WCcount _fp \cs_end: - \l__wheelchart_gap_polar_fp }
+                  \fp_gzero_new:c { g__wheelchart_outer_gap_\WCcount _fp }
+                  \fp_gzero_new:c { g__wheelchart_inner_gap_\WCcount _fp }
+                  \bool_if:NTF \l__wheelchart_plot_bool
+                    {
+                      \fp_gset_eq:cN { g__wheelchart_outer_gap_\WCcount _fp } \l__wheelchart_gap_polar_fp
+                      \fp_gset_eq:cN { g__wheelchart_inner_gap_\WCcount _fp } \l__wheelchart_gap_polar_fp
+                    }
+                    {
+                      \fp_set:Nn \l__wheelchart_gap_max_angle_def_fp
+                        {
+                          \cs:w g__wheelchart_inner_radius_\WCcount _fp \cs_end: > 0
+                          ?
+                          90
+                          :
+                          (
+                            sind ( \l__wheelchart_abs_half_angle_minus_new_angle_minus_gap_polar_fp ) < 0.001
+                            ?
+                            (
+                              90 < \l__wheelchart_gap_max_angle_fp && \l__wheelchart_gap_max_angle_fp < 180
+                              ?
+                              \l__wheelchart_gap_max_angle_fp
+                              :
+                              90
+                            )
+                            :
+                            (
+                              \l__wheelchart_gap_max_angle_fp < 90 || \l__wheelchart_gap_max_angle_fp > 180
+                              ?
+                              180
+                              :
+                              \l__wheelchart_gap_max_angle_fp
+                            )
+                          )
+                        }
+                      \__wheelchart_def_gap:nn { outer } { \cs:w g__wheelchart_outer_radius_\WCcount _fp \cs_end: }
+                      \__wheelchart_def_gap:nn { inner } { \cs:w g__wheelchart_inner_radius_\WCcount _fp \cs_end: }
+                      \fp_compare:nNnT { \l__wheelchart_abs_half_angle_minus_new_angle_minus_gap_polar_fp } > { 0.01 }
+                        {
+                          \fp_gset:cn { g__wheelchart_inner_radius_\WCcount _fp }
+                            {
+                              max
+                                (
+                                  \l__wheelchart_gap_fp
+                                  / sind
+                                    (
+                                      min
+                                        (
+                                          \l__wheelchart_abs_half_angle_minus_new_angle_minus_gap_polar_fp ,
+                                          \l__wheelchart_gap_max_angle_def_fp
+                                        )
+                                    )
+                                  ,
+                                  \cs:w g__wheelchart_inner_radius_\WCcount _fp \cs_end:
+                                )
+                            }
+                        }
+                    }
+                  \__wheelchart_def_slice_angle:nnnn { inner } { end } { new_ } { -1 }
+                  \__wheelchart_def_slice_angle:nnnn { inner } { start } {} { 1 }
+                  \__wheelchart_def_slice_angle:nnnn { outer } { end } { new_ } { -1 }
+                  \__wheelchart_def_slice_angle:nnnn { outer } { start } {} { 1 }
+                  \__wheelchart_def_angle:nnnn { 0.5 } { 0 } { 0.5 } { 0 }
+                  \cs_set:Npe \WCmidangle { \pgfmathresult }
+                  \__wheelchart_gdef_count_fp:nn { data_angle_shift } { data~angle~shift }
+                  \__wheelchart_gdef_count_fp:nn { data_pos } { data~pos }
+                  \__wheelchart_gdef_count_fp:nn { data_sep } { data~sep }
+                  \__wheelchart_def_angle:nnnn
+                    { \cs:w g__wheelchart_data_angle_pos_\WCcount _fp \cs_end: }
+                    { \cs:w g__wheelchart_data_angle_shift_\WCcount _fp \cs_end: }
+                    { \cs:w g__wheelchart_data_pos_\WCcount _fp \cs_end: }
+                    { \cs:w g__wheelchart_data_sep_\WCcount _fp \cs_end: }
+                  \cs_set:Npe \WCdataangle { \pgfmathresult }
+                  \__wheelchart_gdef_count_fp:nn { explode } { explode }
+                  \pgfkeysvalueof { / wheelchart / for~loop~start }%this must be placed after the definition of macros such as
+                  %\WCpercentage so that these macros can be used in the key for loop start
+                  \int_compare:nNnT { \WCcount } = { 1 }
+                    {
+                      \begin { scope }
+                        [
+                          shift = { ( \WCmidangle \c_colon_str \fp_use:c { g__wheelchart_explode_\WCcount _fp } ) } ,
+                          / wheelchart / slices_scope
+                        ]
+                        \__wheelchart_def_orientation:
+                      \end { scope }
+                    }
+                  \fp_gzero_new:c { g__wheelchart_WCdataangle_\WCcount _fp }
+                  \fp_gset:cn { g__wheelchart_WCdataangle_\WCcount _fp } { \WCdataangle }
+                  \fp_gzero_new:c { g__wheelchart_WCmidangle_\WCcount _fp }
+                  \fp_gset:cn { g__wheelchart_WCmidangle_\WCcount _fp } { \WCmidangle }
+                  \fp_gset_eq:NN \g__wheelchart_angle_fp \g__wheelchart_new_angle_fp
+                  \pgfkeysvalueof { / wheelchart / for~loop~end }
+                }
+            }
+          \begin { scope } [ shift /. expanded = { \pgfkeysvalueof { / wheelchart / at } } ]
+            \begin { scope } [ local~bounding~box /. expanded = \g__wheelchart_name_tl ]
+              \bool_if:NT \l__wheelchart_middle_fill_bool
+                {
+                  \bool_if:NF \l__wheelchart_plot_bool
+                    {
+                      \__wheelchart_def_inner_radius:
+                      \fill [ / wheelchart / middle_fill ]
+                        \fp_compare:nNnTF { \l__wheelchart_total_angle_fp } = { 360 }
+                          { ( 0 , 0 ) circle [ radius = \fp_use:N \l__wheelchart_inner_radius_fp ] }
+                          {
+                            ( 0 , 0 )
+                            -- ( \fp_use:N \l__wheelchart_start_angle_fp \c_colon_str \fp_use:N \l__wheelchart_inner_radius_fp )
+                            arc
+                              [
+                                start~angle = \fp_use:N \l__wheelchart_start_angle_fp ,
+                                end~angle =
+                                  \fp_eval:n
+                                    {
+                                      \l__wheelchart_start_angle_fp
+                                      + \l__wheelchart_counter_or_clockwise_fp * \l__wheelchart_total_angle_fp
+                                    }
+                                  ,
+                                radius = \fp_use:N \l__wheelchart_inner_radius_fp
+                              ]
+                            -- cycle
+                          }
+                        ;
+                    }
+                }
+              \bool_if:NTF \l__wheelchart_discrete_bool
+                { \__wheelchart_discrete_algorithm: }
+                {
+                  \__wheelchart_for_loop:n
+                    {
+                      \pgfkeysvalueof { / wheelchart / before~slices }
+                      \bool_if:NTF \l__wheelchart_slices_bool
+                        {
+                          \__wheelchart_def_fp:nn { slices_angle_pos } { slices~angle~pos }
+                          \__wheelchart_def_fp:nn { slices_angle_shift } { slices~angle~shift }
+                          \__wheelchart_def_fp:nn { slices_pos } { slices~pos }
+                          \__wheelchart_def_fp:nn { slices_sep } { slices~sep }
+                          \__wheelchart_def_angle:nnnn
+                            { \l__wheelchart_slices_angle_pos_fp }
+                            { \l__wheelchart_slices_angle_shift_fp }
+                            { \l__wheelchart_slices_pos_fp }
+                            { \l__wheelchart_slices_sep_fp }
+                          \fp_set:Nn \l__wheelchart_slices_angle_fp { \pgfmathresult }
+                          \begin { scope }
+                            [
+                              shift /. expanded =
+                                {
+                                  \cs:w __wheelchart_point_plot_\bool_to_str:N \l__wheelchart_plot_bool :nnnnn \cs_end:
+                                    { \WCcount }
+                                    { \l__wheelchart_slices_angle_pos_fp }
+                                    { \l__wheelchart_slices_angle_shift_fp }
+                                    { \l__wheelchart_slices_pos_fp }
+                                    { \l__wheelchart_slices_sep_fp }
+                                } ,
+                              rotate = \fp_use:N \l__wheelchart_slices_angle_fp
+                            ]
+                            \fill [ / wheelchart / slices_style ] \l__wheelchart_slices_tl
+                          \end { scope }
+                        }
+                        {
+                          %We do not use the let operation in the path \fill[/wheelchart/slices_style] ... because then
+                          %\n, \p, \x and \y can not be used as macro names inside the argument of a key which is applied
+                          %on this path such as the key slices inner arc.
+                          \__wheelchart_def_coord:nnnn { inner~end } { inner } { end }
+                            { \fp_use:c { g__wheelchart_slice_inner_end_angle_\WCcount _fp } }
+                          \__wheelchart_def_coord:nnnn { inner~start } { inner } { start }
+                            { \fp_use:c { g__wheelchart_slice_inner_start_angle_\WCcount _fp } }
+                          \__wheelchart_def_coord:nnnn { outer~end } { outer } { end }
+                            { \fp_use:c { g__wheelchart_slice_outer_end_angle_\WCcount _fp } }
+                          \__wheelchart_def_coord:nnnn { outer~start } { outer } { start }
+                            { \fp_use:c { g__wheelchart_slice_outer_start_angle_\WCcount _fp } }
+                          \fill [ / wheelchart / slices_style ]
+                            ( g__wheelchart_slice_\WCcount _outer~start_coordinate )
+                            \pgfkeysvalueof { / wheelchart / slices~outer }
+                            \pgfkeysvalueof { / wheelchart / slices~end }
+                            \pgfkeysvalueof { / wheelchart / slices~inner }
+                            \pgfkeysvalueof { / wheelchart / slices~start }
+                            ;
+                        }
+                      \pgfkeysvalueof { / wheelchart / after~slices }
+                    }
+                }
+              \__wheelchart_for_loop:n
+                {
+                  \bool_if:NT \l__wheelchart_wheel_lines_bool
+                  %this is placed inside \__wheelchart_for_loop:n so that wheel lines can be applied for specific slices
+                    {
+                      \int_step_inline:nnn { 0 } { \fp_eval:n { round ( \cs:w g__wheelchart_value_\WCcount _fp \cs_end: ) } }
+                      %note the \fp_eval:n { round ( ... ) } to avoid the messages Missing character: There is no ... in font nullfont!
+                        {
+                          \bool_if:NTF \l__wheelchart_plot_bool
+                            {
+                              \draw [ / wheelchart / wheel_lines ]
+                                (
+                                  \__wheelchart_inner_plot:nn
+                                    { \__wheelchart_wheel_lines_aux:nn {####1} { inner } }
+                                    { \fp_use:c { g__wheelchart_inner_radius_\WCcount _fp } }
+                                )
+                                --
+                                (
+                                  \__wheelchart_outer_plot:nn
+                                    { \__wheelchart_wheel_lines_aux:nn {####1} { outer } }
+                                    { \fp_use:c { g__wheelchart_outer_radius_\WCcount _fp } }
+                                )
+                                ;
+                            }
+                            {
+                              \draw [ / wheelchart / wheel_lines ]
+                                (
+                                  \__wheelchart_wheel_lines_aux:nn {####1} { inner }
+                                  \c_colon_str
+                                  \fp_use:c { g__wheelchart_inner_radius_\WCcount _fp }
+                                )
+                                --
+                                (
+                                  \__wheelchart_wheel_lines_aux:nn {####1} { outer }
+                                  \c_colon_str
+                                  \fp_use:c { g__wheelchart_outer_radius_\WCcount _fp }
+                                )
+                                ;
+                            }
+                        }
+                    }
+                }
+              \bool_if:NT \l__wheelchart_contour_bool
+                {
+                  \bool_if:NF \l__wheelchart_plot_bool
+                    {
+                      \__wheelchart_def_outer_radius:
+                      \__wheelchart_def_inner_radius:
+                      \fp_compare:nNnTF { \l__wheelchart_total_angle_fp } = { 360 }
+                        {
+                          \draw [ / wheelchart / contour_style ]
+                            ( 0 , 0 ) circle [ radius = \fp_use:N \l__wheelchart_inner_radius_fp ] ;
+                          \draw [ / wheelchart / contour_style ]
+                            ( 0 , 0 ) circle [ radius = \fp_use:N \l__wheelchart_outer_radius_fp ] ;
+                        }
+                        {
+                          \draw [ / wheelchart / contour_style ]
+                            ( \fp_use:N \l__wheelchart_start_angle_fp \c_colon_str \fp_use:N \l__wheelchart_inner_radius_fp )
+                            arc
+                              [
+                                start~angle = \fp_use:N \l__wheelchart_start_angle_fp ,
+                                end~angle =
+                                  \fp_eval:n
+                                    {
+                                      \l__wheelchart_start_angle_fp
+                                      + \l__wheelchart_counter_or_clockwise_fp * \l__wheelchart_total_angle_fp
+                                    }
+                                  ,
+                                radius = \fp_use:N \l__wheelchart_inner_radius_fp
+                              ]
+                            --
+                              (
+                                \fp_eval:n
+                                  {
+                                    \l__wheelchart_start_angle_fp
+                                    + \l__wheelchart_counter_or_clockwise_fp * \l__wheelchart_total_angle_fp
+                                  }
+                                \c_colon_str
+                                \fp_use:N \l__wheelchart_outer_radius_fp
+                              )
+                            arc
+                              [
+                                start~angle =
+                                  \fp_eval:n
+                                    {
+                                      \l__wheelchart_start_angle_fp
+                                      + \l__wheelchart_counter_or_clockwise_fp * \l__wheelchart_total_angle_fp
+                                    }
+                                  ,
+                                end~angle = \fp_use:N \l__wheelchart_start_angle_fp ,
+                                radius = \fp_use:N \l__wheelchart_outer_radius_fp
+                              ]
+                            -- cycle ;
+                        }
+                    }
+                }
+              \__wheelchart_for_loop:n
+                {
+                  \__wheelchart_def_fp:nn { lines } { lines }
+                  \__wheelchart_def_fp:nn { lines_angle_pos } { lines~angle~pos }
+                  \__wheelchart_def_fp:nn { lines_angle_shift } { lines~angle~shift }
+                  \__wheelchart_def_fp:nn { lines_ext } { lines~ext }
+                  \__wheelchart_def_fp:nn { lines_pos } { lines~pos }
+                  \__wheelchart_def_fp:nn { lines_sep } { lines~sep }
+                  \fp_compare:nNnF { \l__wheelchart_lines_ext_fp } = { 0 }
+                    {
+                      \bool_if:NF \l__wheelchart_lines_ext_dir_bool
+                        {
+                          \__wheelchart_def_fp:nn { lines_ext_dirsep } { lines~ext~dirsep }
+                          \int_set:Nn \l__wheelchart_lines_ext_dir_int
+                            {
+                              \fp_eval:n
+                                {
+                                  (
+                                    \WCdataangle < 90 - \l__wheelchart_lines_ext_dirsep_fp
+                                    ?
+                                    1
+                                    :
+                                    (
+                                      \WCdataangle <= 90 + \l__wheelchart_lines_ext_dirsep_fp
+                                      ?
+                                      \l__wheelchart_lines_ext_top_dir_int
+                                      :
+                                      (
+                                        \WCdataangle < 270 - \l__wheelchart_lines_ext_dirsep_fp
+                                        ?
+                                        -1
+                                        :
+                                        (
+                                          \WCdataangle <= 270 + \l__wheelchart_lines_ext_dirsep_fp
+                                          ?
+                                          \l__wheelchart_lines_ext_bottom_dir_int
+                                          :
+                                          1
+                                        )
+                                      )
+                                    )
+                                  )
+                                }
+                            }
+                        }
+                      \__wheelchart_def_fp:nn { lines_ext_fixed_left } { lines~ext~fixed~left }
+                      \__wheelchart_def_fp:nn { lines_ext_fixed_right } { lines~ext~fixed~right }
+                    }
+                  \fp_compare:nF { \l__wheelchart_lines_fp == 0 && \l__wheelchart_lines_ext_fp == 0 }
+                    {
+                      \draw [ / wheelchart / lines_style ] let \p { l__wheelchart_lines_1 } =
+                        \cs:w __wheelchart_point_plot_\bool_to_str:N \l__wheelchart_plot_bool :nnnnn \cs_end:
+                          { \WCcount }
+                          { \cs:w g__wheelchart_data_angle_pos_\WCcount _fp \cs_end: }
+                          { \cs:w g__wheelchart_data_angle_shift_\WCcount _fp \cs_end: }
+                          { \cs:w g__wheelchart_data_pos_\WCcount _fp \cs_end: }
+                          { \l__wheelchart_lines_sep_fp + \l__wheelchart_lines_fp }
+                        in
+                          \cs:w __wheelchart_point_plot_\bool_to_str:N \l__wheelchart_plot_bool :nnnnn \cs_end:
+                            { \WCcount }
+                            { \l__wheelchart_lines_angle_pos_fp }
+                            { \l__wheelchart_lines_angle_shift_fp }
+                            { \l__wheelchart_lines_pos_fp }
+                            { \l__wheelchart_lines_sep_fp }
+                          -- ( \p { l__wheelchart_lines_1 } )
+                      \fp_compare:nNnF { \l__wheelchart_lines_ext_fp } = { 0 }
+                        {
+                          \str_case:enF { \pgfkeysvalueof { / wheelchart / lines~ext~fixed } }
+                            {
+                              { true }
+                                {
+                                  --
+                                    (
+                                      {
+                                        \fp_eval:n
+                                          {
+                                            \l__wheelchart_lines_ext_dir_int == 1
+                                            ?
+                                            \l__wheelchart_lines_ext_fixed_right_fp
+                                            :
+                                            \l__wheelchart_lines_ext_fixed_left_fp
+                                          }
+                                      }
+                                      ,
+                                      \y { l__wheelchart_lines_1 }
+                                    )
+                                }
+                              { false }
+                                { --++ ( { \fp_eval:n { \l__wheelchart_lines_ext_dir_int * \l__wheelchart_lines_ext_fp } } , 0 ) }
+                            }
+                            {
+                              \pgfkeys
+                                {
+                                  / errors / boolean~expected /. expanded =
+                                    { lines~ext~fixed }
+                                    { \pgfkeysvalueof { / wheelchart / lines~ext~fixed } }
+                                }
+                            }
+                          coordinate
+                            [
+                              shift =
+                                {
+                                  (
+                                    {
+                                      \fp_eval:n
+                                        {
+                                          \l__wheelchart_lines_ext_dir_int * \cs:w g__wheelchart_data_sep_\WCcount _fp \cs_end:
+                                        }
+                                    } ,
+                                    0
+                                  )
+                                }
+                            ]
+                            ( g__wheelchart_data_coordinate )
+                        }
+                      ;
+                    }
+                  \__wheelchart_if_text:nnn { data } { o }
+                    {
+                      \fp_compare:nNnTF { \l__wheelchart_lines_ext_fp } = { 0 }
+                        {
+                          \__wheelchart_def_fp:nn { anchor_xsep } { anchor~xsep }
+                          \__wheelchart_def_fp:nn { anchor_ysep } { anchor~ysep }
+                          \pgfmathparse
+                            {
+                              ( \WCdataangle == 0 ? "west" \c_colon_str
+                              ( \WCdataangle == 90 ? "south" \c_colon_str
+                              ( \WCdataangle == 180 ? "east" \c_colon_str
+                              ( \WCdataangle == 270 ? "north" \c_colon_str
+                              ( \WCdataangle <= \fp_use:N \l__wheelchart_anchor_ysep_fp ? "west" \c_colon_str
+                              ( \WCdataangle < 90 - \fp_use:N \l__wheelchart_anchor_xsep_fp ? "south~west" \c_colon_str
+                              ( \WCdataangle <= 90 + \fp_use:N \l__wheelchart_anchor_xsep_fp ? "south" \c_colon_str
+                              ( \WCdataangle < 180 - \fp_use:N \l__wheelchart_anchor_ysep_fp ? "south~east" \c_colon_str
+                              ( \WCdataangle <= 180 + \fp_use:N \l__wheelchart_anchor_ysep_fp ? "east" \c_colon_str
+                              ( \WCdataangle < 270 - \fp_use:N \l__wheelchart_anchor_xsep_fp ? "north~east" \c_colon_str
+                              ( \WCdataangle <= 270 + \fp_use:N \l__wheelchart_anchor_xsep_fp ? "north" \c_colon_str
+                              ( \WCdataangle < 360 - \fp_use:N \l__wheelchart_anchor_ysep_fp ? "north~west" \c_colon_str
+                              "west"
+                              ))))))))))))
+                            }
+                          \tl_set:Ne \l__wheelchart_data_anchor_tl { \pgfmathresult }
+                          \coordinate
+                            [
+                              at =
+                                \cs:w __wheelchart_point_plot_\bool_to_str:N \l__wheelchart_plot_bool :nnnnn \cs_end:
+                                  { \WCcount }
+                                  { \cs:w g__wheelchart_data_angle_pos_\WCcount _fp \cs_end: }
+                                  { \cs:w g__wheelchart_data_angle_shift_\WCcount _fp \cs_end: }
+                                  { \cs:w g__wheelchart_data_pos_\WCcount _fp \cs_end: }
+                                  {
+                                    \cs:w g__wheelchart_data_sep_\WCcount _fp \cs_end: +
+                                    (
+                                      \l__wheelchart_lines_fp == 0
+                                      ?
+                                      0
+                                      :
+                                      \l__wheelchart_lines_sep_fp + \l__wheelchart_lines_fp
+                                    )
+                                  }
+                            ]
+                            ( g__wheelchart_data_coordinate ) ;
+                        }
+                        {
+                          \pgfmathparse { \int_use:N \l__wheelchart_lines_ext_dir_int == 1 ? "right" \c_colon_str "left" }
+                          \tl_set:Ne \l__wheelchart_data_anchor_tl
+                            { \pgfkeysvalueof { / wheelchart / lines~ext~\pgfmathresult \c_space_tl anchor } }
+                        }
+                      \node [ anchor = \l__wheelchart_data_anchor_tl , align = left , / wheelchart / data_style ]
+                        at ( g__wheelchart_data_coordinate )
+                        { \pgfkeysvalueof { / wheelchart / data } } ;%a separate \node and not at the end of the \draw with lines_style
+                        %so that the key lines style is not passed to this \node
+                    }
+                  \__wheelchart_def_fp:nn { arc_around_line } { arc~around~line }
+                  \__wheelchart_def_fp:nn { arc_data_angle_pos } { arc~data~angle~pos }
+                  \__wheelchart_def_fp:nn { arc_data_angle_shift } { arc~data~angle~shift }
+                  \__wheelchart_def_fp:nn { arc_data_dir } { arc~data~dir }
+                  %these are needed for arc data and arc
+                  \pgfinterruptpicture%
+                    \fp_gset:Nn \g__wheelchart_half_ex_over_one_cm_fp { 0.5 ex / 1 cm }%
+                  \endpgfinterruptpicture%
+                  \fp_gset:Nn \g__wheelchart_arc_data_aux_ii_fp { 0 }
+                  \__wheelchart_if_text:nnn { arc~data } {}
+                    {
+                      \cs_set:Npn \WCperc { \WCpercentagerounded { \, } { \% } }%so that \WCperc follows the arc if used in arc data
+                      %this redefinition of \WCperc is local to the group of arc data
+                      \__wheelchart_def_fp:nn { arc_data_pos } { arc~data~pos }
+                      \__wheelchart_def_fp:nn { arc_data_sep } { arc~data~sep }
+                      \__wheelchart_def_fp:nn { arc_data_line_sep_factor } { arc~data~line~sep~factor }
+                      \__wheelchart_def_fp:nn { arc_data_lines_pos } { arc~data~lines~pos }
+                      \__wheelchart_def_fp:nn { arc_data_lines_shift } { arc~data~lines~shift }
+                      \cs:w seq_set_split:Nn\pgfkeysvalueof { / wheelchart / arc~data~expand } \cs_end:
+                        \l__wheelchart_arc_data_seq
+                        { \\ }
+                        { \pgfkeysvalueof { / wheelchart / arc~data } }
+                      \seq_map_indexed_inline:Nn \l__wheelchart_arc_data_seq
+                        {
+                          \fp_set:Nn \l__wheelchart_arc_data_text_pos_fp
+                            {
+                              \l__wheelchart_arc_data_pos_fp + 4 * \g__wheelchart_slices_orientation_fp *
+                                (
+                                  ####1 - 1 - \l__wheelchart_arc_data_lines_pos_fp * ( \seq_count:N \l__wheelchart_arc_data_seq - 1 )
+                                  + \l__wheelchart_arc_data_lines_shift_fp
+                                )
+                                * sign ( \l__wheelchart_arc_data_dir_fp )
+                                * \l__wheelchart_arc_data_line_sep_factor_fp * \g__wheelchart_half_ex_over_one_cm_fp
+                                /
+                                (
+                                  \cs:w g__wheelchart_outer_radius_\WCcount _fp \cs_end:
+                                  - \cs:w g__wheelchart_inner_radius_\WCcount _fp \cs_end:
+                                  + 2 * \l__wheelchart_arc_data_sep_fp
+                                )
+                            }%the sign is needed because \l__wheelchart_arc_data_dir_fp is not necessarily 1 or -1
+                          \hbox_set:Nn \l__wheelchart_arc_data_box
+                            { \pgfinterruptpicture {####2} \endpgfinterruptpicture }
+                          \fp_gset:Nn \g__wheelchart_arc_data_slice_length_fp { 1 }%this is necessary if the value is 0
+                          \bool_if:NTF \l__wheelchart_plot_bool
+                            {
+                              \__wheelchart_convex_comb_coord_plot:nnnnnnn
+                                {
+                                  overlay ,
+                                  decorate ,
+                                  decoration =
+                                    {
+                                      text~along~path ,
+                                      text =
+                                        { {} { \fp_gset:Nn \g__wheelchart_arc_data_slice_length_fp { \pgfdecoratedpathlength } } } ,
+                                      raise = -0.5 ex ,
+                                      text~align = \l__wheelchart_arc_data_align_tl ,
+                                      / wheelchart / arc_data_style
+                                    }
+                                }%get the length of the path
+                                %note the option overlay so that this does not increase the bounding box
+                                %note the {} at the start of text and the braces around \fp_gset:Nn ...
+                                %so that the compilation does not stall
+                                { 0 }
+                                { 1 }
+                                { \l__wheelchart_plot_variable_tl }
+                                { 0 }
+                                { \l__wheelchart_arc_data_text_pos_fp }
+                                { \l__wheelchart_arc_data_sep_fp }
+                              \__wheelchart_convex_comb_coord_plot:nnnnnnn
+                                {
+                                  decorate ,
+                                  decoration =
+                                    {
+                                      text~along~path ,
+                                      text =
+                                        {
+                                          { { \fp_gset:Nn \g__wheelchart_arc_data_aux_i_fp { \the \pgfdecoratedcompleteddistance } } }
+                                          ####2
+                                          {
+                                            {
+                                              \fp_gset:Nn \g__wheelchart_arc_data_aux_i_fp
+                                                {
+                                                  ( \the \pgfdecoratedcompleteddistance - \g__wheelchart_arc_data_aux_i_fp )
+                                                  / \g__wheelchart_arc_data_slice_length_fp
+                                                }
+                                            }
+                                          }
+                                        } ,
+                                      raise = -0.5 ex ,
+                                      text~align = \l__wheelchart_arc_data_align_tl ,
+                                      / wheelchart / arc_data_style
+                                    }
+                                }%note the double braces around \fp_gset:Nn ...
+                                %so that for example arc data=text {\qty{5}{\percent}} is allowed
+                                %note that \def\mytext{}\path[decorate,decoration={text along path,text={\mytext}}] (0,0)--(1,1);
+                                %gives the message Missing character: There is no ... in font nullfont!, then
+                                %text={\pgfkeysvalueof { / wheelchart / arc~data }{}} can be used
+                                %if the \fp_gset:Nn ... would not be present
+                                { \fp_use:c { c__wheelchart_arc_data_start_factor_\l__wheelchart_arc_data_align_tl _fp } }
+                                { \fp_use:c { c__wheelchart_arc_data_end_factor_\l__wheelchart_arc_data_align_tl _fp } }
+                                {
+                                  \l__wheelchart_plot_variable_tl * \l__wheelchart_arc_data_dir_fp * 1.1
+                                  * ( \dim_to_fp:n { \box_wd:N \l__wheelchart_arc_data_box } / \g__wheelchart_arc_data_slice_length_fp )
+                                  + \l__wheelchart_arc_data_angle_pos_fp
+                                }
+                                { \l__wheelchart_arc_data_angle_shift_fp }
+                                { \l__wheelchart_arc_data_text_pos_fp }
+                                { \l__wheelchart_arc_data_sep_fp }
+                            }
+                            {
+                              \fp_set:Nn \l__wheelchart_arc_data_radius_plot_false_fp
+                                {
+                                  \__wheelchart_def_radius:nnn
+                                    { \WCcount }
+                                    { \l__wheelchart_arc_data_text_pos_fp }
+                                    { \l__wheelchart_arc_data_sep_fp + \g__wheelchart_half_ex_over_one_cm_fp }
+                                }
+                              \fp_set:Nn \l__wheelchart_arc_data_total_angle_plot_false_fp
+                                {
+                                  \box_wd:N \l__wheelchart_arc_data_box * 1.1 /
+                                    (
+                                      sqrt ( abs ( \l__wheelchart_coord_determinant_fp ) )%this is necessary if an option such as
+                                      %[x={(-0.5,0)},y={(0,0.5)}] is given to the tikzpicture
+                                      * \l__wheelchart_arc_data_radius_plot_false_fp * deg
+                                    )
+                                }
+                              \fp_set:Nn \l__wheelchart_arc_data_start_angle_plot_false_fp
+                                {
+                                  \__wheelchart_def_angle_plot_false:nnnnn
+                                    { \WCcount }
+                                    { \l__wheelchart_arc_data_angle_pos_fp }
+                                    { \l__wheelchart_arc_data_angle_shift_fp }
+                                    { \l__wheelchart_arc_data_text_pos_fp }
+                                    { \l__wheelchart_arc_data_sep_fp + \g__wheelchart_half_ex_over_one_cm_fp }
+                                  + \l__wheelchart_counter_or_clockwise_fp * \l__wheelchart_arc_data_dir_fp
+                                    * \cs:w c__wheelchart_arc_data_start_factor_\l__wheelchart_arc_data_align_tl _fp \cs_end:
+                                    * \l__wheelchart_arc_data_total_angle_plot_false_fp
+                                }
+                              \path
+                                [
+                                  decorate ,
+                                  decoration =
+                                    {
+                                      text~along~path ,
+                                      text =
+                                        {
+                                          { { \fp_gset:Nn \g__wheelchart_arc_data_aux_i_fp { \the \pgfdecoratedcompleteddistance } } }
+                                          ####2
+                                          {
+                                            {
+                                              \fp_gset:Nn \g__wheelchart_arc_data_aux_i_fp
+                                                {
+                                                  ( \the \pgfdecoratedcompleteddistance - \g__wheelchart_arc_data_aux_i_fp )
+                                                  / \l__wheelchart_arc_data_radius_plot_false_fp
+                                                }
+                                            }
+                                          }
+                                        } ,
+                                      raise = -0.5 ex ,
+                                      text~align = \l__wheelchart_arc_data_align_tl ,
+                                      / wheelchart / arc_data_style
+                                    }
+                                ]
+                                (
+                                  \fp_use:N \l__wheelchart_arc_data_start_angle_plot_false_fp
+                                  \c_colon_str
+                                  \fp_use:N \l__wheelchart_arc_data_radius_plot_false_fp
+                                )
+                                arc
+                                  [
+                                    start~angle = \fp_use:N \l__wheelchart_arc_data_start_angle_plot_false_fp ,
+                                    end~angle =
+                                      \fp_eval:n
+                                        {
+                                          \l__wheelchart_arc_data_start_angle_plot_false_fp
+                                          + \l__wheelchart_counter_or_clockwise_fp * \l__wheelchart_arc_data_dir_fp
+                                          * \l__wheelchart_arc_data_total_angle_plot_false_fp
+                                        }
+                                      ,
+                                    radius = \fp_use:N \l__wheelchart_arc_data_radius_plot_false_fp
+                                  ]
+                                ;
+                            }
+                          \fp_compare:nNnF { \g__wheelchart_arc_data_aux_i_fp } > { 0 }
+                            {
+                              \PackageWarning { wheelchart }
+                                {
+                                  The~arc~data~in~slice~\WCcount \c_space_tl did~(possibly)~not~fit.~
+                                  Increase~the~absolute~value~of~arc~data~dir.
+                                }%refer to \WCcount and not to \pgfkeysvalueof { / wheelchart / arc~data }
+                                %because the latter is not necessarily unique
+                            }
+                          \int_compare:nNnT {####1} = { \fp_use:N \l__wheelchart_arc_around_line_fp }
+                            { \fp_gset_eq:NN \g__wheelchart_arc_data_aux_ii_fp \g__wheelchart_arc_data_aux_i_fp }
+                        }
+                    }
+                  \bool_if:NT \l__wheelchart_arc_bool
+                    {
+                      \__wheelchart_def_fp:nn { arc_pos } { arc~pos }
+                      \__wheelchart_def_fp:nn { arc_sep } { arc~sep }
+                      \str_case:enF { \pgfkeysvalueof { / wheelchart / arc~around~text } }
+                        {
+                          { true }
+                            {
+                              \bool_if:NTF \l__wheelchart_plot_bool
+                                {
+                                  \__wheelchart_arc_around_text_plot_true:nnn { first } { -1 } { 0 }
+                                  \__wheelchart_arc_around_text_plot_true:nnn { second } { 1 } { 1 }
+                                }
+                                {
+                                  \fp_gset:Nn \g__wheelchart_arc_data_aux_ii_fp
+                                    {
+                                      \g__wheelchart_arc_data_aux_ii_fp
+                                      / ( sqrt ( abs ( \l__wheelchart_coord_determinant_fp ) ) * deg )
+                                    }
+                                  \fp_set:Nn \l__wheelchart_arc_radius_fp
+                                    {
+                                      \__wheelchart_def_radius:nnn
+                                        { \WCcount }
+                                        { \l__wheelchart_arc_pos_fp }
+                                        { \l__wheelchart_arc_sep_fp + \g__wheelchart_half_ex_over_one_cm_fp }
+                                    }
+                                  \__wheelchart_arc_around_text_plot_false:nn { first } { 0 }
+                                  \__wheelchart_arc_around_text_plot_false:nn { second } { 1 }
+                                }
+                            }
+                          { false }
+                            {
+                              \bool_if:NTF \l__wheelchart_plot_bool
+                                {
+                                  \__wheelchart_convex_comb_coord_plot:nnnnnnn
+                                    { draw , / wheelchart / arc_style }
+                                    { 0 }
+                                    { 1 }
+                                    { \l__wheelchart_plot_variable_tl }
+                                    { 0 }
+                                    { \l__wheelchart_arc_pos_fp }
+                                    { \l__wheelchart_arc_sep_fp }
+                                }
+                                {
+                                  \fp_set:Nn \l__wheelchart_arc_radius_fp
+                                    {
+                                      \__wheelchart_def_radius:nnn
+                                        { \WCcount }
+                                        { \l__wheelchart_arc_pos_fp }
+                                        { \l__wheelchart_arc_sep_fp + \g__wheelchart_half_ex_over_one_cm_fp }
+                                    }
+                                  \fp_set:Nn \l__wheelchart_arc_start_angle_fp
+                                    {
+                                      \__wheelchart_def_angle_plot_false:nnnnn
+                                        { \WCcount }
+                                        { 0 }
+                                        { 0 }
+                                        { \l__wheelchart_arc_pos_fp }
+                                        { \l__wheelchart_arc_sep_fp + \g__wheelchart_half_ex_over_one_cm_fp }
+                                    }
+                                  \path
+                                    [ draw , / wheelchart / arc_style ]
+                                    ( \fp_use:N \l__wheelchart_arc_start_angle_fp \c_colon_str \fp_use:N \l__wheelchart_arc_radius_fp )
+                                    arc
+                                      [
+                                        start~angle = \fp_use:N \l__wheelchart_arc_start_angle_fp ,
+                                        end~angle =
+                                          \__wheelchart_def_angle_plot_false:nnnnn
+                                            { \WCcount }
+                                            { 1 }
+                                            { 0 }
+                                            { \l__wheelchart_arc_pos_fp }
+                                            { \l__wheelchart_arc_sep_fp + \g__wheelchart_half_ex_over_one_cm_fp } ,
+                                        radius = \fp_use:N \l__wheelchart_arc_radius_fp
+                                      ]
+                                    ;
+                                }
+                            }
+                        }
+                        {
+                          \pgfkeys
+                            {
+                              / errors / boolean~expected /. expanded =
+                                { arc~around~text }
+                                { \pgfkeysvalueof { / wheelchart / arc~around~text } }
+                            }
+                        }
+                    }
+                  \__wheelchart_inner_and_wheel_data:n { inner }
+                  \__wheelchart_inner_and_wheel_data:n { wheel }
+                  \pgfkeysvalueof { / wheelchart / legend~entry }
+                }
+              \bool_if:NT \l__wheelchart_legend_row_bool
+                { \__wheelchart_def_WClegend: }
+              \__wheelchart_if_text:nnn { middle } { o }
+                { \node [ align = center , / wheelchart / middle_style ] at ( 0 , 0 ) { \pgfkeysvalueof { / wheelchart / middle } } ; }
+              \pgfkeysvalueof { / wheelchart / legend }
+            \end { scope }
+            \__wheelchart_caption_and_title:nnnnn
+              { caption~left } { north~west } { left } { \g__wheelchart_name_tl .south~west } { -1 }
+            \__wheelchart_caption_and_title:nnnnn
+              { caption } { north } { center } { \g__wheelchart_name_tl .south -| 0 , 0 } { -1 }
+            \__wheelchart_caption_and_title:nnnnn
+              { title~left } { south~west } { left } { \g__wheelchart_name_tl .north~west } { 1 }
+            \__wheelchart_caption_and_title:nnnnn
+              { title } { south } { center } { \g__wheelchart_name_tl .north -| 0 , 0 } { 1 }
+          \end { scope }
+        }
+    }
+  }
+
+\endinput

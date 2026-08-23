@@ -1,0 +1,98 @@
+% ============================================
+% Survey Structure Figure Template
+% 使用Forest包生成多层级彩色分类树
+% ============================================
+
+% Define colors and styles
+\definecolor{hidden-draw}{RGB}{128, 128, 128}
+<define_color>
+
+% 大纲总样式
+\tikzstyle{ot}=[
+    rectangle,
+    draw=hidden-draw,
+    rounded corners,
+    align=left,
+    text opacity=1,
+    text=black,
+    minimum height=2.5em,
+    minimum width=5em,
+    inner xsep=4pt,
+    inner ysep=4pt,
+    line width=0.8pt,
+    font=\small,
+]
+
+% 大纲主样式-root
+\tikzstyle{root}=[
+    ot,
+    draw=gray!80,
+    fill=gray!35,
+    font=\small\bfseries,
+]
+
+% 大纲主样式-1级 (Section)
+\tikzstyle{ot1}=[
+    ot,
+    minimum height=2em,
+    font=\small,
+]
+
+% 大纲主样式-2级 (Subsection)
+\tikzstyle{ot2}=[
+    ot,
+    minimum height=1.8em,
+    font=\footnotesize,
+]
+
+% 大纲主样式-3级 (Subsubsection/Leaf with refs)
+\tikzstyle{ot3}=[
+    ot, 
+    minimum height=1.5em,
+    font=\footnotesize,
+]
+
+% 引用样式 (用于显示cite角标)
+\tikzstyle{refnode}=[
+    rectangle,
+    draw=gray!50,
+    rounded corners=2pt,
+    fill=gray!10,
+    font=\scriptsize,
+    inner xsep=2pt,
+    inner ysep=1pt,
+    text=gray!70,
+]
+
+\begin{figure*}[!th]
+    \centering
+    \resizebox{0.98\textwidth}{!}
+    {
+        \begin{forest}
+            for tree={
+                grow=east,
+                reversed=true,
+                anchor=base west,
+                parent anchor=east,
+                child anchor=west,
+                base=left,
+                font=\small,
+                rectangle,
+                draw=hidden-draw,
+                rounded corners,
+                align=left,
+                minimum width=2em,
+                edge+={darkgray, line width=1pt},
+                s sep=7pt,
+                inner xsep=4pt,
+                inner ysep=3pt,
+                line width=0.8pt,
+                ver/.style={rotate=90, child anchor=north, parent anchor=south, anchor=center},
+            }, 
+            <tree_content>
+        \end{forest}
+    }
+    \caption{<caption>}
+    \label{fig:<label>}
+\vspace{-0.3cm}
+\end{figure*}

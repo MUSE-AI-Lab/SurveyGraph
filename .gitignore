@@ -1,0 +1,81 @@
+.DS_Store
+
+outputs
+output/
+uploads/
+logs/
+cache/
+data/graph_db/*.db
+data/runtime/
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.local.json
+*.local.yaml
+*.local.yml
+paperreview_*
+req_upload.json
+req_debug.txt
+run_paperreview_*
+
+# Generated research and packaging artifacts
+*.zip
+*.tar.gz
+*.pdf
+*.db
+*paperreview*
+paper/openreview_*/
+paper/final_audit_*
+paper/**/*.aux
+paper/**/*.bbl
+paper/**/*.blg
+paper/**/*.fdb_latexmk
+paper/**/*.fls
+paper/**/*.log
+paper/**/*.out
+paper/**/*.synctex.gz
+paper/**/*.toc
+!paper/README.md
+release_artifacts/
+
+# tmp directory
+tmp/
+*.egg-info/
+
+# Python bytecode
+*.pyc
+
+# Logs
+*.log
+
+# Virtualenv
+venv/
+
+# Build
+build/
+dist/
+__pycache__/
+
+# IDE
+.vscode/
+.idea/
+
+# Scripts
+*.ipynb
+sandbox/
+
+# eval
+eval/
+
+cache
+datasets
+
+toy.py
+parallel_directories
+backup
+backups
+refer/
+experiments/configs/*.local.json
+experiments/manifests/*.generated.json

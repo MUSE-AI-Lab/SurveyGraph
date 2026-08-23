@@ -1,0 +1,31 @@
+% ============================================
+% 性能对比图模板 (Performance Comparison Chart)
+% 专业学术风格 - 适用于展示方法性能对比 (纯 TikZ 版本)
+% ============================================
+% Usage: Replace <caption>, <label>, <bars>, <x_labels>, <legend>, <y_axis>, <x_axis> placeholders
+% Note: Colors (perf-*) are defined in the main document preamble (survey.ini.tex)
+
+\begin{figure}[H]
+\centering
+\begin{adjustbox}{max width=0.95\textwidth, center}
+\begin{tikzpicture}
+% Y轴
+<y_axis>
+
+% X轴
+<x_axis>
+
+% 柱状图
+<bars>
+
+% X轴标签
+<x_labels>
+
+% 图例
+<legend>
+
+\end{tikzpicture}
+\end{adjustbox}
+\caption{<caption>}
+\label{fig:<label>}
+\end{figure}

@@ -1,0 +1,27 @@
+**Prompt**:  
+You will be provided with a piece of information describing an evaluation benchmark. Your task is to extract the following key attributes from the given information:  
+
+1. **Size**: The total amount of data included in the benchmark. If the provided information does not specify the size, return "-".  
+2. **Domain**: The specific application domains covered by the benchmark (e.g., mathematics, coding). Extract only one primary domains.  
+3. **Task Format**: The specific types of tasks included in the benchmark (e.g., Question Answering, text classification). Extract only one main task types.  
+4. **Metric**: The evaluation metrics used in the benchmark (e.g., accuracy, F1-score). Extract one or two primary metrics. If the metric name has a corresponding abbreviation, please use the abbreviation. For example, for "Mean Reciprocal Rank (MRR@10)", the output should be "MRR@10". 
+
+Output the results in the form of a dictionary.
+
+**IMPORTANT: All extracted attributes MUST be in ENGLISH.**
+
+Your response should be enclosed within `<Answer>` and `</Answer>` tags.
+
+**Example Output**:  
+<Answer>
+{{
+    "Size": "10,000",
+    "Domain": "Math",
+    "Task Format": "Question Answering",
+    "Metric": "Accuracy, F1 score"
+}}
+</Answer>
+
+
+Here is the information:
+{Input}

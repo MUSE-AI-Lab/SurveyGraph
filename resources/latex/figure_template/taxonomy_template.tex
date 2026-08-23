@@ -1,0 +1,68 @@
+% ============================================
+% 现代化 Taxonomy/Hierarchy 分类图模板
+% 专业学术风格 - 适用于评估指标、框架分类等
+% ============================================
+% Usage: Replace <caption>, <label>, and <tree_content> placeholders
+% Note: Colors (tax-*) are defined in the main document preamble (survey.ini.tex)
+
+\begin{figure}[H]
+\centering
+\begin{adjustbox}{max width=0.98\textwidth, center}
+\begin{forest}
+for tree={
+    grow=east,
+    rounded corners=4pt,
+    minimum height=1cm,
+    minimum width=2.5cm,
+    text centered,
+    font=\small\sffamily,
+    l sep=1.8cm,
+    s sep=0.6cm,
+    anchor=west,
+    parent anchor=east,
+    child anchor=west,
+    edge path={
+        \noexpand\path [draw=tax-edge, line width=1.2pt, rounded corners=3pt, -stealth]
+        (!u.parent anchor) -- ++(0.6cm,0) |- (.child anchor)\forestoption{edge label};
+    },
+},
+% 根节点样式
+where level=0{
+    fill=tax-root,
+    text=tax-root-text,
+    font=\normalsize\sffamily\bfseries,
+    minimum width=4cm,
+    minimum height=1.3cm,
+    line width=0pt,
+    drop shadow={shadow xshift=1pt, shadow yshift=-1pt, opacity=0.2},
+}{},
+% Level 1 样式 - 主分类
+where level=1{
+    font=\small\sffamily\bfseries,
+    minimum width=3.2cm,
+    minimum height=1.1cm,
+    line width=1.5pt,
+    drop shadow={shadow xshift=0.5pt, shadow yshift=-0.5pt, opacity=0.15},
+}{},
+% Level 2 样式 - 子分类
+where level=2{
+    font=\footnotesize\sffamily,
+    minimum width=2.8cm,
+    minimum height=0.9cm,
+    line width=1pt,
+}{},
+% Level 3+ 样式 - 叶子节点
+where level>=3{
+    fill=tax-leaf,
+    draw=tax-leaf-border,
+    font=\footnotesize\sffamily,
+    minimum width=2.5cm,
+    minimum height=0.8cm,
+    line width=0.8pt,
+}{},
+<tree_content>
+\end{forest}
+\end{adjustbox}
+\caption{<caption>}
+\label{fig:<label>}
+\end{figure}

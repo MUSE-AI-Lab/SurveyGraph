@@ -1,0 +1,20 @@
+% Nested Multirow Table Template
+% 嵌套多行表格 - 类似 (Core Components, Tasks, and Applications)
+% 特点：多级嵌套行，multirow合并单元格，箭头符号表示关系
+
+\begin{table*}[t]
+\centering
+\caption{<caption>}
+\label{tab:<label>}
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{<column_spec>}
+\toprule
+<headers>
+\midrule
+<rows>
+\bottomrule
+\end{tabular}%
+}
+\end{table*}

@@ -1,0 +1,184 @@
+% ============================================
+% 数据流图模板 (Data Flow Diagram)
+% 专业学术风格 - 适用于展示数据在系统中的流动
+% ============================================
+% Usage: Replace <caption>, <label>, and <nodes> placeholders
+% Note: Colors (df-*) are defined in the main document preamble (survey.ini.tex)
+%
+% Key improvements:
+% 1. Increased node widths to accommodate longer text
+% 2. Support for multi-line text with proper wrapping
+% 3. Better spacing between nodes
+% 4. Improved flow label positioning
+% 5. Dynamic height support
+
+\begin{figure}[H]
+\centering
+\begin{adjustbox}{max width=0.95\textwidth, center}
+\begin{tikzpicture}[
+    node distance=2.0cm and 2.5cm,
+    % 外部实体 - 红色方框 (用于输入/输出)
+    external/.style={
+        rectangle,
+        draw=df-external!70,
+        fill=df-external!15,
+        minimum width=2.8cm,
+        minimum height=1.4cm,
+        text centered,
+        font=\small\sffamily\bfseries,
+        text=df-text,
+        line width=1.2pt,
+        text width=2.5cm,
+        align=center,
+        drop shadow={shadow xshift=0.5pt, shadow yshift=-0.5pt, opacity=0.1},
+    },
+    % 处理过程 - 蓝色圆角矩形
+    process/.style={
+        rectangle,
+        rounded corners=8pt,
+        draw=df-process!70,
+        fill=df-process!15,
+        minimum width=3.2cm,
+        minimum height=1.4cm,
+        text centered,
+        font=\small\sffamily,
+        text=df-text,
+        line width=1pt,
+        text width=3.0cm,
+        align=center,
+        drop shadow={shadow xshift=0.5pt, shadow yshift=-0.5pt, opacity=0.1},
+    },
+    % 宽处理过程 - 用于较长文本
+    process-wide/.style={
+        rectangle,
+        rounded corners=8pt,
+        draw=df-process!70,
+        fill=df-process!15,
+        minimum width=4.0cm,
+        minimum height=1.4cm,
+        text centered,
+        font=\small\sffamily,
+        text=df-text,
+        line width=1pt,
+        text width=3.8cm,
+        align=center,
+        drop shadow={shadow xshift=0.5pt, shadow yshift=-0.5pt, opacity=0.1},
+    },
+    % 数据存储 - 绿色开口矩形
+    datastore/.style={
+        rectangle,
+        draw=df-datastore!70,
+        fill=df-datastore!15,
+        minimum width=3.2cm,
+        minimum height=1.0cm,
+        text centered,
+        font=\small\sffamily,
+        text=df-text,
+        line width=1pt,
+        text width=3.0cm,
+        align=center,
+    },
+    % 宽数据存储
+    datastore-wide/.style={
+        rectangle,
+        draw=df-datastore!70,
+        fill=df-datastore!15,
+        minimum width=4.0cm,
+        minimum height=1.0cm,
+        text centered,
+        font=\small\sffamily,
+        text=df-text,
+        line width=1pt,
+        text width=3.8cm,
+        align=center,
+    },
+    % 数据流箭头
+    dataflow/.style={
+        ->,
+        thick,
+        >=stealth,
+        draw=df-flow,
+        line width=1.2pt,
+    },
+    % 数据流标签 - 改进版，支持多行
+    flowlabel/.style={
+        font=\footnotesize\sffamily,
+        text=df-flow,
+        fill=white,
+        inner sep=3pt,
+        align=center,
+        text width=2.5cm,
+    },
+    % 宽流标签
+    flowlabel-wide/.style={
+        font=\footnotesize\sffamily,
+        text=df-flow,
+        fill=white,
+        inner sep=3pt,
+        align=center,
+        text width=3.5cm,
+    },
+]
+
+<nodes>
+
+\end{tikzpicture}
+\end{adjustbox}
+\caption{<caption>}
+\label{fig:<label>}
+\end{figure}
+
+% ============================================
+% USAGE INSTRUCTIONS FOR CODE GENERATION:
+% ============================================
+%
+% When generating dataflow diagrams, follow these guidelines:
+%
+% 1. NODE TYPES:
+%    - external: For input/output entities (users, external systems)
+%    - process: For processing steps (transformations, computations)
+%    - process-wide: For processes with longer text
+%    - datastore: For data storage (databases, files)
+%    - datastore-wide: For datastores with longer text
+%
+% 2. NODE PLACEMENT (horizontal flow):
+%    - For 6 nodes in a row: x = 0, 3.5, 7.0, 10.5, 14.0, 17.5
+%    - For 5 nodes in a row: x = 0, 4.0, 8.0, 12.0, 16.0
+%    - For 4 nodes in a row: x = 0, 4.5, 9.0, 13.5
+%    - Minimum horizontal spacing: 3.5cm between node centers
+%
+% 3. TEXT HANDLING:
+%    - Short text (< 12 chars): single line
+%    - Medium text (12-20 chars): use text width for auto-wrap
+%    - Long text (> 20 chars): use \\ for manual line breaks
+%    - Example: {Query\\Augmentation} for two-line text
+%
+% 4. FLOW LABELS:
+%    - Place labels at midpoint of arrows
+%    - Use flowlabel for short labels
+%    - Use flowlabel-wide for longer labels
+%    - Use \\ for multi-line labels
+%
+% EXAMPLE - Linear data flow with 5 nodes:
+%
+% % Nodes
+% \node[external] (input) at (0, 0) {Raw Query};
+% \node[process] (proc1) at (4, 0) {Query\\Augmentation};
+% \node[datastore-wide] (store) at (8, 0) {Tool Repository\\(API Metadata)};
+% \node[process-wide] (proc2) at (12, 0) {Dense Vector\\Retrieval};
+% \node[external] (output) at (16, 0) {Selected\\Candidates};
+%
+% % Flows with labels
+% \draw[dataflow] (input) -- (proc1) node[flowlabel, midway, above] {raw query};
+% \draw[dataflow] (proc1) -- (store) node[flowlabel, midway, above] {augmented\\vector};
+% \draw[dataflow] (store) -- (proc2) node[flowlabel, midway, above] {technical\\docs};
+% \draw[dataflow] (proc2) -- (output) node[flowlabel, midway, above] {final\\selection};
+%
+% EXAMPLE - Vertical data flow:
+%
+% \node[external] (input) at (0, 0) {User Input};
+% \node[process] (proc1) at (0, -2.5) {Processing};
+% \node[datastore] (store) at (0, -5) {Database};
+%
+% \draw[dataflow] (input) -- (proc1);
+% \draw[dataflow] (proc1) -- (store);

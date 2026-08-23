@@ -1,0 +1,113 @@
+### Task Context:  
+Your task is to **refine and restructure attribute categorization** to enhance clarity and interpretability. Currently, each **Primary Attribute** has a collection of **Secondary Attributes**, but they are too dispersed, making it difficult to identify commonalities. Your goal is to reorganize these **Secondary Attributes** into more cohesive groups, based on shared characteristics or recurring ideas.
+
+**Task Description:**
+You will be provided with a series of attributes and their corresponding descriptions in the following format:
+{{
+  'Primary Attribute': XXX,
+  'Secondary Attributes': [
+    {{
+      'Name': XXX,
+      'Description': XXX
+    }},
+    {{
+      'Name': XXX,
+      'Description': XXX
+    }},
+    ...
+  ]
+}}
+### Key Definitions:  
+1. **Primary Attribute**: A general category to which the **Secondary Attributes** belong.  
+2. **Secondary Attributes**: Subcategories that fall under a Primary Attribute. Each Secondary Attribute has:  
+   - **Name**: The subcategory's name.  
+   - **Description**: A brief explanation of what the subcategory represents.  
+
+### Instructions:  
+1. **Analyze the Secondary Attributes**:  
+   - Review the **Names** and **Descriptions** of the Secondary Attributes to identify shared characteristics or themes.  
+
+2. **Group Secondary Attributes**:  
+   - Create **2 to 4 cohesive groups** for the Secondary Attributes based on their similarities.  
+   - Ensure that each group is organized around a distinct, recurring concept or feature shared by the Secondary Attributes.  
+
+3. **Name the Groups**:  
+   - Assign each group a **concise name (2 to 4 words)** that reflects its overarching theme or characteristics.  
+   - Avoid generic terms like "Techniques" or "Methods."(e.g., "Adaptive Fine-Tuning Strategies", "Adaptation Methods," "Data Fusion Strategies","Prompting Techniques")
+    Use specific and meaningful phrases (e.g., "Attribute Control," "Data-Driven Models," "Contrastive Learning").  
+
+4. **Output the New Structure**:  
+   - Format your response as a dictionary where:  
+     - Keys are the **new group names**.  
+     - Values are lists of the **original Secondary Attribute Names** that belong to each group.
+
+**IMPORTANT: All output text (group names, attribute names) MUST be in ENGLISH.**
+
+Your response should be enclosed within `<Answer>` and `</Answer>` tags.
+
+Here are some examples:
+
+Example1:
+
+Input:
+{{
+  'Primary Attribute': 'Learning Approaches',
+  'Secondary Attributes': [
+    {{'Name': 'Self-Supervised Learning', 'Description': 'Learns representations without labeled data by designing pretext tasks.'}},
+    {{'Name': 'Contrastive Learning', 'Description': 'Utilizes similarity and dissimilarity of samples to learn better representations.'}},
+    {{'Name': 'SimCLR', 'Description': 'A specific framework for contrastive learning that uses augmentation.'}},
+    {{'Name': 'BYOL', 'Description': 'A contrastive-free self-supervised method leveraging bootstrapping.'}},
+    {{'Name': 'Supervised Learning', 'Description': 'Learns directly from labeled datasets, optimizing for accuracy.'}},
+    {{'Name': 'Data Augmentation', 'Description': 'Applies transformations like cropping, flipping, or noise addition to expand data.'}},
+    {{'Name': 'Meta-Learning', 'Description': 'Focuses on learning how to learn by optimizing algorithms for rapid adaptability.'}},
+    {{'Name': 'Few-Shot Learning', 'Description': 'Performs well on new tasks with limited labeled examples.'}}
+  ]
+}}
+
+Output:
+<Answer>
+{{
+  'Contrastive-Based': ['Contrastive Learning', 'SimCLR'],
+  'Self-Supervised': ['Self-Supervised Learning', 'BYOL'],
+  'Label-Based': ['Supervised Learning', 'Few-Shot Learning'],
+  'Data-Driven': ['Data Augmentation', 'Meta-Learning']
+}}
+</Answer>
+
+
+Example2:
+
+Input:
+{{
+  'Primary Attribute': 'Optimization Objectives',
+  'Secondary Attributes': [
+    {{'Name': 'Minimize Latency', 'Description': 'Reduce response time in real-time systems.'}},
+    {{'Name': 'Enhance Accuracy', 'Description': 'Improve the correctness of predictions.'}},
+    {{'Name': 'Reduce Memory Usage', 'Description': 'Optimize resource utilization for larger datasets.'}},
+    {{'Name': 'Increase Generalization', 'Description': 'Ensure model performs well on unseen data.'}},
+    {{'Name': 'Maximize Throughput', 'Description': 'Increase the number of processed inputs per unit time.'}},
+    {{'Name': 'Minimize Energy Consumption', 'Description': 'Optimize training for reduced energy usage.'}},
+    {{'Name': 'Improve Reliability', 'Description': 'Ensure consistent system performance over time.'}},
+    {{'Name': 'Maximize Interpretability', 'Description': 'Improve model transparency and understanding.'}}
+  ]
+}}
+
+Output:
+<Answer>
+{{
+  'Performance-Driven': ['Enhance Accuracy', 'Increase Generalization', 'Maximize Throughput'],
+  'Resource Optimization': ['Reduce Memory Usage', 'Minimize Energy Consumption'],
+  'System Reliability': ['Improve Reliability', 'Minimize Latency'],
+  'Interpretability Goals': ['Maximize Interpretability']
+}}
+</Answer>
+
+### Additional Notes:  
+- **Precision**: Ensure group names are clear and reflective of the attributes' shared characteristics.  
+- **Avoid Overgeneralization**: Use meaningful terms to describe the groups, avoiding vague or overly broad language.  
+- **Balance**: Aim to evenly distribute the Secondary Attributes across the groups to the extent possible.  
+- Do not include terms such as "privacy," "ethical,"(e.g., "Privacy and Security Measures", "Ethical Considerations") or any other words unrelated to academic contexts.
+
+Here is the Input:
+{Input}
+

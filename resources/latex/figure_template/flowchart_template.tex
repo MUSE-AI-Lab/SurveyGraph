@@ -1,0 +1,90 @@
+% ============================================
+% 现代化流程图模板
+% 专业学术风格 - 适用于算法流程、系统流程等
+% ============================================
+% Usage: Replace <title>, <caption>, <label>, and <nodes> placeholders
+% Note: Colors (flow-*) are defined in the main document preamble (survey.ini.tex)
+
+\begin{figure}[H]
+\centering
+\begin{adjustbox}{max width=0.95\textwidth, center}
+\begin{tikzpicture}[
+    node distance=1.8cm,
+    % 开始/结束节点 - 绿色圆角矩形
+    startstop/.style={
+        rectangle,
+        rounded corners=8pt,
+        minimum width=3.5cm,
+        minimum height=1.1cm,
+        text centered,
+        draw=flow-start-border,
+        fill=flow-start!15,
+        text=flow-text,
+        font=\small\sffamily\bfseries,
+        line width=1.2pt,
+        drop shadow={shadow xshift=0.5pt, shadow yshift=-0.5pt, opacity=0.1},
+    },
+    % 处理过程节点 - 蓝色矩形
+    process/.style={
+        rectangle,
+        rounded corners=4pt,
+        minimum width=3.5cm,
+        minimum height=1.1cm,
+        text centered,
+        draw=flow-process-border!70,
+        fill=flow-process!12,
+        text=flow-text,
+        font=\small\sffamily,
+        line width=1pt,
+        drop shadow={shadow xshift=0.5pt, shadow yshift=-0.5pt, opacity=0.1},
+    },
+    % 判断节点 - 橙色菱形
+    decision/.style={
+        diamond,
+        minimum width=2.8cm,
+        minimum height=1.2cm,
+        text centered,
+        draw=flow-decision-border!70,
+        fill=flow-decision!15,
+        aspect=2,
+        text=flow-text,
+        font=\small\sffamily,
+        line width=1pt,
+        inner sep=2pt,
+    },
+    % 输入/输出节点 - 紫色平行四边形
+    io/.style={
+        trapezium,
+        trapezium left angle=70,
+        trapezium right angle=110,
+        minimum width=3cm,
+        minimum height=1cm,
+        text centered,
+        draw=flow-io-border!70,
+        fill=flow-io!12,
+        text=flow-text,
+        font=\small\sffamily,
+        line width=1pt,
+    },
+    % 箭头样式
+    arrow/.style={
+        thick,
+        ->,
+        >=stealth,
+        draw=flow-arrow,
+        line width=1.2pt,
+    },
+    % 带标签的箭头
+    arrow-label/.style={
+        font=\footnotesize\sffamily,
+        text=flow-arrow,
+    },
+]
+
+<nodes>
+
+\end{tikzpicture}
+\end{adjustbox}
+\caption{<caption>}
+\label{fig:<label>}
+\end{figure}

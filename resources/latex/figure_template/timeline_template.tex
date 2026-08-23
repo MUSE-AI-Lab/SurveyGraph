@@ -1,0 +1,91 @@
+% Vertical Timeline Template
+% Usage: Replace <caption>, <label>, <total_height>, and <items> placeholders
+%
+% Key improvements:
+% 1. Vertical layout with proper spacing between years
+% 2. Each year has dedicated space with clear separation
+% 3. Multiple events per year are stacked vertically with proper spacing
+% 4. Auto-scaling to fit page width
+% 5. Event boxes use anchor=north west for proper vertical alignment
+%
+% Item format for each year:
+% \node[year] at (0, -<y_pos>) {<year>};
+% \fill[blue!60] (0, -<y_pos>) circle (4pt);
+% \node[event] at (0.5, -<y_pos>) {<event_description>};
+%
+% IMPORTANT: For multi-line content, increase y_pos spacing accordingly
+% - Short text (1-2 lines): increment by 1.5
+% - Medium text (3-4 lines): increment by 2.5
+% - Long text (5+ lines): increment by 3.5 or more
+
+\begin{figure}[H]
+\centering
+\begin{adjustbox}{max width=0.95\textwidth, center}
+\begin{tikzpicture}[
+    node distance=1.2cm,
+    year/.style={font=\small\bfseries, text=blue!70!black, anchor=east, text width=1.2cm, align=right},
+    event/.style={rectangle, rounded corners=3pt, draw=gray!40, fill=gray!8,
+                  text width=10.5cm, font=\small,
+                  align=left, inner sep=8pt, anchor=north west},
+    milestone/.style={circle, fill=blue!60, minimum size=8pt, inner sep=0pt}
+]
+
+% Timeline axis - vertical line from top to bottom
+\draw[thick, gray!50] (0, 0.8) -- (0, -<total_height>);
+
+<items>
+
+\end{tikzpicture}
+\end{adjustbox}
+\caption{<caption>}
+\label{fig:<label>}
+\end{figure}
+
+% ============================================
+% USAGE INSTRUCTIONS FOR CODE GENERATION:
+% ============================================
+%
+% When generating timeline items, follow this pattern:
+%
+% 1. Calculate y_position for each event based on content length:
+%    - First event: y_pos = 0
+%    - Short content (1-2 lines): next y_pos += 1.8
+%    - Medium content (3-4 lines): next y_pos += 2.8
+%    - Long content (5+ lines): next y_pos += 4.0
+%    - Very long content (bullet points): next y_pos += 5.0 or more
+%
+% 2. For each event, generate:
+%    % Year <YEAR> - Event <N>
+%    \node[year] at (-0.3, -<y_pos>) {<YEAR>};
+%    \node[milestone] at (0, -<y_pos>) {};
+%    \node[event] at (0.3, -<y_pos>) {<event_description>};
+%
+% 3. For subsequent events in the SAME year (no year label):
+%    % Year <YEAR> - Event <N+1>
+%    \node[milestone] at (0, -<y_pos>) {};
+%    \node[event] at (0.3, -<y_pos>) {<event_description>};
+%
+% 4. Set <total_height> = final y_pos + 1.5 (add extra padding at bottom)
+%
+% EXAMPLE with 3 years (2022, 2023, 2024), 2 events in 2023:
+%
+% % Year 2022 - Event 1 (short text)
+% \node[year] at (-0.3, 0) {2022};
+% \node[milestone] at (0, 0) {};
+% \node[event] at (0.3, 0) {Introduction of the first framework for function calling.};
+%
+% % Year 2023 - Event 1 (medium text, y_pos = 0 + 1.8 = 1.8)
+% \node[year] at (-0.3, -1.8) {2023};
+% \node[milestone] at (0, -1.8) {};
+% \node[event] at (0.3, -1.8) {Release of benchmark datasets for evaluation with multiple metrics.};
+%
+% % Year 2023 - Event 2 (same year, medium text, y_pos = 1.8 + 2.0 = 3.8)
+% \node[milestone] at (0, -3.8) {};
+% \node[event] at (0.3, -3.8) {Development of multi-turn conversation support.};
+%
+% % Year 2024 - Event 1 (long text with bullets, y_pos = 3.8 + 2.5 = 6.3)
+% \node[year] at (-0.3, -6.3) {2024};
+% \node[milestone] at (0, -6.3) {};
+% \node[event] at (0.3, -6.3) {\textbullet\ First point about optimization.\\ \textbullet\ Second point about deployment.};
+%
+% total_height would be: 6.3 + 4.0 = 10.3 (accounting for long content at end)

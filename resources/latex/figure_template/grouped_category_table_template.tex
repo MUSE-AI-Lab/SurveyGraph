@@ -1,0 +1,20 @@
+% Grouped Category Table Template
+% 带彩色分组标题的表格 - 类似 (Datasets & Benchmarks)
+% 特点：彩色圆点分组标题，多级表头，专业学术风格
+
+\begin{table*}[t]
+\centering
+\caption{<caption>}
+\label{tab:<label>}
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{<column_spec>}
+\toprule
+<headers>
+\midrule
+<rows>
+\bottomrule
+\end{tabular}%
+}
+\end{table*}

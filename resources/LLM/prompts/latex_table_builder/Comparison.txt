@@ -1,0 +1,63 @@
+You are an AI assistant tasked with extracting comparative information about various methods described in a given text. The text contains one main chapter and multiple sub-chapters. Each sub-chapter focuses on a specific method, and its title represents the name of the method. Your goal is to:  
+
+### Tasks  
+
+1. **Identify Common Comparative Attributes**:  
+   - Analyze the text to identify 3 key attributes that are shared across all methods.  
+   - The attributes must be **representative**, **suitable for comparison**, and **easy to understand**.  
+   - Avoid attributes that are too narrow or irrelevant for comparison.  
+
+2. **Summarize Method Features**:  
+   - For each method (represented by sub-chapter titles), provide concise and **specific** descriptions for each identified attribute.  
+   - Avoid vague or ambiguous phrases; the descriptions should clearly reflect the unique features of the method.  
+   - Limit each description to **no more than 4 words**.  
+
+3. **Output Format**:  
+   - Present your results in the following dictionary format:  
+     - `"common_attributes"`: A list of the identified common attributes.  
+     - `"methods"`: A dictionary where each key is a method name, and its value is another dictionary mapping the common attributes to specific feature descriptions.  
+
+Your response should be enclosed within `<Answer>` and `</Answer>` tags.
+
+### Example Output  
+<Answer> 
+{{
+  "common_attributes": ["Optimization Scope", "Optimization Method", "Model Compatibility"],
+  "methods": {{
+    "Prompt Tuning": {{
+      "Optimization Scope": "Input Embeddings",
+      "Optimization Method": "Direct optimization",
+      "Model Compatibility": "T5"
+    }},
+    "Prefix Tuning": {{
+      "Optimization Scope": "All Layers",
+      "Optimization Method": "FFN optimization",
+      "Model Compatibility": "GPT"
+    }},
+    "P-tuning": {{
+      "Optimization Scope": "Input Sequence",
+      "Optimization Method": "LSTM-based encoder",
+      "Model Compatibility": "All models"
+    }}
+  }}
+}}
+<Answer>
+```  
+
+### Guidelines  
+
+#### Key Attribute Extraction  
+- Ensure attributes are **broad but specific** enough to describe all methods in a comparable way.  
+- Focus on attributes that enhance **representativeness**, **comparability**, and **clarity** .  
+
+
+#### Feature Filling  
+- Provide **specific and clear** content for each attribute. Avoid generic terms such as "Flexible" or "Efficient" unless they are precisely defined in the context.  
+- If certain features are not explicitly mentioned in the text, use "Not specified" as a placeholder.
+
+**IMPORTANT: All extracted attributes and descriptions MUST be in ENGLISH.**
+
+**Instructions**: Use this format and guidelines to analyze the provided text and generate the comparative information.
+
+Here is the input:
+{Input}

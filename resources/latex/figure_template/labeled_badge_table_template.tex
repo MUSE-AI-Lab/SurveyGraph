@@ -1,0 +1,20 @@
+% Labeled Badge Table Template
+% 带彩色标签徽章的表格 - 类似 B, N, W 等彩色圆形标签
+% 特点：彩色圆形字母标签，分组标题，多列数据
+
+\begin{table*}[t]
+\centering
+\caption{<caption>}
+\label{tab:<label>}
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{<column_spec>}
+\toprule
+<headers>
+\midrule
+<rows>
+\bottomrule
+\end{tabular}%
+}
+\end{table*}

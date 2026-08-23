@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEKG Knowledge Graph Explorer</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="app">
+        <!-- 顶部导航栏 -->
+        <header class="glass-panel">
+            <div class="logo">
+                <i class="fa-solid fa-network-wired"></i>
+                <span>MEKG Explorer</span>
+            </div>
+            
+            <div class="controls">
+                <div class="select-wrapper">
+                    <i class="fa-solid fa-database"></i>
+                    <select id="data-source-select">
+                        <option value="" disabled selected>Loading data sources...</option>
+                    </select>
+                </div>
+                <button id="refresh-btn" class="icon-btn" title="Refresh Data">
+                    <i class="fa-solid fa-sync"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- 悬浮控制面板 -->
+        <div id="control-panel" class="glass-panel floating-panel">
+            <h3><i class="fa-solid fa-sliders"></i> Controls</h3>
+            
+            <div class="control-group">
+                <label>Search Node</label>
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Paper title...">
+                    <button id="search-btn"><i class="fa-solid fa-search"></i></button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Display Options</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="show-labels-check">
+                    <label for="show-labels-check">Show Labels</label>
+                </div>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="show-edges-check">
+                    <label for="show-edges-check">Show Edge Names</label>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Layout Force</label>
+                <input type="range" id="repulsion-range" min="100" max="3000" value="800">
+                <span class="range-value">800</span>
+            </div>
+        </div>
+
+        <!-- 图谱容器 -->
+        <div id="graph-container"></div>
+
+        <!-- 侧边栏详情 -->
+        <div id="sidebar" class="glass-panel hidden">
+            <div class="sidebar-header">
+                <h2 id="node-title">Node Details</h2>
+                <button id="close-sidebar" class="icon-btn"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="sidebar-content">
+                <div id="node-basic-info" class="info-section"></div>
+                <div class="divider"></div>
+                <h3>Attributes</h3>
+                <div id="node-attributes" class="info-section scrollable"></div>
+                
+                <div class="divider"></div>
+                <div class="actions">
+                    <a id="open-paper-btn" href="#" target="_blank" class="action-btn hidden">
+                        <i class="fa-solid fa-external-link-alt"></i> Open Paper
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 加载遮罩 -->
+        <div id="loading-mask" class="hidden">
+            <div class="spinner"></div>
+            <p>Loading Knowledge Graph...</p>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1612 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEKG Survey Visualization</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0f1117;
+            --bg-secondary: #161821;
+            --bg-card: #1e212b;
+            --bg-hover: #2a2d3a;
+            --border-color: #2f3342;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            --hierarchy-color: #4a5568;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 顶部导航 */
+        .navbar {
+            height: 60px;
+            background: rgba(22, 24, 33, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 100;
+        }
+
+        .navbar-brand { display: flex; align-items: center; gap: 12px; }
+        .logo-icon {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; color: white;
+        }
+        .brand-text h1 { font-size: 16px; font-weight: 600; }
+        .brand-text p { font-size: 12px; color: var(--text-muted); }
+
+        .navbar-actions { display: flex; gap: 12px; }
+        .btn {
+            height: 36px; padding: 0 16px;
+            border-radius: 6px; border: 1px solid var(--border-color);
+            background: var(--bg-card); color: var(--text-secondary);
+            font-size: 13px; font-weight: 500; cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+            transition: all 0.2s;
+        }
+        .btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .btn-primary { background: var(--accent-blue); border-color: var(--accent-blue); color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn.active { background: var(--accent-green); border-color: var(--accent-green); color: white; }
+
+        /* 主布局 */
+        .layout { flex: 1; display: flex; overflow: hidden; }
+
+        /* 左侧边栏 */
+        .sidebar-left {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex; flex-direction: column;
+        }
+
+        .sidebar-section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            overflow-y: auto;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+        }
+        .sidebar-section::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+        .section-title {
+            font-size: 12px; font-weight: 600; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;
+        }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat-item {
+            background: var(--bg-card); padding: 12px;
+            border-radius: 8px; border: 1px solid var(--border-color);
+        }
+        .stat-value { font-size: 20px; font-weight: 600; color: var(--text-primary); }
+        .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+        .legend-list { display: flex; flex-direction: column; gap: 4px; }
+        .legend-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px; border-radius: 6px; cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .legend-item:hover { background: var(--bg-hover); }
+        .legend-item.active { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); }
+        
+        .legend-line { width: 24px; height: 2px; border-radius: 1px; }
+        .legend-name { flex: 1; font-size: 13px; color: var(--text-secondary); }
+        .legend-count {
+            font-size: 11px; color: var(--text-muted);
+            background: var(--bg-card); padding: 2px 6px; border-radius: 4px;
+        }
+
+        /* 画布区域 */
+        .canvas-container {
+            flex: 1; position: relative;
+            background: var(--bg-primary);
+            overflow: hidden; cursor: grab;
+        }
+        .canvas-container:active { cursor: grabbing; }
+        #graph-canvas { 
+            width: 100%; 
+            height: 100%; 
+            display: block;
+        }
+
+        /* 右侧详情栏 */
+        .sidebar-right {
+            width: 320px; background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            display: flex; flex-direction: column;
+        }
+        .detail-header { padding: 24px; border-bottom: 1px solid var(--border-color); }
+        .detail-icon {
+            width: 48px; height: 48px; background: var(--bg-card);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: var(--accent-blue); margin-bottom: 16px;
+        }
+        .detail-title {
+            font-size: 16px; font-weight: 600; margin-bottom: 8px; line-height: 1.5;
+            word-break: break-word; /* 允许长标题换行 */
+        }
+        .detail-subtitle { font-size: 13px; color: var(--text-muted); }
+        .detail-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .detail-content::-webkit-scrollbar { display: none; }
+        
+        .info-row {
+            display: flex; justify-content: space-between; padding: 8px 0;
+            border-bottom: 1px solid var(--border-color); font-size: 13px;
+        }
+        .info-label { color: var(--text-muted); }
+        .info-value { color: var(--text-primary); font-weight: 500; max-width: 180px; text-align: right; word-break: break-word; }
+
+        /* Tooltip */
+        .tooltip {
+            position: fixed; background: rgba(30, 33, 43, 0.95);
+            border: 1px solid var(--border-color); color: var(--text-primary);
+            padding: 8px 12px; border-radius: 6px; font-size: 12px;
+            pointer-events: none; z-index: 2000; box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(4px); display: none; max-width: 400px;
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: absolute; bottom: 24px; right: 24px;
+            display: flex; flex-direction: column; gap: 8px;
+            background: var(--bg-card); padding: 8px;
+            border-radius: 8px; border: 1px solid var(--border-color);
+        }
+        .tool-btn {
+            width: 32px; height: 32px; border: none; background: transparent;
+            color: var(--text-secondary); border-radius: 4px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .tool-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+        /* 加载动画 */
+        .loading-overlay {
+            position: fixed; inset: 0; background: var(--bg-primary);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; transition: opacity 0.3s;
+        }
+        .spinner {
+            width: 40px; height: 40px; border: 3px solid var(--bg-card);
+            border-top-color: var(--accent-blue); border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* 显示统计信息 */
+        .filter-info {
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 12px;
+        }
+
+        /* 大纲预览模态框 */
+        .outline-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            backdrop-filter: blur(4px);
+        }
+        .outline-modal.show {
+            display: flex;
+        }
+        .outline-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .outline-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .outline-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .outline-header h2 i {
+            color: var(--accent-purple);
+        }
+        .outline-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .outline-close:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+        .outline-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) transparent;
+        }
+        .outline-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        .outline-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .outline-content::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+        
+        /* 大纲树形结构 */
+        .outline-tree {
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .outline-node {
+            position: relative;
+            padding-left: 24px;
+        }
+        .outline-node::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: var(--border-color);
+        }
+        .outline-node:last-child::before {
+            height: 14px;
+        }
+        .outline-item {
+            position: relative;
+            padding: 4px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .outline-item::before {
+            content: '';
+            position: absolute;
+            left: -16px;
+            top: 12px;
+            width: 12px;
+            height: 1px;
+            background: var(--border-color);
+        }
+        .outline-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .outline-icon.topic {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--accent-blue);
+        }
+        .outline-icon.category {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--accent-purple);
+        }
+        .outline-icon.subcategory {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+        .outline-text {
+            color: var(--text-primary);
+            word-break: break-word;
+        }
+        .outline-text.topic {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--accent-blue);
+        }
+        .outline-text.category {
+            font-weight: 500;
+            color: var(--accent-purple);
+        }
+        .outline-text.subcategory {
+            color: var(--accent-green);
+        }
+        .outline-count {
+            font-size: 11px;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+        
+        /* 根节点不需要连接线 */
+        .outline-tree > .outline-node {
+            padding-left: 0;
+        }
+        .outline-tree > .outline-node::before {
+            display: none;
+        }
+        .outline-tree > .outline-node > .outline-item::before {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loading">
+        <div class="spinner"></div>
+        <p style="margin-top: 16px; color: var(--text-muted); font-size: 14px;">正在构建知识图谱...</p>
+    </div>
+
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <div class="logo-icon"><i class="fa-solid fa-diagram-project"></i></div>
+            <div class="brand-text">
+                <h1 id="survey-title">MEKG Survey Graph</h1>
+                <p>Methods-Entity Knowledge Graph Visualization</p>
+            </div>
+        </div>
+        <div class="navbar-actions">
+            <button class="btn" onclick="showOutline()">
+                <i class="fa-solid fa-list-tree"></i> 大纲预览
+            </button>
+            <button class="btn active" id="btn-relations" onclick="toggleRelations()">
+                <i class="fa-solid fa-share-nodes"></i> <span id="rel-btn-text">隐藏关系</span>
+            </button>
+            <button class="btn" onclick="fitView()">
+                <i class="fa-solid fa-expand"></i> 适应屏幕
+            </button>
+            <button class="btn btn-primary" onclick="refreshData()">
+                <i class="fa-solid fa-rotate"></i> 刷新数据
+            </button>
+        </div>
+    </nav>
+
+    <div class="layout">
+        <aside class="sidebar-left">
+            <div class="sidebar-section">
+                <div class="section-title">数据概览</div>
+                <div class="stats-grid">
+                    <div class="stat-item"><div class="stat-value" id="stat-nodes">-</div><div class="stat-label">节点总数</div></div>
+                    <div class="stat-item"><div class="stat-value" id="stat-relations">-</div><div class="stat-label">关系总数</div></div>
+                    <div class="stat-item"><div class="stat-value" id="stat-papers">-</div><div class="stat-label">论文数量</div></div>
+                    <div class="stat-item"><div class="stat-value" id="stat-categories">-</div><div class="stat-label">分类数量</div></div>
+                </div>
+            </div>
+            <div class="sidebar-section" style="flex: 1; overflow-y: auto;">
+                <div class="section-title">关系筛选 (点击切换)</div>
+                <div class="legend-list" id="relation-legend"></div>
+                <div class="filter-info" id="filter-info">显示所有节点</div>
+            </div>
+        </aside>
+
+        <main class="canvas-container" id="canvas-container">
+            <canvas id="graph-canvas"></canvas>
+            <div class="toolbar">
+                <button class="tool-btn" onclick="zoomIn()" title="放大"><i class="fa-solid fa-plus"></i></button>
+                <button class="tool-btn" onclick="zoomOut()" title="缩小"><i class="fa-solid fa-minus"></i></button>
+                <button class="tool-btn" onclick="resetZoom()" title="重置视图"><i class="fa-solid fa-compress"></i></button>
+            </div>
+        </main>
+
+        <aside class="sidebar-right">
+            <div id="empty-detail" style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px;">
+                <div style="font-size: 48px; color: var(--bg-card); margin-bottom: 16px;"><i class="fa-regular fa-object-group"></i></div>
+                <h3 style="font-size: 16px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px;">未选择对象</h3>
+                <p style="font-size: 13px; color: var(--text-muted);">点击节点或关系线查看详情</p>
+            </div>
+            <div id="node-detail" style="display: none; height: 100%; flex-direction: column;">
+                <div class="detail-header">
+                    <div class="detail-icon" id="detail-icon"></div>
+                    <h2 class="detail-title" id="detail-title"></h2>
+                    <p class="detail-subtitle" id="detail-type"></p>
+                </div>
+                <div class="detail-content">
+                    <div style="margin-bottom: 24px;">
+                        <div class="section-title">详细信息</div>
+                        <div id="detail-info"></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <!-- 大纲预览模态框 -->
+    <div class="outline-modal" id="outline-modal" onclick="hideOutline(event)">
+        <div class="outline-container" onclick="event.stopPropagation()">
+            <div class="outline-header">
+                <h2><i class="fa-solid fa-sitemap"></i> Survey 大纲预览</h2>
+                <button class="outline-close" onclick="hideOutline()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="outline-content" id="outline-content">
+                <!-- 大纲内容将通过 JS 动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 配置
+        const CONFIG = {
+            colors: {
+                topic: '#3b82f6', category: '#8b5cf6', subcategory: '#10b981', paper: '#f59e0b',
+                // 关系颜色 - 使用更柔和的颜色
+                cites: '#78909c', extends: '#26a69a', improves: '#ef5350', applies: '#ab47bc',
+                supports: '#66bb6a', refutes: '#ef5350', combines: '#26c6da',
+                shares_task: '#9ccc65', shares_dataset: '#ba68c8', shares_methodology: '#ffa726',
+                is_instance_of: '#4db6ac', bibliographic_coupling: '#7986cb', same_author: '#f06292',
+                default: '#90a4ae'
+            },
+            icons: {
+                topic: '\uf140', category: '\uf07b', subcategory: '\uf07c', paper: '\uf15b'
+            },
+            nodeSize: {
+                topic: { w: 200, h: 60 }, category: { w: 180, h: 50 },
+                subcategory: { w: 160, h: 45 }, paper: { w: 180, h: 40 }
+            },
+            bgPrimary: '#0f1117',
+            bgCard: '#1e212b',
+            borderColor: '#2f3342',
+            textPrimary: '#ffffff',
+            textMuted: '#64748b',
+            hierarchyColor: '#4a5568',
+            accentBlue: '#3b82f6',
+            accentOrange: '#f59e0b'
+        };
+
+        // 状态管理
+        let state = {
+            nodes: [],
+            links: [],
+            nodeMap: new Map(),        // id -> node 快速查找
+            nodeBounds: new Map(),     // id -> {x, y, w, h} 节点边界（用于点击检测）
+            transform: { x: 0, y: 0, k: 1 },
+            isDragging: false,
+            lastPos: { x: 0, y: 0 },
+            selectedId: null,
+            selectedLinkId: null,
+            highlightedNodes: new Set(),
+            hoveredNodeId: null,
+            hoveredLinkId: null,
+            showRelations: true,
+            activeRelTypes: new Set(),
+            allRelTypes: new Set(),
+            visibleNodes: new Set(),   // 当前可见的节点ID
+            initialized: false,
+            navigationHistory: [],      // 导航历史，用于返回功能
+            // Canvas 相关
+            canvas: null,
+            ctx: null,
+            dpr: 1,
+            needsRedraw: true,
+            animationFrameId: null
+        };
+
+        // Canvas 初始化
+        function initCanvas() {
+            state.canvas = document.getElementById('graph-canvas');
+            state.ctx = state.canvas.getContext('2d');
+            state.dpr = window.devicePixelRatio || 1;
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // 启动渲染循环
+            startRenderLoop();
+        }
+        
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            const rect = container.getBoundingClientRect();
+            
+            state.canvas.width = rect.width * state.dpr;
+            state.canvas.height = rect.height * state.dpr;
+            state.canvas.style.width = rect.width + 'px';
+            state.canvas.style.height = rect.height + 'px';
+            
+            state.ctx.scale(state.dpr, state.dpr);
+            state.needsRedraw = true;
+        }
+        
+        function startRenderLoop() {
+            function loop() {
+                if (state.needsRedraw) {
+                    renderCanvas();
+                    state.needsRedraw = false;
+                }
+                state.animationFrameId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+        
+        function requestRedraw() {
+            state.needsRedraw = true;
+        }
+
+        async function init() {
+            initCanvas();
+            await loadData();
+            setupInteractions();
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        async function loadData() {
+            try {
+                const [nodesRes, edgesRes, hierarchyRes, statsRes] = await Promise.all([
+                    fetch('/api/nodes'), fetch('/api/edges'), fetch('/api/hierarchy'), fetch('/api/stats')
+                ]);
+                const nodes = await nodesRes.json();
+                const edges = await edgesRes.json();
+                const hierarchy = await hierarchyRes.json();
+                const stats = await statsRes.json();
+
+                // 构建节点映射
+                state.nodeMap.clear();
+                nodes.forEach(n => state.nodeMap.set(n.id, n));
+                
+                state.nodes = nodes;
+                state.links = [...hierarchy.map(h => ({...h, isHierarchy: true})), ...edges];
+                
+                // 收集所有关系类型
+                state.allRelTypes = new Set(edges.map(e => e.type));
+                state.activeRelTypes = new Set(state.allRelTypes); // 默认全选
+
+                updateStats(stats);
+                updateLegend(edges);
+                computeVisibleNodes();
+                
+                state.initialized = true;
+                
+                // 首次加载时自动适应视图
+                setTimeout(() => fitView(), 100);
+                
+                requestRedraw();
+            } catch (err) { 
+                console.error(err); 
+                alert('加载数据失败: ' + err.message); 
+            }
+        }
+
+        function updateStats(stats) {
+            document.getElementById('survey-title').textContent = stats.topic || 'MEKG Survey';
+            document.getElementById('stat-nodes').textContent = stats.nodes_count;
+            document.getElementById('stat-relations').textContent = stats.relations_count;
+            document.getElementById('stat-papers').textContent = stats.papers_count;
+            document.getElementById('stat-categories').textContent = Object.keys(stats.categories || {}).length;
+        }
+
+        function updateLegend(edges) {
+            const counts = {};
+            edges.forEach(e => counts[e.type] = (counts[e.type] || 0) + 1);
+            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+            const html = sorted.map(([type, count]) => {
+                const color = CONFIG.colors[type] || CONFIG.colors.default;
+                return `
+                <div class="legend-item active" onclick="toggleRelType('${type}', this)" data-type="${type}">
+                    <div class="legend-line" style="background: ${color};"></div>
+                    <span class="legend-name">${type}</span>
+                    <span class="legend-count">${count}</span>
+                </div>`;
+            }).join('');
+            document.getElementById('relation-legend').innerHTML = html;
+        }
+
+        function toggleRelType(type, el) {
+            if (state.activeRelTypes.has(type)) {
+                state.activeRelTypes.delete(type);
+                el.classList.remove('active');
+            } else {
+                state.activeRelTypes.add(type);
+                el.classList.add('active');
+            }
+            computeVisibleNodes();
+            requestRedraw();
+        }
+
+        // 计算需要显示的节点（基于选中的关系类型）
+        function computeVisibleNodes() {
+            state.visibleNodes.clear();
+            
+            // 如果没有选中任何关系类型，或者关系被隐藏，显示所有节点
+            if (!state.showRelations || state.activeRelTypes.size === 0) {
+                state.nodes.forEach(n => state.visibleNodes.add(n.id));
+                document.getElementById('filter-info').textContent = '显示所有节点';
+                return;
+            }
+            
+            // 如果选中了所有关系类型，显示所有节点
+            if (state.activeRelTypes.size === state.allRelTypes.size) {
+                state.nodes.forEach(n => state.visibleNodes.add(n.id));
+                document.getElementById('filter-info').textContent = '显示所有节点';
+                return;
+            }
+            
+            // 找出所有有选中关系的论文节点
+            const paperNodesWithRelations = new Set();
+            state.links.forEach(link => {
+                if (!link.isHierarchy && state.activeRelTypes.has(link.type)) {
+                    paperNodesWithRelations.add(link.source);
+                    paperNodesWithRelations.add(link.target);
+                }
+            });
+            
+            // 添加这些论文节点
+            paperNodesWithRelations.forEach(id => state.visibleNodes.add(id));
+            
+            // 向上追溯添加父节点（确保树结构完整）
+            const addParents = (nodeId) => {
+                const node = state.nodeMap.get(nodeId);
+                if (node && node.parentId) {
+                    state.visibleNodes.add(node.parentId);
+                    addParents(node.parentId);
+                }
+            };
+            
+            paperNodesWithRelations.forEach(id => addParents(id));
+            
+            // 更新筛选信息
+            const paperCount = [...state.visibleNodes].filter(id => {
+                const n = state.nodeMap.get(id);
+                return n && n.type === 'paper';
+            }).length;
+            
+            document.getElementById('filter-info').textContent = 
+                `显示 ${paperCount} 篇相关论文`;
+        }
+
+        // Canvas 渲染主函数
+        function renderCanvas() {
+            const ctx = state.ctx;
+            const canvas = state.canvas;
+            const width = canvas.width / state.dpr;
+            const height = canvas.height / state.dpr;
+            
+            // 清空画布
+            ctx.fillStyle = CONFIG.bgPrimary;
+            ctx.fillRect(0, 0, width, height);
+            
+            // 保存状态并应用变换
+            ctx.save();
+            ctx.translate(state.transform.x, state.transform.y);
+            ctx.scale(state.transform.k, state.transform.k);
+            
+            // 清空节点边界缓存
+            state.nodeBounds.clear();
+            
+            // 1. 先绘制关系线（虚线）- 放在底层
+            if (state.showRelations) {
+                state.links.forEach(link => {
+                    if (!link.isHierarchy && state.activeRelTypes.has(link.type)) {
+                        if (state.visibleNodes.has(link.source) && state.visibleNodes.has(link.target)) {
+                            drawRelationLink(ctx, link);
+                        }
+                    }
+                });
+            }
+            
+            // 2. 再绘制层级线（树干）- 放在关系线上面
+            state.links.forEach(link => {
+                if (link.isHierarchy) {
+                    if (state.visibleNodes.has(link.source) && state.visibleNodes.has(link.target)) {
+                        drawHierarchyLink(ctx, link);
+                    }
+                }
+            });
+            
+            // 3. 最后绘制节点 - 放在最上层
+            state.nodes.forEach(node => {
+                if (state.visibleNodes.has(node.id)) {
+                    drawNode(ctx, node);
+                }
+            });
+            
+            ctx.restore();
+        }
+
+        function drawHierarchyLink(ctx, link) {
+            const source = state.nodeMap.get(link.source);
+            const target = state.nodeMap.get(link.target);
+            if (!source || !target) return;
+
+            const sourceSize = CONFIG.nodeSize[source.type];
+            const targetSize = CONFIG.nodeSize[target.type];
+            
+            ctx.strokeStyle = CONFIG.hierarchyColor;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([]);
+            
+            ctx.beginPath();
+            
+            // 判断目标节点是否是论文节点（叶子节点）
+            if (target.type === 'paper') {
+                // 论文节点：从父节点右侧中心连接到论文节点左侧中心（水平方向）
+                const startX = source.x + sourceSize.w / 2;
+                const startY = source.y;
+                const endX = target.x - targetSize.w / 2;
+                const endY = target.y;
+                
+                // 计算中间转折点
+                const horizontalGap = endX - startX;
+                const midX = startX + Math.max(horizontalGap * 0.4, 30);
+                
+                // 正交连线：先水平→再垂直→最后水平
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(midX, startY);
+                ctx.lineTo(midX, endY);
+                ctx.lineTo(endX, endY);
+            } else {
+                // 非论文节点：从父节点底部中心连接到子节点顶部中心（垂直方向）
+                const startX = source.x;
+                const startY = source.y + sourceSize.h / 2;
+                const endX = target.x;
+                const endY = target.y - targetSize.h / 2;
+                
+                // 计算中间转折点
+                const verticalGap = endY - startY;
+                const midY = startY + Math.max(verticalGap * 0.4, 20);
+                
+                // 正交连线：先垂直→再水平→最后垂直
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(startX, midY);
+                ctx.lineTo(endX, midY);
+                ctx.lineTo(endX, endY);
+            }
+            
+            ctx.stroke();
+        }
+
+        function drawRelationLink(ctx, link) {
+            const source = state.nodeMap.get(link.source);
+            const target = state.nodeMap.get(link.target);
+            if (!source || !target) return;
+
+            const color = CONFIG.colors[link.type] || CONFIG.colors.default;
+            const sourceSize = CONFIG.nodeSize[source.type];
+            const targetSize = CONFIG.nodeSize[target.type];
+            
+            // 计算方向向量
+            const dx = target.x - source.x;
+            const dy = target.y - source.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist === 0) return;
+            
+            // 单位方向向量
+            const ux = dx / dist;
+            const uy = dy / dist;
+            
+            // 计算源节点边缘点
+            const sourceOffsetX = Math.abs(ux) > Math.abs(uy) ? (sourceSize.w / 2) * Math.sign(ux) : ux * sourceSize.h / 2 / Math.abs(uy);
+            const sourceOffsetY = Math.abs(uy) > Math.abs(ux) ? (sourceSize.h / 2) * Math.sign(uy) : uy * sourceSize.w / 2 / Math.abs(ux);
+            const startX = source.x + sourceOffsetX;
+            const startY = source.y + sourceOffsetY;
+            
+            // 计算目标节点边缘点（留出箭头空间）
+            const arrowOffset = 12;
+            const targetOffsetX = Math.abs(ux) > Math.abs(uy) ? (targetSize.w / 2 + arrowOffset) * Math.sign(ux) : ux * (targetSize.h / 2 + arrowOffset) / Math.abs(uy);
+            const targetOffsetY = Math.abs(uy) > Math.abs(ux) ? (targetSize.h / 2 + arrowOffset) * Math.sign(uy) : uy * (targetSize.w / 2 + arrowOffset) / Math.abs(ux);
+            const endX = target.x - targetOffsetX;
+            const endY = target.y - targetOffsetY;
+            
+            // 使用确定性偏移避免重叠
+            const hash = (link.source + link.target).split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
+            const offset = (hash % 60) - 30;
+            
+            // 控制点在中点附近
+            const ctrlX = (startX + endX) / 2 + offset;
+            const ctrlY = (startY + endY) / 2 + offset;
+            
+            const linkId = link.source + '-' + link.target;
+            const isHovered = state.hoveredLinkId === linkId;
+            const isSelected = state.selectedLinkId === linkId;
+            
+            ctx.strokeStyle = color;
+            ctx.lineWidth = (isHovered || isSelected) ? 3 : 1.5;
+            ctx.globalAlpha = (isHovered || isSelected) ? 1 : 0.7;
+            ctx.setLineDash([6, 4]);
+            
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.quadraticCurveTo(ctrlX, ctrlY, endX, endY);
+            ctx.stroke();
+            
+            // 绘制箭头
+            const angle = Math.atan2(endY - ctrlY, endX - ctrlX);
+            const arrowSize = 8;
+            ctx.setLineDash([]);
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(endX - arrowSize * Math.cos(angle - Math.PI / 6), endY - arrowSize * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(endX - arrowSize * Math.cos(angle + Math.PI / 6), endY - arrowSize * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.globalAlpha = 1;
+        }
+
+        function drawNode(ctx, node) {
+            const size = CONFIG.nodeSize[node.type];
+            const x = node.x - size.w / 2;
+            const y = node.y - size.h / 2;
+            
+            // 保存节点边界用于点击检测
+            state.nodeBounds.set(node.id, { x, y, w: size.w, h: size.h });
+            
+            const isSelected = state.selectedId === node.id;
+            const isHighlighted = state.highlightedNodes.has(node.id);
+            const isHovered = state.hoveredNodeId === node.id;
+            
+            // 绘制阴影（选中或高亮时）
+            if (isSelected || isHighlighted) {
+                ctx.shadowColor = isHighlighted ? 'rgba(245, 158, 11, 0.6)' : 'rgba(59, 130, 246, 0.5)';
+                ctx.shadowBlur = 12;
+            }
+            
+            // 绘制矩形背景
+            ctx.fillStyle = CONFIG.bgCard;
+            ctx.strokeStyle = isHighlighted ? CONFIG.accentOrange : (isSelected || isHovered ? CONFIG.accentBlue : CONFIG.borderColor);
+            ctx.lineWidth = isHighlighted ? 2.5 : (isSelected ? 2 : 1.5);
+            
+            roundRect(ctx, x, y, size.w, size.h, 6);
+            ctx.fill();
+            ctx.stroke();
+            
+            // 重置阴影
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            
+            // 绘制图标
+            const iconColor = CONFIG.colors[node.type];
+            ctx.fillStyle = iconColor;
+            ctx.font = '14px "Font Awesome 6 Free"';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(CONFIG.icons[node.type], x + 20, node.y);
+            
+            // 绘制文本
+            ctx.fillStyle = CONFIG.textPrimary;
+            ctx.font = '12px Inter, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            
+            let title = node.title || '';
+            if (title.length > 20) title = title.substring(0, 18) + '...';
+            
+            const textY = node.type === 'paper' ? node.y - 6 : node.y;
+            ctx.fillText(title, x + 40, textY);
+            
+            // 论文节点显示额外信息
+            if (node.type === 'paper') {
+                ctx.fillStyle = CONFIG.textMuted;
+                ctx.font = '10px Inter, sans-serif';
+                ctx.fillText(`${node.year || ''} · ${node.citations || 0} 引用`, x + 40, node.y + 8);
+            }
+        }
+        
+        // 绘制圆角矩形
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+        }
+
+        // 点击检测：检测点击位置是否在某个节点上
+        function hitTestNode(canvasX, canvasY) {
+            // 转换为图形坐标
+            const graphX = (canvasX - state.transform.x) / state.transform.k;
+            const graphY = (canvasY - state.transform.y) / state.transform.k;
+            
+            for (const [nodeId, bounds] of state.nodeBounds) {
+                if (graphX >= bounds.x && graphX <= bounds.x + bounds.w &&
+                    graphY >= bounds.y && graphY <= bounds.y + bounds.h) {
+                    return nodeId;
+                }
+            }
+            return null;
+        }
+        
+        // 点击检测：检测点击位置是否在某条关系线上
+        function hitTestLink(canvasX, canvasY) {
+            if (!state.showRelations) return null;
+            
+            const graphX = (canvasX - state.transform.x) / state.transform.k;
+            const graphY = (canvasY - state.transform.y) / state.transform.k;
+            
+            for (const link of state.links) {
+                if (link.isHierarchy) continue;
+                if (!state.activeRelTypes.has(link.type)) continue;
+                if (!state.visibleNodes.has(link.source) || !state.visibleNodes.has(link.target)) continue;
+                
+                const source = state.nodeMap.get(link.source);
+                const target = state.nodeMap.get(link.target);
+                if (!source || !target) continue;
+                
+                // 简化的线段距离检测
+                const dist = pointToLineDistance(graphX, graphY, source.x, source.y, target.x, target.y);
+                if (dist < 15) { // 15像素的点击容差
+                    return link;
+                }
+            }
+            return null;
+        }
+        
+        // 计算点到线段的距离
+        function pointToLineDistance(px, py, x1, y1, x2, y2) {
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const len2 = dx * dx + dy * dy;
+            
+            if (len2 === 0) return Math.sqrt((px - x1) ** 2 + (py - y1) ** 2);
+            
+            let t = ((px - x1) * dx + (py - y1) * dy) / len2;
+            t = Math.max(0, Math.min(1, t));
+            
+            const nearX = x1 + t * dx;
+            const nearY = y1 + t * dy;
+            
+            return Math.sqrt((px - nearX) ** 2 + (py - nearY) ** 2);
+        }
+
+        // 高亮关系线两端的节点
+        function highlightLinkNodes(sourceId, targetId, highlight, isPersistent = false) {
+            if (highlight) {
+                state.highlightedNodes.add(sourceId);
+                state.highlightedNodes.add(targetId);
+            } else {
+                if (!isPersistent) {
+                    state.highlightedNodes.delete(sourceId);
+                    state.highlightedNodes.delete(targetId);
+                }
+            }
+            requestRedraw();
+        }
+
+        function selectNode(node, addToHistory = true) {
+            // 清除之前的选中状态
+            clearSelection();
+            
+            state.selectedId = node.id;
+            
+            // 添加到导航历史
+            if (addToHistory) {
+                state.navigationHistory.push({ type: 'node', id: node.id });
+            }
+            
+            // 根据节点类型显示不同的详情
+            const nodeTypeNames = {
+                topic: '主题',
+                category: '分类',
+                subcategory: '子分类',
+                paper: '论文'
+            };
+            
+            const items = [];
+            if (node.type === 'paper') {
+                if (node.year) items.push({ label: '年份', value: node.year });
+                if (node.citations !== undefined) items.push({ label: '引用数', value: node.citations });
+                
+                // 查找该论文的所有关系（只显示当前可见的关系）
+                const relations = findNodeRelations(node.id, true);
+                if (relations.length > 0) {
+                    items.push({ label: '相关论文', value: `${relations.length} 个关系`, isHeader: true });
+                    relations.forEach(rel => {
+                        const otherNode = state.nodeMap.get(rel.otherId);
+                        const otherTitle = otherNode ? (otherNode.title.length > 25 ? otherNode.title.substring(0, 23) + '...' : otherNode.title) : rel.otherId;
+                        items.push({
+                            label: rel.direction === 'out' ? `→ ${rel.type}` : `← ${rel.type}`,
+                            value: otherTitle,
+                            clickable: true,
+                            linkData: rel.link
+                        });
+                    });
+                }
+            }
+            if (node.paperCount) items.push({ label: '论文数量', value: node.paperCount });
+            
+            showDetail('NODE', node.fullTitle || node.title, nodeTypeNames[node.type] || node.type, items, false);
+            requestRedraw();
+        }
+        
+        // 查找节点的所有关系
+        function findNodeRelations(nodeId, onlyVisible = false) {
+            const relations = [];
+            state.links.forEach(link => {
+                if (link.isHierarchy) return;
+                
+                // 如果只显示可见关系，检查关系类型是否被选中
+                if (onlyVisible) {
+                    if (!state.activeRelTypes.has(link.type)) return;
+                }
+                
+                if (link.source === nodeId) {
+                    if (onlyVisible && !state.visibleNodes.has(link.target)) return;
+                    relations.push({
+                        type: link.type,
+                        otherId: link.target,
+                        direction: 'out',
+                        link: link
+                    });
+                } else if (link.target === nodeId) {
+                    if (onlyVisible && !state.visibleNodes.has(link.source)) return;
+                    relations.push({
+                        type: link.type,
+                        otherId: link.source,
+                        direction: 'in',
+                        link: link
+                    });
+                }
+            });
+            return relations;
+        }
+
+        function selectLink(link, addToHistory = true) {
+            // 清除之前的选中状态
+            clearSelection();
+            
+            const linkId = link.source + '-' + link.target;
+            state.selectedLinkId = linkId;
+            
+            // 添加到导航历史
+            if (addToHistory) {
+                state.navigationHistory.push({ type: 'link', link: link });
+            }
+            
+            // 持久高亮两端节点
+            state.highlightedNodes.add(link.source);
+            state.highlightedNodes.add(link.target);
+
+            const source = state.nodeMap.get(link.source);
+            const target = state.nodeMap.get(link.target);
+            
+            const items = [
+                { label: '源论文', value: source?.fullTitle || source?.title || link.source, clickable: true, nodeId: link.source },
+                { label: '目标论文', value: target?.fullTitle || target?.title || link.target, clickable: true, nodeId: link.target }
+            ];
+            if (link.confidence) items.push({ label: '置信度', value: (link.confidence*100).toFixed(0)+'%' });
+            if (link.evidence) items.push({ label: '证据', value: link.evidence });
+            
+            showDetail('RELATION', link.type, '论文关系', items, true);
+            requestRedraw();
+        }
+
+        function clearSelection() {
+            state.selectedId = null;
+            state.selectedLinkId = null;
+            state.highlightedNodes.clear();
+            requestRedraw();
+        }
+
+        function showDetail(type, title, subtitle, items, showBackButton = false) {
+            document.getElementById('empty-detail').style.display = 'none';
+            document.getElementById('node-detail').style.display = 'flex';
+            
+            const iconHtml = type === 'NODE'
+                ? '<i class="fa-solid fa-file-lines"></i>'
+                : '<i class="fa-solid fa-arrow-right-arrow-left"></i>';
+            document.getElementById('detail-icon').innerHTML = iconHtml;
+            document.getElementById('detail-title').textContent = title;
+            document.getElementById('detail-type').textContent = subtitle;
+            
+            // 返回按钮
+            let backButtonHtml = '';
+            if (showBackButton && state.navigationHistory.length > 1) {
+                backButtonHtml = `<div class="info-row" style="margin-bottom: 12px; border-bottom: none; padding: 0;">
+                    <button onclick="navigateBack()" style="
+                        background: var(--bg-card);
+                        border: 1px solid var(--border-color);
+                        color: var(--text-secondary);
+                        padding: 6px 12px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 12px;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                    " onmouseenter="this.style.background='var(--bg-hover)'" onmouseleave="this.style.background='var(--bg-card)'">
+                        <i class="fa-solid fa-arrow-left"></i> 返回上一个
+                    </button>
+                </div>`;
+            }
+            
+            const html = backButtonHtml + items.map((item, idx) => {
+                if (item.isHeader) {
+                    return `<div class="info-row" style="margin-top: 16px; border-bottom: 2px solid var(--border-color);">
+                        <span class="info-label" style="font-weight: 600; color: var(--text-secondary);">${item.label}</span>
+                        <span class="info-value" style="color: var(--accent-blue);">${item.value}</span>
+                    </div>`;
+                }
+                if (item.clickable) {
+                    return `<div class="info-row relation-row" data-link-idx="${idx}" data-node-id="${item.nodeId || ''}" style="cursor: pointer; padding: 6px 0;"
+                            onmouseenter="this.style.background='var(--bg-hover)'"
+                            onmouseleave="this.style.background='transparent'">
+                        <span class="info-label" style="color: var(--accent-purple); font-size: 12px;">${item.label}</span>
+                        <span class="info-value" style="color: var(--text-primary); font-size: 12px;">${item.value || '-'}</span>
+                    </div>`;
+                }
+                return `<div class="info-row">
+                    <span class="info-label">${item.label}</span>
+                    <span class="info-value">${item.value || '-'}</span>
+                </div>`;
+            }).join('');
+            document.getElementById('detail-info').innerHTML = html;
+            
+            // 绑定关系行点击事件
+            document.querySelectorAll('.relation-row').forEach((row, i) => {
+                const clickableItems = items.filter(it => it.clickable);
+                row.onclick = () => {
+                    const item = clickableItems[i];
+                    if (item) {
+                        if (item.linkData) {
+                            // 点击关系行 -> 跳转到关系详情
+                            selectLink(item.linkData, true);
+                        } else if (item.nodeId) {
+                            // 点击节点行 -> 跳转到节点详情
+                            const node = state.nodeMap.get(item.nodeId);
+                            if (node) {
+                                selectNode(node, true);
+                            }
+                        }
+                    }
+                };
+            });
+        }
+        
+        // 返回上一个导航项
+        function navigateBack() {
+            if (state.navigationHistory.length <= 1) return;
+            
+            // 移除当前项
+            state.navigationHistory.pop();
+            // 获取上一项
+            const prev = state.navigationHistory[state.navigationHistory.length - 1];
+            
+            if (prev.type === 'node') {
+                const node = state.nodeMap.get(prev.id);
+                if (node) {
+                    selectNode(node, false);
+                }
+            } else if (prev.type === 'link') {
+                selectLink(prev.link, false);
+            }
+        }
+
+        // 工具函数
+        function showTooltip(e, text) {
+            const t = document.getElementById('tooltip');
+            t.textContent = text;
+            t.style.display = 'block';
+            t.style.left = (e.clientX + 15) + 'px';
+            t.style.top = (e.clientY + 15) + 'px';
+        }
+        
+        function hideTooltip() {
+            document.getElementById('tooltip').style.display = 'none';
+        }
+        
+        function setupInteractions() {
+            const container = document.getElementById('canvas-container');
+            const canvas = state.canvas;
+            
+            // 获取画布坐标
+            function getCanvasCoords(e) {
+                const rect = canvas.getBoundingClientRect();
+                return {
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                };
+            }
+            
+            // 鼠标按下
+            canvas.onmousedown = e => {
+                const coords = getCanvasCoords(e);
+                const nodeId = hitTestNode(coords.x, coords.y);
+                
+                if (!nodeId) {
+                    // 没有点击到节点，开始拖拽
+                    state.isDragging = true;
+                    state.lastPos = { x: e.clientX, y: e.clientY };
+                }
+            };
+            
+            // 鼠标移动
+            canvas.onmousemove = e => {
+                const coords = getCanvasCoords(e);
+                
+                if (state.isDragging) {
+                    // 拖拽平移
+                    state.transform.x += e.clientX - state.lastPos.x;
+                    state.transform.y += e.clientY - state.lastPos.y;
+                    state.lastPos = { x: e.clientX, y: e.clientY };
+                    requestRedraw();
+                } else {
+                    // 悬停检测
+                    const nodeId = hitTestNode(coords.x, coords.y);
+                    const link = hitTestLink(coords.x, coords.y);
+                    
+                    let needsRedraw = false;
+                    
+                    // 节点悬停
+                    if (nodeId !== state.hoveredNodeId) {
+                        state.hoveredNodeId = nodeId;
+                        needsRedraw = true;
+                        
+                        if (nodeId) {
+                            const node = state.nodeMap.get(nodeId);
+                            if (node) {
+                                showTooltip(e, node.fullTitle || node.title);
+                            }
+                        } else {
+                            hideTooltip();
+                        }
+                    }
+                    
+                    // 关系线悬停
+                    const linkId = link ? (link.source + '-' + link.target) : null;
+                    if (linkId !== state.hoveredLinkId) {
+                        // 清除之前的临时高亮（只清除悬停产生的高亮，不清除选中产生的高亮）
+                        if (state.hoveredLinkId && state.hoveredLinkId !== state.selectedLinkId) {
+                            const [oldSource, oldTarget] = state.hoveredLinkId.split('-');
+                            // 只有当这些节点不是因为选中的关系线而高亮时，才清除
+                            if (state.selectedLinkId) {
+                                const [selSource, selTarget] = state.selectedLinkId.split('-');
+                                if (oldSource !== selSource && oldSource !== selTarget) {
+                                    state.highlightedNodes.delete(oldSource);
+                                }
+                                if (oldTarget !== selSource && oldTarget !== selTarget) {
+                                    state.highlightedNodes.delete(oldTarget);
+                                }
+                            } else {
+                                state.highlightedNodes.delete(oldSource);
+                                state.highlightedNodes.delete(oldTarget);
+                            }
+                        }
+                        
+                        state.hoveredLinkId = linkId;
+                        needsRedraw = true;
+                        
+                        if (link && !nodeId) {
+                            const source = state.nodeMap.get(link.source);
+                            const target = state.nodeMap.get(link.target);
+                            showTooltip(e, `${link.type}: ${source?.title || link.source} → ${target?.title || link.target}`);
+                            
+                            // 临时高亮两端节点
+                            if (state.selectedLinkId !== linkId) {
+                                state.highlightedNodes.add(link.source);
+                                state.highlightedNodes.add(link.target);
+                            }
+                        } else if (!nodeId) {
+                            hideTooltip();
+                        }
+                    }
+                    
+                    if (needsRedraw) requestRedraw();
+                }
+            };
+            
+            // 鼠标松开
+            window.onmouseup = () => {
+                state.isDragging = false;
+            };
+            
+            // 鼠标点击
+            canvas.onclick = e => {
+                const coords = getCanvasCoords(e);
+                const nodeId = hitTestNode(coords.x, coords.y);
+                const link = hitTestLink(coords.x, coords.y);
+                
+                if (nodeId) {
+                    const node = state.nodeMap.get(nodeId);
+                    if (node) {
+                        selectNode(node, true);
+                    }
+                } else if (link) {
+                    selectLink(link, true);
+                } else {
+                    // 点击空白处
+                    clearSelection();
+                    document.getElementById('empty-detail').style.display = 'flex';
+                    document.getElementById('node-detail').style.display = 'none';
+                }
+            };
+            
+            // 滚轮缩放
+            canvas.onwheel = e => {
+                e.preventDefault();
+                const scale = e.deltaY > 0 ? 0.9 : 1.1;
+                
+                // 以鼠标位置为中心缩放
+                const coords = getCanvasCoords(e);
+                
+                const newK = state.transform.k * scale;
+                if (newK < 0.1 || newK > 5) return; // 限制缩放范围
+                
+                state.transform.x = coords.x - (coords.x - state.transform.x) * scale;
+                state.transform.y = coords.y - (coords.y - state.transform.y) * scale;
+                state.transform.k = newK;
+                
+                requestRedraw();
+            };
+            
+            // 鼠标离开画布
+            canvas.onmouseleave = () => {
+                if (state.hoveredNodeId || state.hoveredLinkId) {
+                    // 清除临时高亮
+                    if (state.hoveredLinkId && state.hoveredLinkId !== state.selectedLinkId) {
+                        const [oldSource, oldTarget] = state.hoveredLinkId.split('-');
+                        state.highlightedNodes.delete(oldSource);
+                        state.highlightedNodes.delete(oldTarget);
+                    }
+                    state.hoveredNodeId = null;
+                    state.hoveredLinkId = null;
+                    hideTooltip();
+                    requestRedraw();
+                }
+            };
+        }
+        
+        function fitView() {
+            if (state.nodes.length === 0) return;
+            
+            // 计算可见节点的边界
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            state.nodes.forEach(n => {
+                if (state.visibleNodes.has(n.id)) {
+                    const size = CONFIG.nodeSize[n.type];
+                    minX = Math.min(minX, n.x - size.w/2);
+                    maxX = Math.max(maxX, n.x + size.w/2);
+                    minY = Math.min(minY, n.y - size.h/2);
+                    maxY = Math.max(maxY, n.y + size.h/2);
+                }
+            });
+            
+            if (minX === Infinity) return;
+            
+            const container = document.getElementById('canvas-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            const graphWidth = maxX - minX;
+            const graphHeight = maxY - minY;
+            
+            // 计算缩放比例，留出边距
+            const padding = 80;
+            const scaleX = (width - padding * 2) / graphWidth;
+            const scaleY = (height - padding * 2) / graphHeight;
+            const scale = Math.min(scaleX, scaleY, 1); // 不超过1倍
+            
+            // 计算居中偏移
+            const centerX = (minX + maxX) / 2;
+            const centerY = (minY + maxY) / 2;
+            
+            state.transform.k = scale;
+            state.transform.x = width / 2 - centerX * scale;
+            state.transform.y = height / 2 - centerY * scale;
+            
+            requestRedraw();
+        }
+        
+        function zoomIn() {
+            state.transform.k = Math.min(state.transform.k * 1.2, 5);
+            requestRedraw();
+        }
+        
+        function zoomOut() {
+            state.transform.k = Math.max(state.transform.k * 0.8, 0.1);
+            requestRedraw();
+        }
+        
+        function resetZoom() {
+            fitView();
+        }
+        
+        function toggleRelations() {
+            state.showRelations = !state.showRelations;
+            const btn = document.getElementById('btn-relations');
+            const text = document.getElementById('rel-btn-text');
+            if (state.showRelations) {
+                btn.classList.add('active');
+                text.textContent = '隐藏关系';
+            } else {
+                btn.classList.remove('active');
+                text.textContent = '显示关系';
+            }
+            computeVisibleNodes();
+            requestRedraw();
+        }
+        
+        async function refreshData() {
+            document.getElementById('loading').style.display = 'flex';
+            state.initialized = false;
+            await loadData();
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // 大纲预览功能
+        function showOutline() {
+            const modal = document.getElementById('outline-modal');
+            const content = document.getElementById('outline-content');
+            
+            // 构建树形结构
+            const tree = buildOutlineTree();
+            content.innerHTML = renderOutlineTree(tree);
+            
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function hideOutline(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const modal = document.getElementById('outline-modal');
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        
+        // 构建大纲树形结构
+        function buildOutlineTree() {
+            const tree = [];
+            const nodeChildren = new Map(); // parentId -> children[]
+            
+            // 收集所有非 paper 节点
+            state.nodes.forEach(node => {
+                if (node.type === 'paper') return;
+                
+                if (!node.parentId) {
+                    // 根节点
+                    tree.push({
+                        ...node,
+                        children: []
+                    });
+                } else {
+                    // 子节点，先存储
+                    if (!nodeChildren.has(node.parentId)) {
+                        nodeChildren.set(node.parentId, []);
+                    }
+                    nodeChildren.get(node.parentId).push({
+                        ...node,
+                        children: []
+                    });
+                }
+            });
+            
+            // 统计每个节点下的论文数量
+            const paperCounts = new Map();
+            state.nodes.forEach(node => {
+                if (node.type === 'paper' && node.parentId) {
+                    paperCounts.set(node.parentId, (paperCounts.get(node.parentId) || 0) + 1);
+                }
+            });
+            
+            // 递归构建树
+            function attachChildren(nodes) {
+                nodes.forEach(node => {
+                    const children = nodeChildren.get(node.id) || [];
+                    node.children = children;
+                    node.paperCount = paperCounts.get(node.id) || 0;
+                    attachChildren(children);
+                });
+            }
+            
+            attachChildren(tree);
+            return tree;
+        }
+        
+        // 渲染大纲树
+        function renderOutlineTree(nodes, level = 0) {
+            if (!nodes || nodes.length === 0) return '';
+            
+            return nodes.map(node => {
+                const fullTitle = node.fullTitle || node.title || node.id;
+                const hasChildren = node.children && node.children.length > 0;
+                const paperCount = node.paperCount || 0;
+                
+                let countHtml = '';
+                if (paperCount > 0) {
+                    countHtml = `<span class="outline-count">${paperCount} 篇论文</span>`;
+                }
+                
+                let childrenHtml = '';
+                if (hasChildren) {
+                    childrenHtml = `<div class="outline-children">${renderOutlineTree(node.children, level + 1)}</div>`;
+                }
+                
+                return `
+                    <div class="outline-node">
+                        <div class="outline-item">
+                            <span class="outline-icon ${node.type}">
+                                <i class="fa-solid ${node.type === 'topic' ? 'fa-bullseye' : node.type === 'category' ? 'fa-folder' : 'fa-folder-open'}"></i>
+                            </span>
+                            <span class="outline-text ${node.type}">${fullTitle}</span>
+                            ${countHtml}
+                        </div>
+                        ${childrenHtml}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // ESC 键关闭大纲
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                hideOutline();
+            }
+        });
+
+        // 启动
+        init();
+    </script>
+</body>
+</html>

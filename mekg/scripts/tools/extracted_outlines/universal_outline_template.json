@@ -1,0 +1,327 @@
+{
+  "template_version": "1.0",
+  "description": "Universal survey outline template based on analysis of 5 SOTA survey papers",
+  "design_principles": {
+    "logical_flow_patterns": [
+      {
+        "name": "Why-How-Resources-Future",
+        "description": "Most recommended pattern for technical surveys",
+        "structure": ["Background", "Why [Topic]?", "How [Topic]?", "Benchmarks/Evaluation", "Challenges/Future"],
+        "best_for": "Technical surveys with clear methodology"
+      },
+      {
+        "name": "Taxonomy-Workflow-Training",
+        "description": "For system-oriented surveys",
+        "structure": ["Problem Formulation", "Taxonomy", "Workflow", "Training Strategies", "Evaluation", "Applications"],
+        "best_for": "System/pipeline surveys"
+      },
+      {
+        "name": "Past-Present-Future",
+        "description": "For surveys with clear technology evolution",
+        "structure": ["Preliminaries", "Previous Generation", "Current Generation", "Datasets & Benchmarks", "Challenges"],
+        "best_for": "Surveys tracking technology evolution"
+      },
+      {
+        "name": "Lifecycle-Based",
+        "description": "For technologies with distinct phases",
+        "structure": ["Preliminaries", "Phase 1", "Phase 2", "Phase 3 (deepest)", "Resources"],
+        "best_for": "Surveys on technologies with development stages"
+      }
+    ],
+    "core_section_organization": [
+      {
+        "type": "Process-Oriented",
+        "description": "Organize by workflow stages",
+        "example": "Planning → Selection → Calling → Generation",
+        "when_to_use": "When there's a clear execution pipeline"
+      },
+      {
+        "type": "Representation-Driven",
+        "description": "Organize by underlying representations",
+        "example": "NeRF / 3DGS / Mesh / Pointmap",
+        "when_to_use": "When different technical approaches exist"
+      },
+      {
+        "type": "Lifecycle-Based",
+        "description": "Organize by development phases",
+        "example": "Pre-training → Alignment → Reasoning",
+        "when_to_use": "When technology has evolution stages"
+      },
+      {
+        "type": "Taxonomy-Matrix",
+        "description": "Organize by multiple dimensions",
+        "example": "Input × Output modality matrix",
+        "when_to_use": "When multiple orthogonal dimensions exist"
+      }
+    ],
+    "paradigm_splits": [
+      "Tuning-free vs Tuning-based",
+      "Retriever-based vs LLM-based",
+      "Single-turn vs Multi-turn",
+      "Direct vs Integration",
+      "Parameter-Frozen vs Parameter-Trainable",
+      "End-to-End vs Modular",
+      "Explicit vs Implicit"
+    ],
+    "depth_distribution": {
+      "Introduction": {"level": 1, "subsections": "0-1"},
+      "Background": {"level": 2, "subsections": "2-4"},
+      "Motivation": {"level": 2, "subsections": "3-6"},
+      "Core_Technical": {"level": 3, "subsections": "4-6", "subsubsections": "2-3 per subsection"},
+      "Evaluation": {"level": 2, "subsections": "2-3"},
+      "Challenges": {"level": 2, "subsections": "5-7"},
+      "Conclusion": {"level": 1, "subsections": "0"}
+    },
+    "description_quality": {
+      "main_section": {"words": "80-150", "content": "Scope, main content, relation to other sections"},
+      "subsection": {"words": "40-80", "content": "Method categories, representative work names"},
+      "subsubsection": {"words": "30-50", "content": "Technical details, 1-2 representative papers"}
+    }
+  },
+  "template": {
+    "title": "A Survey on [Topic]: [Subtitle]",
+    "sections": [
+      {
+        "section_title": "Introduction",
+        "description": "Background, motivation, and survey organization. Introduces the problem, explains why it matters, and outlines the survey's scope and contributions.",
+        "subsections": [
+          {
+            "subsection_title": "Survey Organization",
+            "description": "Overview of the paper structure and reading guide"
+          }
+        ],
+        "required": true,
+        "position": "first"
+      },
+      {
+        "section_title": "Background and Preliminaries",
+        "description": "Foundational concepts, definitions, and problem formulation. Establishes the technical vocabulary used throughout the survey.",
+        "subsections": [
+          {
+            "subsection_title": "[Core Concept 1]",
+            "description": "Definition, scope, and key properties"
+          },
+          {
+            "subsection_title": "[Core Concept 2]",
+            "description": "Definition, scope, and key properties"
+          },
+          {
+            "subsection_title": "Problem Formulation",
+            "description": "Formal definition of the problem being surveyed"
+          }
+        ],
+        "required": true,
+        "position": "early"
+      },
+      {
+        "section_title": "Why [Topic]? / Motivation",
+        "description": "Analyzes the necessity and benefits of [topic] from multiple perspectives. Explains why this research direction is important and what problems it solves.",
+        "subsections": [
+          {
+            "subsection_title": "[Benefit/Motivation 1]",
+            "description": "Specific benefit with concrete examples and evidence"
+          },
+          {
+            "subsection_title": "[Benefit/Motivation 2]",
+            "description": "Specific benefit with concrete examples and evidence"
+          },
+          {
+            "subsection_title": "[Benefit/Motivation 3]",
+            "description": "Specific benefit with concrete examples and evidence"
+          }
+        ],
+        "required": false,
+        "recommended": true,
+        "note": "3-6 specific benefits. Highly recommended for establishing research significance."
+      },
+      {
+        "section_title": "How [Topic]? / Core Technical Content",
+        "description": "The main technical section reviewing advancements. This is the LARGEST section with the deepest hierarchy. Organized by workflow stages, representations, or lifecycle phases.",
+        "subsections": [
+          {
+            "subsection_title": "Overall Paradigm / Taxonomy Overview",
+            "description": "Overview of the technical landscape, classification scheme, and how different approaches relate to each other"
+          },
+          {
+            "subsection_title": "[Stage/Category 1]: [Name]",
+            "description": "Description of this stage/category, its role in the overall system, and key challenges",
+            "subsubsections": [
+              {
+                "subsubsection_title": "[Paradigm A]: [Name]",
+                "description": "Approach description with representative works (e.g., Method1, Method2)"
+              },
+              {
+                "subsubsection_title": "[Paradigm B]: [Name]",
+                "description": "Approach description with representative works (e.g., Method3, Method4)"
+              }
+            ]
+          },
+          {
+            "subsection_title": "[Stage/Category 2]: [Name]",
+            "description": "Description of this stage/category, its role in the overall system, and key challenges",
+            "subsubsections": [
+              {
+                "subsubsection_title": "[Paradigm A]: [Name]",
+                "description": "Approach description with representative works"
+              },
+              {
+                "subsubsection_title": "[Paradigm B]: [Name]",
+                "description": "Approach description with representative works"
+              }
+            ]
+          },
+          {
+            "subsection_title": "[Stage/Category 3]: [Name]",
+            "description": "Description of this stage/category, its role in the overall system, and key challenges",
+            "subsubsections": [
+              {
+                "subsubsection_title": "[Paradigm A]: [Name]",
+                "description": "Approach description with representative works"
+              },
+              {
+                "subsubsection_title": "[Paradigm B]: [Name]",
+                "description": "Approach description with representative works"
+              }
+            ]
+          },
+          {
+            "subsection_title": "[Stage/Category 4]: [Name]",
+            "description": "Description of this stage/category, its role in the overall system, and key challenges",
+            "subsubsections": [
+              {
+                "subsubsection_title": "[Paradigm A]: [Name]",
+                "description": "Approach description with representative works"
+              },
+              {
+                "subsubsection_title": "[Paradigm B]: [Name]",
+                "description": "Approach description with representative works"
+              }
+            ]
+          }
+        ],
+        "required": true,
+        "note": "MUST use 3-level hierarchy. 4-6 subsections, each with 2-3 subsubsections. Use paradigm splits."
+      },
+      {
+        "section_title": "Benchmarks and Evaluation",
+        "description": "Summarizes the ecosystem for validating [topic], including datasets, metrics, toolkits, and quantitative comparisons.",
+        "subsections": [
+          {
+            "subsection_title": "Datasets and Benchmarks",
+            "description": "Major datasets, their characteristics, scale, and intended use cases"
+          },
+          {
+            "subsection_title": "Evaluation Metrics",
+            "description": "Metrics for different aspects/stages, their strengths and limitations"
+          },
+          {
+            "subsection_title": "Toolkits and Resources",
+            "description": "Available tools, libraries, and frameworks for practitioners"
+          }
+        ],
+        "required": true
+      },
+      {
+        "section_title": "Applications",
+        "description": "Demonstrates the practical utility of [topic] across various domains and use cases.",
+        "subsections": [
+          {
+            "subsection_title": "[Application Domain 1]",
+            "description": "How [topic] is applied, key works, and impact"
+          },
+          {
+            "subsection_title": "[Application Domain 2]",
+            "description": "How [topic] is applied, key works, and impact"
+          }
+        ],
+        "required": false,
+        "note": "Optional. Include if the topic has diverse and significant applications."
+      },
+      {
+        "section_title": "Challenges and Future Directions",
+        "description": "Identifies critical bottlenecks and proposes promising research directions. Each challenge should be specific and actionable.",
+        "subsections": [
+          {
+            "subsection_title": "[Specific Challenge 1]: [Concrete Name]",
+            "description": "Concrete problem description, why it matters, and potential solution directions"
+          },
+          {
+            "subsection_title": "[Specific Challenge 2]: [Concrete Name]",
+            "description": "Concrete problem description, why it matters, and potential solution directions"
+          },
+          {
+            "subsection_title": "[Specific Challenge 3]: [Concrete Name]",
+            "description": "Concrete problem description, why it matters, and potential solution directions"
+          },
+          {
+            "subsection_title": "[Specific Challenge 4]: [Concrete Name]",
+            "description": "Concrete problem description, why it matters, and potential solution directions"
+          },
+          {
+            "subsection_title": "[Specific Challenge 5]: [Concrete Name]",
+            "description": "Concrete problem description, why it matters, and potential solution directions"
+          }
+        ],
+        "required": true,
+        "note": "MUST have 5-7 specific, actionable challenges. Avoid vague statements like 'improve performance'."
+      },
+      {
+        "section_title": "Conclusion",
+        "description": "Summarizes the key findings, contributions, and takeaways of this survey.",
+        "subsections": [],
+        "required": true,
+        "position": "last"
+      }
+    ]
+  },
+  "quality_checklist": {
+    "structure": [
+      "Main sections = 5-7 (excluding Introduction and Conclusion)",
+      "Core technical section uses 3-level hierarchy",
+      "Each technical subcategory has paradigm splits",
+      "Challenges section has 5-7 specific challenges"
+    ],
+    "logic": [
+      "Follows clear logical flow (Why-How-Resources-Future or alternative)",
+      "Natural transitions between sections",
+      "Depth distribution reflects content importance"
+    ],
+    "content": [
+      "Descriptions mention specific methods/paper names",
+      "Avoids generic descriptions like 'discusses various methods'",
+      "Challenges are specific and actionable"
+    ],
+    "mekg_alignment": [
+      "Main sections align with MEKG categories (if available)",
+      "Subsections align with MEKG subcategories (if available)",
+      "Core papers are mentioned in descriptions (if available)"
+    ]
+  },
+  "bad_examples": {
+    "vague_challenges": [
+      "Improving performance",
+      "Better evaluation",
+      "More applications",
+      "Future work"
+    ],
+    "generic_descriptions": [
+      "This section discusses various methods",
+      "We review related work",
+      "Different approaches are presented"
+    ]
+  },
+  "good_examples": {
+    "specific_challenges": [
+      "High Latency in Tool Learning",
+      "Rigorous and Comprehensive Evaluation",
+      "Safe and Robust Tool Learning",
+      "Unified Tool Learning Framework",
+      "Real-World Benchmark for Tool Learning",
+      "Tool Learning with Multi-Modal Inputs"
+    ],
+    "concrete_descriptions": [
+      "Reviews tuning-free methods including Chain-of-Thought (CoT), ReAct, and Toolformer that enable LLMs to use tools without fine-tuning",
+      "Analyzes retriever-based tool selection approaches such as ToolBench and API-Bank that use embedding similarity for tool matching"
+    ]
+  }
+}
