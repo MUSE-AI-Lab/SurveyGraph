@@ -1,239 +1,140 @@
 <div align="center">
 
-<img src="docs/assets/surveygraph-icon.png" alt="SurveyGraph" width="112" />
+<img src="docs/assets/surveygraph-icon.png" alt="SurveyGraph" width="96">
 
-# SurveyGraph
+# SurveyGraph: Generating Academic Surveys via Methods-Entity Knowledge Graphs
 
-### Methods–Entity Knowledge Graphs for Academic Survey Generation and Evaluation
+**Yifan Yuan** · **Yancheng Zhu** · **Zuoyu Zhang** · **Xiaogang Peng**<sup>&dagger;</sup>
 
-Evidence-oriented survey generation with graph-aware retrieval, hybrid planning, reflective writing, and multi-dimensional evaluation.
+School of Artificial Intelligence, Shenzhen University
+<br>
+<sup>&dagger;</sup>Corresponding author
+
+**EMNLP 2026 Findings**
+
+<a href="https://arxiv.org/abs/2610.31317"><img src="https://img.shields.io/badge/arXiv-2610.31317-b31b1b" alt="arXiv"></a>
+<a href="requirements.txt"><img src="https://img.shields.io/badge/Python-3.10--3.12-3776ab?logo=python&logoColor=white" alt="Python"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-lightgrey" alt="License"></a>
 
 [English](README.md) · [简体中文](README_zh.md)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.10–3.12](https://img.shields.io/badge/python-3.10--3.12-3776AB.svg?logo=python&logoColor=white)](requirements.txt)
-[![EMNLP 2026 Findings](https://img.shields.io/badge/venue-EMNLP%202026%20Findings-6f42c1.svg)](CITATION.cff)
-
 </div>
 
-SurveyGraph is the research code accompanying our **EMNLP 2026 Findings** paper. It treats an academic survey as an evidence-and-structure problem rather than a single prompt: papers are collected and parsed, methods and entities are connected in a **multi-layer evolutionary knowledge graph (MEKG)**, and the graph guides outline planning, retrieval, generation, reflection, formatting, and evaluation.
+<p align="center"><img src="docs/assets/surveygraph-pipeline.png" width="100%"><br><em>SurveyGraph: MEKG construction, graph-driven survey generation, and integrated evaluation.</em></p>
 
-The repository is organized for inspection and reproducibility. Source code, release checks, documentation, and small visual fixtures are public; downloaded corpora, databases, provider credentials, submission material, and generated private state are intentionally excluded.
+**TL;DR:** LLM survey generators usually retrieve papers as a flat pile of documents, so the result reads like a collage of summaries. A good survey explains how a field evolved — which work extends which, which methods compete, which benchmarks mark turning points. **SurveyGraph** builds a **Methods-Entity Knowledge Graph (MEKG)** that records method-level *follow-on*, *competition* and *shared-resource* relations, and uses it as the backbone for core-paper discovery, graph-aware retrieval, hybrid outlining and evidence-gated, evolution-aware writing. Graph-aware retrieval **nearly doubles recall** over flat lexical baselines (p = 0.004), and **80.6%** of generated sentences are fully or partly supported by the papers they cite.
 
-## Contents
+## 🔍 Method
 
-- [What SurveyGraph does](#what-surveygraph-does)
-- [System overview](#system-overview)
-- [Architecture](#architecture)
-- [Evaluation and output examples](#evaluation-and-output-examples)
-- [Repository map](#repository-map)
-- [Quick start](#quick-start)
-- [Run the pipeline](#run-the-pipeline)
-- [Evaluation and experiments](#evaluation-and-experiments)
-- [Optional frontend](#optional-frontend)
-- [Public-release boundary](#public-release-boundary)
-- [Citation](#citation)
-- [License](#license)
+<p align="center"><img src="docs/assets/surveygraph-architecture.png" width="80%"></p>
 
-## What SurveyGraph does
+| Stage | What happens | Code |
+|:-|:-|:-|
+| **MEKG construction** | Collect and parse papers (OpenAlex, arXiv, uploaded PDFs); extract methods, models, tasks, datasets and metrics; infer typed relations (*extends*, *improves*, *applies*, competition, shared resources) and filter them with a semantic evidence gate; rank core papers by graph centrality | `mekg/`, `src/` |
+| **Hybrid outline planning** | Fuse a top-down topic skeleton with bottom-up themes from graph communities and core papers, refined by an outline critic | `mekg/`, `src/` |
+| **Reflective generation** | Graph-aware retrieval and evidence gating per section, evolution-aware narrative synthesis, and a reflection loop that checks structure, factual support and citation grounding | `src/` |
+| **Post-processing & evaluation** | Figures, tables and LaTeX/PDF assembly; evaluation of structure, content, references, ethics/integrity and visual quality with an HTML report | `src/`, `evaluation/` |
 
-### Evidence-first literature modeling
+## 🛠️ Installation
 
-- Collects and normalizes paper metadata and source material from configured providers.
-- Extracts method-centered entities such as methods, models, tasks, datasets, metrics, and innovations.
-- Combines structural, semantic, conceptual, temporal, and authorship relations in MEKG.
-- Uses graph centrality and relation evidence to identify influential and representative papers.
+```bash
+git clone https://github.com/MUSE-AI-Lab/SurveyGraph.git
+cd SurveyGraph
+python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
 
-### Graph-guided survey generation
+Python 3.10–3.12 is tested. Optional components are enabled only when needed: [Memgraph](https://memgraph.com/) as graph database, a LaTeX toolchain for PDF output, MinerU for PDF parsing, and MySQL for the web frontend.
 
-- Builds a domain-aware top-down skeleton from the requested topic and keywords.
-- Discovers bottom-up themes from graph communities and core papers.
-- Fuses both views into a coherent outline instead of relying on a flat list of retrieved documents.
-- Performs graph-aware retrieval and evidence gating for each draft section.
-- Revises sections through a reflection loop that checks structure, factual support, and citation grounding.
+**Providers.** Copy `.env.example` to `.env` (ignored by git) and fill in what your run needs — `REMOTE_URL` + `TOKEN` or a provider key such as `OPENAI_API_KEY` / `DASHSCOPE_API_KEY`, optionally an embedding endpoint (`EMBED_*`) and `OPENALEX_EMAIL`. Offline tests need no credentials.
 
-### Inspectable evaluation
+## 🚀 Quick Start
 
-- Evaluates structure, content, references, ethics and integrity, and visual/media quality.
-- Supports parallel model-based evaluators and deterministic aggregation of rubric dimensions.
-- Produces machine-readable results and an HTML report for human inspection.
-- Exposes release and public-hygiene checks so the research tree can be audited before publication.
+Generate a survey for a topic (papers are collected automatically):
 
-## System overview
+```bash
+python tasks/mekg_run.py --topic "Retrieval-Augmented Generation" --max_papers 30 \
+    --year_start 2022 --year_end 2024 --no-memgraph --no-evaluation
+```
 
-The end-to-end flow has three stages: **MEKG construction**, **graph-driven planning and generation**, and **integrated evaluation with multimodal output**.
+Every intermediate result is saved under `outputs/<task_id>/` (`mekg/`, `papers/`, `latex/`, `logs/`, `task_config.json`), so an interrupted run can be resumed:
 
-<p align="center">
-  <img src="docs/assets/surveygraph-pipeline.png" alt="SurveyGraph end-to-end pipeline: MEKG construction, graph-driven survey generation, and integrated evaluation" width="100%" />
-</p>
+```bash
+python tasks/mekg_run.py --list-tasks
+python tasks/mekg_run.py --resume --task_id <task_id>
+```
 
-The pipeline is deliberately modular. Provider calls, graph storage, the optional frontend, and rendering dependencies can be enabled independently; offline checks do not require an LLM key or network access.
+Useful switches: `--uploaded-files '["a.pdf", "b.pdf"]'` and `--no-arxiv` to write from your own papers, `--no-reflection` / `--no-hybrid-outline` / `--no-global-reflector` for ablations, and dropping `--no-evaluation` to score the result at the end. See `python tasks/mekg_run.py --help` for all options.
 
-## Architecture
+## 📊 Evaluation
 
-The compact architecture view below highlights the four operational stages: knowledge-graph construction, hybrid outline planning, reflective generation, and post-processing.
+```bash
+python evaluation/main.py --help         # quality evaluators and HTML report
+python experiments/run_suite.py --help   # ablations, matched baselines, probes and evidence audits
+```
 
-<p align="center">
-  <img src="docs/assets/surveygraph-architecture.png" alt="SurveyGraph four-stage architecture" width="820" />
-</p>
+**Seven-method equal-budget retrieval benchmark** (top-5, Table 2 of the paper). R@5 / P@5: recall and precision; Str.: section–evidence alignment; Den.: typed relation density; CoCit: co-citation connectivity measured with OpenAlex, independent of MEKG.
 
-| Stage | Main responsibility | Public implementation area |
-| --- | --- | --- |
-| MEKG construction | Parse papers, extract entities, discover relations, and score graph nodes | `mekg/`, `src/` |
-| Hybrid planning | Combine a topic skeleton with graph-emergent communities | `mekg/`, `src/` |
-| Reflective generation | Retrieve evidence, draft sections, and refine against rubric feedback | `src/`, `evaluation/` |
-| Post-processing | Render figures/tables, apply templates, and assemble deliverables | `src/`, `evaluation/` |
+| Method | R@5 | P@5 | Str. | Den. | CoCit |
+|:-|:-:|:-:|:-:|:-:|:-:|
+| Flat lexical | .252 | .132 | **.558** | .134 | .089 |
+| Bibliographic RRF | .309 | .194 | .530 | .132 | .142 |
+| TF-IDF GraphRAG | .347 | .176 | .485 | .140 | .118 |
+| MEKG typed | .153 | .089 | .392 | **.228** | .156 |
+| Safe fusion | .261 | .134 | .528 | .179 | .147 |
+| Biblio + TF-IDF | **.357** | **.200** | .498 | .134 | .131 |
+| Biblio + MEKG | .304 | .178 | .486 | .174 | **.163** |
 
-## Evaluation and output examples
+Graph-free methods reach higher raw recall but almost no typed structure; MEKG-linked fusion keeps competitive recall while nearly doubling relation density and co-citation connectivity. Further results: graph-aware retrieval nearly doubles recall over flat lexical baselines on the graph-native core diagnostic (p = 0.004); the semantic evidence gate reaches AUC = 0.75; citation audits over 160 generated sentences find 80.6% anchored-or-partial support; human validation of 108 semantic edges confirms 68.5% supported-or-partial (Cohen's κ = 0.64).
 
-The repository includes small, static visual fixtures so that the public README communicates the actual product surface without publishing private corpora or databases.
+<table>
+<tr>
+<td width="45%"><img src="docs/assets/generated-survey-preview.png"><p align="center"><em>First page of a generated survey</em></p></td>
+<td width="55%"><img src="docs/assets/evaluation-report.png"><p align="center"><em>HTML evaluation report</em></p></td>
+</tr>
+</table>
 
-### Generated survey preview
+Scores depend on the corpus, provider and evaluator models; the images are display examples, not benchmark claims.
 
-<p align="center">
-  <img src="docs/assets/generated-survey-preview.png" alt="A generated academic survey page produced by SurveyGraph" width="760" />
-</p>
+## 🖥️ Web Frontend (optional)
 
-This is a rendered first page from a generated survey fixture. It illustrates the expected output format: a structured title and abstract, section hierarchy, citations, and a publication-style layout. The image is a display fixture, not a benchmark claim.
+A FastAPI service for task management and result browsing (needs a MySQL-compatible database):
 
-### Evaluation report
+```bash
+pip install -r frontend/requirements.txt
+python frontend/run.py --reload          # binds to 127.0.0.1; set JWT_SECRET and CORS before sharing
+```
 
-<p align="center">
-  <img src="docs/assets/evaluation-report.png" alt="SurveyGraph evaluation report showing a multidimensional quality score" width="820" />
-</p>
-
-The included report snapshot shows the HTML evaluation surface and a **85.6/100** aggregate score for that fixture. Scores depend on the input corpus, provider configuration, evaluator models, and rubric version; they should not be interpreted as a universal system score.
-
-## Repository map
+## 📁 Repository Structure
 
 ```text
-SurveyGraph/
-├── src/                 Retrieval, generation, refinement, schemas, and shared config
-├── mekg/                Multi-layer evolutionary knowledge-graph pipeline
-├── evaluation/          Quality evaluators and HTML report generation
-├── experiments/         Ablations, matched baselines, probes, and evidence audits
-├── frontend/            Optional FastAPI task-management and result-browsing service
-├── tests/               Unit tests and public-release checks
-├── docs/                Technical notes, design records, and README assets
-├── resources/           Public prompts, templates, and lightweight static resources
-└── scripts/             Release staging, packaging, and validation helpers
+tasks/mekg_run.py   # end-to-end entry point (collection → MEKG → outline → writing → LaTeX → evaluation)
+mekg/               # Methods-Entity Knowledge Graph pipeline
+src/                # retrieval, generation, refinement, schemas and shared config
+evaluation/         # quality evaluators and HTML report
+experiments/        # ablations, matched baselines, probes and evidence audits
+frontend/           # optional FastAPI service
+resources/          # prompts, templates and static resources
+tests/              # unit tests and public-release checks
+docs/               # design notes and figures
+scripts/            # release staging, packaging and validation
 ```
 
-Further design notes are indexed in [`docs/PROJECT_STRUCTURE.md`](docs/PROJECT_STRUCTURE.md) and [`docs/mekg/README_MEKG.md`](docs/mekg/README_MEKG.md).
+Downloaded papers, corpora, generated databases and provider credentials are not part of the repository; `python -m pytest -q tests/test_public_release.py` and `python scripts/check_public_release.py` audit the public tree (they need `git` on `PATH`). See [`docs/PUBLIC_RELEASE_BOUNDARY.md`](docs/PUBLIC_RELEASE_BOUNDARY.md).
 
-## Quick start
-
-### 1. Create an environment
-
-Python **3.10–3.12** is supported. Python 3.13 may work, but it is not part of the CI matrix.
-
-```bash
-python -m venv .venv
-
-# Linux/macOS
-source .venv/bin/activate
-
-# Windows PowerShell
-.venv\Scripts\Activate.ps1
-
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-### 2. Configure providers only when needed
-
-Copy `.env.example` to an ignored local `.env` file and fill only the providers required by your run:
-
-```bash
-cp .env.example .env
-```
-
-Online generation typically needs `REMOTE_URL` and `TOKEN`, or a provider-specific key such as `OPENAI_API_KEY` or `DASHSCOPE_API_KEY`. Public tests and static inspection do not require credentials. Never commit a real key to source, JSON, notebooks, shell history, or an issue.
-
-### 3. Run public checks
-
-```bash
-python -m compileall -q src mekg evaluation experiments tests frontend scripts
-python -m pytest -q tests/test_public_release.py
-python scripts/check_public_release.py
-```
-
-The full test suite includes optional integrations and may require additional services or dependencies. Run it with `python -m pytest -q` after installing what the modules under change require.
-
-## Run the pipeline
-
-The end-to-end entry point creates an ignored task directory under `outputs/` and can resume from checkpoints:
-
-```bash
-python run_sg_endtoend.py \
-  --topic "retrieval augmented generation" \
-  --max_papers 20 \
-  --no-memgraph \
-  --no-evaluation
-```
-
-For a fully configured run, remove `--no-evaluation`, configure the LLM variables, and install optional LaTeX/MinerU dependencies described by the relevant module documentation. Depending on configuration, the pipeline may call OpenAlex, arXiv, an embedding service, and an LLM provider; network access and provider costs are outside this repository.
-
-## Evaluation and experiments
-
-To inspect available commands:
-
-```bash
-python evaluation/main.py --help
-python experiments/run_suite.py --help
-```
-
-Experiment scripts keep model names, topic lists, and output paths explicit. Put provider-specific configuration under `experiments/configs/` with a `.local.json` suffix so it remains ignored. Record the command, model identifier, input revision, and rubric version alongside any result you publish.
-
-## Optional frontend
-
-The FastAPI frontend is a separate service for task management and result browsing. It requires a local MySQL-compatible database:
-
-```bash
-python -m pip install -r frontend/requirements.txt
-python frontend/run.py --reload
-```
-
-The service binds to `127.0.0.1` by default. Before any shared deployment, set a strong `JWT_SECRET`, restrict CORS, and use a dedicated database account.
-
-## Public-release boundary
-
-The public tree is a curated source release, not a copy of the private research workspace. The release process intentionally excludes:
-
-- downloaded papers, private corpora, generated databases, and archives;
-- anonymous submission, review, rebuttal, and upload-session material;
-- provider credentials, local `.env` files, and machine-specific state;
-- private experiment outputs that cannot be redistributed with a clear license.
-
-To build and audit the exact release locally:
-
-```bash
-python scripts/audit_release_assets.py \
-  --output release_artifacts/RESEARCH_ASSET_MANIFEST.tsv
-python scripts/stage_public_release.py \
-  --output release_artifacts/public_release
-python scripts/check_public_release.py \
-  --root release_artifacts/public_release
-python scripts/package_public_release.py \
-  --source release_artifacts/public_release \
-  --output release_artifacts/SurveyGraph-public-release.zip
-```
-
-Read [`docs/PUBLIC_RELEASE_BOUNDARY.md`](docs/PUBLIC_RELEASE_BOUNDARY.md) before adding a new artifact. Check the license and add attribution for every third-party asset.
-
-## Citation
-
-Please cite the accompanying EMNLP 2026 Findings paper when you use SurveyGraph. The machine-readable record is maintained in [`CITATION.cff`](CITATION.cff); bibliographic fields will be updated when the camera-ready record is available.
+## 📝 Citation
 
 ```bibtex
-@software{surveygraph2026,
-  title  = {SurveyGraph: Methods-Entity Knowledge Graphs for Academic Survey Generation and Evaluation},
-  year   = {2026},
-  note   = {Research software accompanying an EMNLP 2026 Findings paper},
-  url    = {https://github.com/xzzvsxd/SurveyGraph-open-source}
+@inproceedings{yuan2026surveygraph,
+  title     = {{SurveyGraph}: Generating Academic Surveys via Methods-Entity Knowledge Graphs},
+  author    = {Yuan, Yifan and Zhu, Yancheng and Zhang, Zuoyu and Peng, Xiaogang},
+  booktitle = {Findings of the Association for Computational Linguistics: EMNLP 2026},
+  year      = {2026},
+  eprint    = {2610.31317},
+  archivePrefix = {arXiv}
 }
 ```
 
-## License
+## 📄 License
 
-SurveyGraph is released under the [MIT License](LICENSE). Third-party dependencies, provider services, and user-supplied data remain subject to their own licenses and terms.
+[MIT](LICENSE). Third-party dependencies, provider services and user-supplied data remain subject to their own licenses and terms.
