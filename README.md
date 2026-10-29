@@ -53,9 +53,18 @@ Python 3.10–3.12 is tested. Optional components are enabled only when needed: 
 Generate a survey for a topic (papers are collected automatically):
 
 ```bash
-python tasks/mekg_run.py --topic "Retrieval-Augmented Generation" --max_papers 30 \
+python run_sg_endtoend.py --topic "Retrieval-Augmented Generation" --max_papers 30 \
     --year_start 2022 --year_end 2024 --no-memgraph --no-evaluation
 ```
+
+The launcher uses the Python interpreter that started it on Windows, Linux and macOS. It forwards pipeline options without overriding the topic, paper limit, years or evaluation settings. To inspect the command without credentials or provider calls:
+
+```bash
+python run_sg_endtoend.py --topic "Retrieval-Augmented Generation" --max_papers 20 --no-memgraph --no-evaluation --dry-run
+bash run.sh --topic "Retrieval-Augmented Generation" --max_papers 20 --no-memgraph --no-evaluation
+```
+
+`run.sh` invokes the same launcher, forwards its arguments and works from another working directory. Repeat `--topic` for an explicit sequential batch; `--state-file` selects its progress file. No arguments show an error instead of starting a hidden batch. The direct `tasks/mekg_run.py` entry remains supported.
 
 Every intermediate result is saved under `outputs/<task_id>/` (`mekg/`, `papers/`, `latex/`, `logs/`, `task_config.json`), so an interrupted run can be resumed:
 

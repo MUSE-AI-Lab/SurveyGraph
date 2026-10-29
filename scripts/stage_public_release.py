@@ -34,6 +34,7 @@ PUBLIC_TOOL_FILES = {
     "tools/test_multimodal.py",
 }
 PUBLIC_ROOT_FILES = {
+    ".gitattributes",
     ".env.example",
     ".gitignore",
     "README.md",

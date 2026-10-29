@@ -27,6 +27,7 @@ PUBLIC_CANDIDATE_ROOTS = {
     "OpenAlex",
 }
 PUBLIC_CANDIDATE_FILES = {
+    ".gitattributes",
     ".env.example",
     ".gitignore",
     "README.md",

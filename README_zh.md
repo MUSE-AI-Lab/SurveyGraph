@@ -53,9 +53,18 @@ pip install -r requirements.txt
 为一个主题生成综述（论文自动采集）：
 
 ```bash
-python tasks/mekg_run.py --topic "Retrieval-Augmented Generation" --max_papers 30 \
+python run_sg_endtoend.py --topic "Retrieval-Augmented Generation" --max_papers 30 \
     --year_start 2022 --year_end 2024 --no-memgraph --no-evaluation
 ```
+
+入口在 Windows、Linux 和 macOS 上使用当前启动它的 Python 解释器，按原样转发流水线参数，不会覆盖主题、论文数、年份或评测开关。可先检查命令，无需密钥，也不会调用模型服务：
+
+```bash
+python run_sg_endtoend.py --topic "Retrieval-Augmented Generation" --max_papers 20 --no-memgraph --no-evaluation --dry-run
+bash run.sh --topic "Retrieval-Augmented Generation" --max_papers 20 --no-memgraph --no-evaluation
+```
+
+`run.sh` 调用同一个入口并转发全部参数，从其他工作目录也能运行。重复 `--topic` 可显式运行多主题批次，`--state-file` 可指定批次进度文件；不带参数会提示用法，不会自行启动固定主题列表。直接调用 `tasks/mekg_run.py` 仍然受支持。
 
 所有中间结果都保存在 `outputs/<task_id>/` 下（`mekg/`、`papers/`、`latex/`、`logs/`、`task_config.json`），中断后可以续跑：
 
