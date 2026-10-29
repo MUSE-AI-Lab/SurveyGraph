@@ -6,9 +6,9 @@
 
 **Yifan Yuan** · **Yancheng Zhu** · **Zuoyu Zhang** · **Xiaogang Peng**<sup>&dagger;</sup>
 
-深圳大学人工智能学院
+School of Artificial Intelligence, Shenzhen University
 <br>
-<sup>&dagger;</sup>通讯作者
+<sup>&dagger;</sup>Corresponding author
 
 **EMNLP 2026 Findings**
 
